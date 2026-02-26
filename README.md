@@ -32,44 +32,44 @@ Além da presença, o sistema analisa a **expressão facial** dos membros no mom
 ┌──────────────────────────────────────────────────────────────────────────┐
 │                          VULTRA ECOSYSTEM                                │
 │                                                                          │
-│   ┌─────────────────────────────────────────────────┐                   │
-│   │            FRONTEND LAYER (Next.js 15)          │                   │
-│   │   ┌─────────────┐  ┌──────────┐  ┌──────────┐  │                   │
-│   │   │ Admin Portal│  │ RH Portal│  │Prof.Portal│  │                   │
-│   │   │  (Tenants,  │  │(Relatórios│  │ (Chamada │  │                   │
-│   │   │  Membros,   │  │bem-estar) │  │  & Diário│  │                   │
-│   │   │  Dispositiv)│  └──────────┘  └──────────┘  │                   │
-│   │   └─────────────┘                               │                   │
-│   └──────────────────────┬──────────────────────────┘                   │
+│   ┌─────────────────────────────────────────────────┐                    │
+│   │            FRONTEND LAYER (Next.js 15)          │                    │
+│   │   ┌─────────────┐  ┌──────────┐  ┌──────────┐  │                     │
+│   │   │ Admin Portal│  │ RH Portal│  │Prof.Portal│  │                    │
+│   │   │  (Tenants,  │  │(Relatórios│  │ (Chamada │  │                    │
+│   │   │  Membros,   │  │bem-estar) │  │  & Diário│  │                    │
+│   │   │  Dispositiv)│  └──────────┘  └──────────┘  │                     │
+│   │   └─────────────┘                               │                    │
+│   └──────────────────────┬──────────────────────────┘                    │
 │                          │ REST / WebSocket                              │
 │                          ▼                                               │
-│   ┌──────────────────────────────────────────────┐                      │
-│   │          API CORE  (Bun + ElysiaJS)          │                      │
-│   │  Better Auth (RBAC, Organization, Passkeys)  │                      │
-│   │  Arquitetura Hexagonal — Ports & Adapters    │                      │
-│   └──────────┬─────────────────┬─────────────────┘                      │
+│   ┌──────────────────────────────────────────────┐                       │
+│   │          API CORE  (Bun + ElysiaJS)          │                       │
+│   │  Better Auth (RBAC, Organization, Passkeys)  │                       │
+│   │  Arquitetura Hexagonal — Ports & Adapters    │                       │
+│   └──────────┬─────────────────┬─────────────────┘                       │
 │              │                 │                                         │
 │       LPUSH  │          query  │  vector(<=>)                            │
 │              ▼                 ▼                                         │
-│   ┌─────────────┐    ┌──────────────────┐                               │
-│   │    Redis    │    │   PostgreSQL 16  │                               │
-│   │  (Filas de  │    │  + pgvector 0.7  │                               │
-│   │    Jobs)    │    │   vector(512)    │                               │
-│   └──────┬──────┘    └──────────────────┘                               │
+│   ┌─────────────┐    ┌──────────────────┐                                │
+│   │    Redis    │    │   PostgreSQL 16  │                                │
+│   │  (Filas de  │    │  + pgvector 0.7  │                                │
+│   │    Jobs)    │    │   vector(512)    │                                │
+│   └──────┬──────┘    └──────────────────┘                                │
 │          │ BLPOP                                                         │
 │          ▼                                                               │
-│   ┌──────────────────────────────────┐                                  │
-│   │    AI MICROSERVICE (Python)      │                                  │
-│   │  FastAPI + DeepFace (ArcFace)    │                                  │
-│   │  Processamento 100% em RAM       │                                  │
-│   │  Embedding + Análise de Sentim.  │                                  │
-│   └──────────────────────────────────┘                                  │
+│   ┌──────────────────────────────────┐                                   │
+│   │    AI MICROSERVICE (Python)      │                                   │
+│   │  FastAPI + DeepFace (ArcFace)    │                                   │
+│   │  Processamento 100% em RAM       │                                   │
+│   │  Embedding + Análise de Sentim.  │                                   │
+│   └──────────────────────────────────┘                                   │
 │                                                                          │
-│   ┌──────────────────────────────────┐                                  │
-│   │      IoT LAYER (ESP32-CAM)       │                                  │
-│   │  Firmware C++/Arduino            │                                  │
-│   │  Auth via X-Device-Token header  │                                  │
-│   └──────────────────────────────────┘                                  │
+│   ┌──────────────────────────────────┐                                   │
+│   │      IoT LAYER (ESP32-CAM)       │                                   │
+│   │  Firmware C++/Arduino            │                                   │
+│   │  Auth via X-Device-Token header  │                                   │
+│   └──────────────────────────────────┘                                   │
 └──────────────────────────────────────────────────────────────────────────┘
 ```
 
