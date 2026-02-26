@@ -1,5 +1,3 @@
-<![CDATA[<div align="center">
-
 # ⚡ VULTRA
 
 **Ecossistema SaaS Multitenant para Gestão de Presenças com Reconhecimento Facial e Análise de Sentimento**
@@ -205,5 +203,4 @@ chore(deps):      atualiza pgvector para 0.7.4
 
 Este projeto está licenciado sob a [MIT License](./LICENSE).
 
-> Desenvolvido como projeto de **Iniciação Científica** com padrões de engenharia Enterprise.
-]]>
+> Desenvolvido como projeto de **Iniciação Científica**
