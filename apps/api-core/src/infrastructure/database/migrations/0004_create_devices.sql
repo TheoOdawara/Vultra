@@ -5,7 +5,6 @@
 -- ============================================================
 
 -- UP
-BEGIN;
 
 CREATE TABLE devices (
   id               UUID        NOT NULL DEFAULT gen_uuid_v7(),
@@ -57,12 +56,3 @@ CREATE POLICY devices_tenant_isolation ON devices
   WITH CHECK (
     organization_id = NULLIF(current_setting('app.current_org_id', TRUE), '')::UUID
   );
-
-COMMIT;
-
--- DOWN
-BEGIN;
-DROP POLICY  IF EXISTS devices_tenant_isolation   ON devices;
-DROP TRIGGER IF EXISTS trg_devices_updated_at     ON devices;
-DROP TABLE   IF EXISTS devices;
-COMMIT;

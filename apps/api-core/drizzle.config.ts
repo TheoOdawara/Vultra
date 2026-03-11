@@ -15,7 +15,7 @@ export default {
   out:       './src/infrastructure/database/migrations',
   dialect:   'postgresql',
   dbCredentials: {
-    url: Bun.env['DATABASE_URL']!,
+    url: process.env['DATABASE_URL']!,
   },
   verbose: true,
   strict:  true,

@@ -5,7 +5,6 @@
 -- ============================================================
 
 -- UP
-BEGIN;
 
 CREATE TABLE organizations (
   id         UUID        NOT NULL DEFAULT gen_uuid_v7(),
@@ -37,11 +36,3 @@ CREATE INDEX idx_organizations_is_active
 CREATE TRIGGER trg_organizations_updated_at
   BEFORE UPDATE ON organizations
   FOR EACH ROW EXECUTE FUNCTION set_updated_at();
-
-COMMIT;
-
--- DOWN
-BEGIN;
-DROP TRIGGER IF EXISTS trg_organizations_updated_at ON organizations;
-DROP TABLE   IF EXISTS organizations;
-COMMIT;

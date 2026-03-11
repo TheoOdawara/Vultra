@@ -6,7 +6,6 @@
 -- ============================================================
 
 -- UP
-BEGIN;
 
 CREATE TABLE audit_logs (
   id              BIGSERIAL   NOT NULL,
@@ -69,12 +68,3 @@ CREATE INDEX idx_audit_logs_action
 -- Índice GIN para buscas dentro do payload JSONB (opcional, mas útil para debugging)
 CREATE INDEX idx_audit_logs_payload_gin
   ON audit_logs USING GIN (payload);
-
-COMMIT;
-
--- DOWN
-BEGIN;
-DROP TRIGGER   IF EXISTS trg_audit_logs_immutable        ON audit_logs;
-DROP FUNCTION  IF EXISTS enforce_audit_logs_immutable();
-DROP TABLE     IF EXISTS audit_logs;
-COMMIT;

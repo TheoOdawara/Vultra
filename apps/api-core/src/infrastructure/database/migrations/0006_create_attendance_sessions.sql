@@ -4,7 +4,6 @@
 -- ============================================================
 
 -- UP
-BEGIN;
 
 CREATE TABLE attendance_sessions (
   id              UUID        NOT NULL DEFAULT gen_uuid_v7(),
@@ -72,12 +71,3 @@ CREATE POLICY attendance_sessions_tenant_isolation ON attendance_sessions
   WITH CHECK (
     organization_id = NULLIF(current_setting('app.current_org_id', TRUE), '')::UUID
   );
-
-COMMIT;
-
--- DOWN
-BEGIN;
-DROP POLICY  IF EXISTS attendance_sessions_tenant_isolation ON attendance_sessions;
-DROP TRIGGER IF EXISTS trg_attendance_sessions_updated_at   ON attendance_sessions;
-DROP TABLE   IF EXISTS attendance_sessions;
-COMMIT;

@@ -4,7 +4,6 @@
 -- ============================================================
 
 -- UP
-BEGIN;
 
 -- ---------------------------------------------------------------------------
 -- Extensões obrigatórias (idempotentes)
@@ -64,15 +63,3 @@ BEGIN
   RETURN NEW;
 END;
 $$;
-
-COMMIT;
-
--- DOWN
-BEGIN;
-DROP FUNCTION IF EXISTS set_updated_at();
-DROP FUNCTION IF EXISTS gen_uuid_v7();
-DROP EXTENSION IF EXISTS "btree_gin";
-DROP EXTENSION IF EXISTS "pg_trgm";
-DROP EXTENSION IF EXISTS "vector";
-DROP EXTENSION IF EXISTS "uuid-ossp";
-COMMIT;

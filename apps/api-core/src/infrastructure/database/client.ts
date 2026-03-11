@@ -21,7 +21,7 @@ import postgres      from 'postgres';
 import { sql }       from 'drizzle-orm';
 import * as schema   from './schema';
 
-const DATABASE_URL = Bun.env['DATABASE_URL'];
+const DATABASE_URL = process.env['DATABASE_URL'];
 
 if (!DATABASE_URL) {
   throw new Error('[database/client] DATABASE_URL não está definida. Verifique o .env');

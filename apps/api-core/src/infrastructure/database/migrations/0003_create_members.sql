@@ -5,7 +5,6 @@
 -- ============================================================
 
 -- UP
-BEGIN;
 
 CREATE TABLE members (
   id              UUID        NOT NULL DEFAULT gen_uuid_v7(),
@@ -79,12 +78,3 @@ CREATE POLICY members_tenant_isolation ON members
   WITH CHECK (
     organization_id = NULLIF(current_setting('app.current_org_id', TRUE), '')::UUID
   );
-
-COMMIT;
-
--- DOWN
-BEGIN;
-DROP POLICY  IF EXISTS members_tenant_isolation   ON members;
-DROP TRIGGER IF EXISTS trg_members_updated_at     ON members;
-DROP TABLE   IF EXISTS members;
-COMMIT;

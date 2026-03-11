@@ -1,3 +1,4 @@
 
 /apps/api-core/node_modules
 /infra/.env
+/apps/api-core/.env

@@ -5,7 +5,6 @@
 -- ============================================================
 
 -- UP
-BEGIN;
 
 CREATE TABLE biometric_profiles (
   id              UUID        NOT NULL DEFAULT gen_uuid_v7(),
@@ -67,11 +66,3 @@ CREATE POLICY biometric_profiles_tenant_isolation ON biometric_profiles
   WITH CHECK (
     organization_id = NULLIF(current_setting('app.current_org_id', TRUE), '')::UUID
   );
-
-COMMIT;
-
--- DOWN
-BEGIN;
-DROP POLICY IF EXISTS biometric_profiles_tenant_isolation ON biometric_profiles;
-DROP TABLE  IF EXISTS biometric_profiles;
-COMMIT;

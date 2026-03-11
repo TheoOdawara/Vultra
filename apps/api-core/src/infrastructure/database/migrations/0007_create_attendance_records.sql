@@ -14,7 +14,6 @@
 -- ============================================================
 
 -- UP
-BEGIN;
 
 -- ---------------------------------------------------------------------------
 -- Tabela pai (não contém dados diretamente — apenas metadados e constraints)
@@ -130,12 +129,3 @@ CREATE POLICY attendance_records_tenant_isolation ON attendance_records
   WITH CHECK (
     organization_id = NULLIF(current_setting('app.current_org_id', TRUE), '')::UUID
   );
-
-COMMIT;
-
--- DOWN
-BEGIN;
-DROP POLICY IF EXISTS attendance_records_tenant_isolation ON attendance_records;
--- DROP CASCADE elimina a tabela pai e TODAS as partições filhas automaticamente
-DROP TABLE IF EXISTS attendance_records CASCADE;
-COMMIT;

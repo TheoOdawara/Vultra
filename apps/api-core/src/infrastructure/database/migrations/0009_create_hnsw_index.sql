@@ -23,7 +23,6 @@
 -- ============================================================
 
 -- UP
-BEGIN;
 
 -- Em PRODUÇÃO com dados existentes, substituir pela versão CONCURRENTLY:
 -- CREATE INDEX CONCURRENTLY idx_biometric_profiles_face_embedding_hnsw ...
@@ -31,10 +30,3 @@ CREATE INDEX idx_biometric_profiles_face_embedding_hnsw
   ON biometric_profiles
   USING hnsw (face_embedding vector_cosine_ops)
   WITH (m = 16, ef_construction = 64);
-
-COMMIT;
-
--- DOWN
-BEGIN;
-DROP INDEX IF EXISTS idx_biometric_profiles_face_embedding_hnsw;
-COMMIT;
