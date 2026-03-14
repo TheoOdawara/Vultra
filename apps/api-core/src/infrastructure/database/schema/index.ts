@@ -8,7 +8,7 @@
 // Tipos customizados
 export * from './_types';
 
-// Tabelas e tipos inferidos
+// Tabelas e tipos inferidos — domínio VULTRA
 export * from './organizations';
 export * from './members';
 export * from './devices';
@@ -16,6 +16,9 @@ export * from './biometric-profiles';
 export * from './attendance-sessions';
 export * from './attendance-records';
 export * from './audit-logs';
+
+// Tabelas Better Auth (prefixo auth_) — autenticação & autorização
+export * from './auth-schema';
 
 // ---------------------------------------------------------------------------
 // Drizzle Relations — habilita `db.query.*` com joins tipados

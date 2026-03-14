@@ -1,7 +1,7 @@
 # 🏗️ Schema — Tabelas e Relacionamentos
 
 > **← [Voltar ao Database](../README.md)**
-> **Última revisão:** Março 2026 — schema implementado (migrations 0001–0009)
+> **Última revisão:** Março 2026 — schema completo (migrations 0001–0014, incluindo tabelas Better Auth)
 
 ---
 
@@ -20,11 +20,14 @@ organizations  (sem RLS — gerida pelo super-admin)
     │
     └── attendance_sessions  (aberta por device; 1 sessão open por device)
             │
-            └── attendance_records  ← PARTICIONADO por recorded_at (trimestral)
-                    ├── 2025_q1 … 2027_q2  (partições declarativas)
-                    └── overflow            (captura datas fora do range)
+            └── attendance_records  (tabela simples — particionamento removido na migration 0010)
 
 audit_logs  (BIGSERIAL PK — sem FK em organization_id — trigger bloqueia UPDATE/DELETE)
+
+— — — Better Auth (prefixo auth_) — —
+auth_users → auth_sessions, auth_accounts, auth_verifications
+auth_organizations → auth_members, auth_invitations
+auth_users → auth_passkeys
 ```
 
 ---
@@ -49,7 +52,7 @@ audit_logs  (BIGSERIAL PK — sem FK em organization_id — trigger bloqueia UPD
 |--------|------|-------|
 | `id` | UUID PK | `gen_uuid_v7()` |
 | `organization_id` | UUID FK | → `organizations.id` — **filtro obrigatório** |
-| `user_id` | UUID nullable | → tabela de auth do Better Auth (nullable: membro pode existir sem conta) |
+| `user_id` | TEXT nullable | → `auth_users.id` (FK concretizada na migration 0014, ON DELETE SET NULL) |
 | `full_name` | TEXT | Nome completo do membro |
 | `email` | TEXT nullable | — |
 | `role` | TEXT CHECK | `'admin'` \| `'professor'` \| `'rh'` \| `'student'` |
@@ -98,19 +101,18 @@ audit_logs  (BIGSERIAL PK — sem FK em organization_id — trigger bloqueia UPD
 
 ---
 
-## Tabela: `attendance_records` — Particionada
+## Tabela: `attendance_records`
 
-> **Estratégia:** `PARTITION BY RANGE (recorded_at)` — partições trimestrais (ex: `attendance_records_2026_q1`).
-> Permite archiving e `DROP PARTITION` de dados históricos sem `VACUUM FULL` na tabela inteira.
-> **RLS** definida no pai é herdada por todas as partições (existentes e futuras).
+> **Nota (migration 0010):** o particionamento trimestral foi removido por ser over-engineering para a fase atual.
+> A tabela simples suporta os volumes esperados e elimina o overhead de criação manual de partições.
 
 | Coluna | Tipo | Notas |
 |--------|------|-------|
-| `id` | UUID | `gen_uuid_v7()` |
+| `id` | UUID PK | `gen_uuid_v7()` |
 | `organization_id` | UUID | Isolamento de tenant |
 | `session_id` | UUID FK | Sessão de chamada |
 | `member_id` | UUID FK | Membro identificado |
-| `recorded_at` | TIMESTAMPTZ | **Coluna de partição** — obrigatória na PK composta |
+| `recorded_at` | TIMESTAMPTZ | Data/hora do registo |
 | `confidence_score` | REAL CHECK | Similaridade cosseno `[0, 1]` |
 | `match_threshold` | REAL CHECK | Snapshot do threshold vigente (default: `0.85`) — auditoria de falsos positivos |
 | `recognition_method` | TEXT CHECK | `'face'` \| `'manual'` |
@@ -118,8 +120,7 @@ audit_logs  (BIGSERIAL PK — sem FK em organization_id — trigger bloqueia UPD
 | `sentiment_score` | REAL CHECK nullable | Score do sentimento dominante `[0, 1]` |
 | `is_manual` | BOOLEAN | `TRUE` se inserido manualmente pelo professor |
 
-> **PRIMARY KEY composta:** `(id, recorded_at)` — requisito de tabelas particionadas no PostgreSQL.
-> **UNIQUE composta:** `(session_id, member_id, recorded_at)` — impede duplicata na sessão (retorna HTTP 409).
+> **UNIQUE:** `(session_id, member_id)` — impede duplicata na sessão (retorna HTTP 409).
 
 ---
 
@@ -175,3 +176,26 @@ audit_logs  (BIGSERIAL PK — sem FK em organization_id — trigger bloqueia UPD
 |--------|------|------------|
 | `gen_uuid_v7()` | PL/pgSQL | Gera UUID v7 (RFC 9562) — 48-bit timestamp ms no prefixo para ordenação temporal em B-Trees |
 | `set_updated_at()` | Trigger function | Atualiza `updated_at = NOW()` automaticamente via trigger `BEFORE UPDATE` |
+
+---
+
+## Tabelas Better Auth (prefixo `auth_`)
+
+> Criadas nas migrations **0011–0013**. Usam IDs `TEXT` (UUID v7 gerado em JavaScript via `generateId` em `auth.ts`).
+> **Sem RLS** — o Better Auth gerencia acesso internamente. Sem FK em tabelas de domínio aqui.
+> ⚠️ `auth_organizations` ≠ `organizations` de domínio — são tabelas distintas. A sincronização entre elas é responsabilidade do UseCase de provisioning.
+
+| Tabela | Plugin | Propósito |
+|--------|--------|-----------|
+| `auth_users` | core | Utilizadores autenticados |
+| `auth_sessions` | core | Sessões ativas (multiSession: máx. 3) |
+| `auth_accounts` | core | Credenciais por provider (email/pass, passkey) |
+| `auth_verifications` | core | Tokens temporários (verificação e-mail, reset senha) |
+| `auth_organizations` | organization | Organizações no contexto de auth |
+| `auth_members` | organization | Membership de utilizadores em auth_organizations |
+| `auth_invitations` | organization | Convites de ingresso |
+| `auth_passkeys` | passkey | Credenciais WebAuthn/FIDO2 |
+
+> **FK `members.user_id`:** migration `0014` concretiza a FK lógica existente desde `0003`.
+> Altera `user_id` de `UUID` para `TEXT` (alinhamento com `auth_users.id`) com `ON DELETE SET NULL`.
+

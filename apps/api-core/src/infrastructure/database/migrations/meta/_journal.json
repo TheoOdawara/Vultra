@@ -71,6 +71,34 @@
       "when": 1741654308000,
       "tag": "0010_simplify_attendance_records",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1773532800000,
+      "tag": "0011_create_auth_core_tables",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1773532801000,
+      "tag": "0012_create_auth_organization_tables",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1773532802000,
+      "tag": "0013_create_auth_passkey_tables",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1773532803000,
+      "tag": "0014_add_members_user_fk",
+      "breakpoints": true
     }
   ]
 }

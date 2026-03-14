@@ -50,6 +50,11 @@
       "source": ".github/skills/redis-ai-queue",
       "sourceType": "local",
       "computedHash": "dd18d96837fa64a97b8987a27725ab144a8847fa2e8f83b51040f78b392a1f41"
+    },
+    "security-best-practices": {
+      "source": "supercent-io/skills-template",
+      "sourceType": "github",
+      "computedHash": "c5ddd50338549d28b2edd45cec131d6a231349b0671a093b3b7e3b51d4780ab8"
     }
   }
 }

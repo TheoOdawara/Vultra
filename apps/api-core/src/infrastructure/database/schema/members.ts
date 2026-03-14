@@ -1,6 +1,7 @@
 import { pgTable, uuid, text, boolean, timestamp } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { organizations } from './organizations';
+import { authUsers }     from './auth-schema';
 
 export const members = pgTable('members', {
   id: uuid('id')
@@ -12,8 +13,13 @@ export const members = pgTable('members', {
     .notNull()
     .references(() => organizations.id, { onDelete: 'restrict' }),
 
-  /** UUID do usuário no Better Auth (nullable: membro pode existir sem conta de login) */
-  userId: uuid('user_id'),
+  /**
+   * ID do utilizador no Better Auth (TEXT pois auth_users.id é TEXT).
+   * Nullable: membro pode existir sem conta de login (ex: aluno sem acesso ao portal).
+   * FK concretizada na migration 0014 — ON DELETE SET NULL (preserva histórico LGPD).
+   */
+  userId: text('user_id')
+    .references(() => authUsers.id, { onDelete: 'set null' }),
 
   fullName: text('full_name').notNull(),
   email:    text('email'),
