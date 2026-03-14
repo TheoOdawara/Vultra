@@ -1,7 +1,5 @@
 ---
-description: >-
-  Aplicar ao criar use cases, entidades de domínio, ports, repositórios, adapters
-  ou qualquer nova estrutura de pastas no api-core.
+description: "Aplicar ao criar use cases, entidades de domínio, ports, repositórios, adapters ou qualquer nova estrutura de pastas no api-core."
 ---
 
 # Arquitetura Hexagonal — API Core Vultra

@@ -2,7 +2,7 @@
   "version": 1,
   "skills": {
     "better-auth": {
-      "source": ".agents/skills/better-auth",
+      "source": ".github/skills/better-auth",
       "sourceType": "local",
       "computedHash": "f41ec94ee47207b3a6ed9bf0864b8f4bd7b206d7143936297e82d56ddb321299"
     },
@@ -12,17 +12,17 @@
       "computedHash": "9ab075b5061be2a5f299c10505667345cc1ec76e8de4120901cfd586643e776f"
     },
     "criador-skills": {
-      "source": ".agents/skills/criador-skills",
+      "source": ".github/skills/criador-skills",
       "sourceType": "local",
       "computedHash": "74773234b9c5b201f333c5deca3c163b8d562e1fc1c988edc020d0b8e3b7de57"
     },
     "drizzle-orm": {
-      "source": ".agents/skills/drizzle-orm",
+      "source": ".github/skills/drizzle-orm",
       "sourceType": "local",
       "computedHash": "5e8c77af4267589707a21d3d6dc4653f27eca06c6e0391dae450056a4cc46454"
     },
     "elysia-typebox": {
-      "source": ".agents/skills/elysia-typebox",
+      "source": ".github/skills/elysia-typebox",
       "sourceType": "local",
       "computedHash": "14e9bb617661851b508dc2e69f40340b9474c67c435ba63d53dd0a22b25edaa0"
     },
@@ -32,22 +32,22 @@
       "computedHash": "55268e69a2c766ed67e56a0db57544f60cc52dba0c7f024a974baf965e525e1b"
     },
     "error-handler": {
-      "source": ".agents/skills/error-handler",
+      "source": ".github/skills/error-handler",
       "sourceType": "local",
       "computedHash": "abf689e1150ab17f332725a16e78407c74da069a9f959c5603b6eb18ec18529b"
     },
     "hexagonal-arch": {
-      "source": ".agents/skills/hexagonal-arch",
+      "source": ".github/skills/hexagonal-arch",
       "sourceType": "local",
       "computedHash": "fcf5fc4e93ab0d2029ed148a38df3e2a4cc1e5424ae84a43b161ccde382b5a34"
     },
     "lgpd-biometrics": {
-      "source": ".agents/skills/lgpd-biometrics",
+      "source": ".github/skills/lgpd-biometrics",
       "sourceType": "local",
       "computedHash": "73f34b8d1156078201b67bf689563bc72115652c2c0329deda23ebd1b31bf55e"
     },
     "redis-ai-queue": {
-      "source": ".agents/skills/redis-ai-queue",
+      "source": ".github/skills/redis-ai-queue",
       "sourceType": "local",
       "computedHash": "dd18d96837fa64a97b8987a27725ab144a8847fa2e8f83b51040f78b392a1f41"
     }
