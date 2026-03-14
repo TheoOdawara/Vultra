@@ -1,15 +1,15 @@
 {
   "version": 1,
   "skills": {
-    "elysiajs": {
-      "source": "elysiajs/skills",
-      "sourceType": "github",
-      "computedHash": "55268e69a2c766ed67e56a0db57544f60cc52dba0c7f024a974baf965e525e1b"
-    },
     "better-auth": {
       "source": ".agents/skills/better-auth",
       "sourceType": "local",
       "computedHash": "f41ec94ee47207b3a6ed9bf0864b8f4bd7b206d7143936297e82d56ddb321299"
+    },
+    "better-auth-best-practices": {
+      "source": "better-auth/skills",
+      "sourceType": "github",
+      "computedHash": "9ab075b5061be2a5f299c10505667345cc1ec76e8de4120901cfd586643e776f"
     },
     "criador-skills": {
       "source": ".agents/skills/criador-skills",
@@ -25,6 +25,11 @@
       "source": ".agents/skills/elysia-typebox",
       "sourceType": "local",
       "computedHash": "14e9bb617661851b508dc2e69f40340b9474c67c435ba63d53dd0a22b25edaa0"
+    },
+    "elysiajs": {
+      "source": "elysiajs/skills",
+      "sourceType": "github",
+      "computedHash": "55268e69a2c766ed67e56a0db57544f60cc52dba0c7f024a974baf965e525e1b"
     },
     "error-handler": {
       "source": ".agents/skills/error-handler",
