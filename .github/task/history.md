@@ -2,6 +2,33 @@
 
 ---
 
+## [2026-03-15] Refactor — Migração para Arquitetura Hexagonal Definitiva
+> Branch: `feat(database)/full-database-schema`
+
+### Ficheiros movidos/renomeados
+- [x] `src/index.ts` → `src/main.ts` (entry point mais expressivo)
+- [x] `src/app.ts` → `src/infrastructure/server.ts` (bootstrap = infraestrutura)
+- [x] `src/infrastructure/plugins/auth.plugin.ts` → `src/adapters/http/auth.plugin.ts`
+- [x] `src/infrastructure/plugins/device-auth.plugin.ts` → `src/adapters/http/device-auth.plugin.ts`
+- [x] Pasta `src/infrastructure/plugins/` removida
+
+### Scaffolding criado
+- [x] `src/core/use-cases/.gitkeep`
+- [x] `src/adapters/repositories/.gitkeep`
+- [x] `src/adapters/queue/.gitkeep`
+
+### Documentação
+- [x] `docs/backend/adrs/ADR-004-estrutura-pastas-modularizacao.md` criado
+- [x] `docs/backend/arquitetura/hexagonal.md` atualizado (estrutura de pastas real)
+- [x] `docs/backend/README.md` — ADR-004 adicionado à tabela
+
+### Verificação
+- [x] `bun run typecheck` — zero erros ✅
+- [x] `bun --hot src/main.ts` inicia sem erros ✅
+- [x] `GET /api/auth/ok` → `{ ok: true }` ✅
+
+---
+
 ## [2026-03-14] Fase Database — Better Auth Tables + auth.ts
 > Branch: `feat(database)/full-database-schema`
 

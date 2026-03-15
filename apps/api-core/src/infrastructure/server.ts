@@ -9,8 +9,8 @@
 
 import { Elysia }    from 'elysia';
 import { cors }      from '@elysiajs/cors';
-import { auth }      from './infrastructure/auth';
-import { globalErrorHandler } from './infrastructure/error-handler';
+import { auth }      from './auth';
+import { globalErrorHandler } from './error-handler';
 
 export const app = new Elysia()
   // ── 1. Handler global de erros — DEVE ser o primeiro plugin ──────────────

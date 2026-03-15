@@ -10,30 +10,38 @@ O VULTRA adota a **Arquitetura Hexagonal (Ports & Adapters)**. O domínio é com
 
 ```
 src/
+├── main.ts                        # Entry point — app.listen(port)
+│
 ├── core/                          # Camada de Domínio (zero dependências externas)
 │   ├── domain/
-│   │   ├── entities/              # Entidades puras (Attendance, Member, Organization)
-│   │   ├── value-objects/         # FaceEmbedding (vector 512), ConfidenceScore
-│   │   └── errors/                # DomainError, AttendanceConflictError
-│   └── use-cases/                 # Orquestradores de negócio
-│       ├── RecordAttendanceUseCase.ts
-│       ├── EnrollBiometricUseCase.ts
-│       └── GenerateReportUseCase.ts
+│   │   └── errors/                # DomainError e subclasses (AttendanceConflictError, etc.)
+│   └── use-cases/                 # Orquestradores de negócio (um arquivo por aggregate)
+│       ├── attendance.use-cases.ts
+│       ├── members.use-cases.ts
+│       └── biometrics.use-cases.ts
 │
-├── adapters/                      # Ports & Adapters
-│   ├── http/
-│   │   ├── routes/                # attendance.routes.ts, members.routes.ts, devices.routes.ts
-│   │   ├── middleware/            # auth.middleware.ts, device.middleware.ts
-│   │   └── schemas/               # TypeBox schemas por rota (attendance.schema.ts)
-│   ├── repositories/              # AttendanceRepository, BiometricRepository, MemberRepository
+├── adapters/                      # Ports & Adapters (implementações concretas)
+│   ├── http/                      # Adapter de entrada (HTTP)
+│   │   ├── auth.plugin.ts         # Plugin: currentUser + currentOrg via derive()
+│   │   ├── device-auth.plugin.ts  # Plugin: X-Device-Token via derive()
+│   │   ├── attendance.routes.ts   # Rotas /v1/attendance (TypeBox + handler)
+│   │   ├── members.routes.ts      # Rotas /v1/members
+│   │   └── devices.routes.ts      # Rotas /v1/devices
+│   ├── repositories/              # Adapter de saída (PostgreSQL via Drizzle)
+│   │   ├── attendance.repo.ts
+│   │   ├── members.repo.ts
+│   │   └── devices.repo.ts
 │   └── queue/
-│       └── AIJobQueue.ts          # Publica jobs no Redis para o AI Service
+│       └── ai-job.queue.ts        # Publica jobs no Redis para o AI Service
 │
-└── infrastructure/
-    ├── server.ts                  # Bootstrap: Bun.serve() + Elysia
-    ├── database.ts                # Conexão PostgreSQL (pg + pgvector)
-    ├── redis.ts                   # Redis client
-    └── container.ts               # Container de injeção de dependências (DI manual)
+└── infrastructure/                # Configurações de servidor e dependências externas
+    ├── server.ts                  # Composição ElysiaJS: plugins → CORS → /v1 routes
+    ├── auth.ts                    # Better Auth (emailAndPassword, organization, RBAC)
+    ├── error-handler.ts           # Plugin global .onError()
+    └── database/
+        ├── client.ts              # Drizzle ORM + withTenantContext()
+        ├── migrations/            # SQL migrations numeradas
+        └── schema/                # Definições de tabela por entidade
 ```
 
 ---

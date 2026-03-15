@@ -12,7 +12,7 @@
  */
 
 import { Elysia } from 'elysia';
-import { auth }   from '../auth';
+import { auth }   from '../../infrastructure/auth';
 import { UnauthorizedError } from '../../core/domain/errors/DomainError';
 
 export const authPlugin = new Elysia({ name: 'auth-plugin' })

@@ -16,10 +16,10 @@
 
 import { Elysia }  from 'elysia';
 import { eq, and } from 'drizzle-orm';
-import { db }      from '../database/client';
-import { devices } from '../database/schema/index';
+import { db }      from '../../infrastructure/database/client';
+import { devices } from '../../infrastructure/database/schema/index';
 import { InvalidDeviceTokenError } from '../../core/domain/errors/DomainError';
-import type { Device } from '../database/schema/devices';
+import type { Device } from '../../infrastructure/database/schema/devices';
 
 export const deviceAuthPlugin = new Elysia({ name: 'device-auth-plugin' })
   .derive(
