@@ -8,36 +8,40 @@
 
 O Better Auth é inicializado em `infrastructure/auth.ts` com os seguintes plugins:
 
-| Plugin | Configuração |
-|--------|-------------|
-| `organization` | Criação de orgs restrita ao super-admin |
-| `rbac` | Permissões por role definidas na tabela abaixo |
-| `passkey` | Autenticação biométrica via WebAuthn (FIDO2) |
-| `multiSession` | Máximo de **3 sessões simultâneas** por usuário |
+| Plugin | Status | Configuração |
+|--------|--------|-------------|
+| `organization` | ✅ Ativo | Criação de orgs restrita ao super-admin (`allowUserToCreateOrganization: false`) |
+| `rbac` (via `organization`) | ✅ Ativo | Permissões por role via `createAccessControl` (ver tabela abaixo) |
+| `multiSession` | ✅ Ativo | Máximo de **3 sessões simultâneas** por utilizador |
+| `passkey` | ⚠️ Indisponível | Não incluído no better-auth 1.x — será habilitado quando upstream disponibilizar |
 
 ---
 
-## RBAC — Matriz de Permissões
+## RBAC — Matriz de Permissões (AccessControl real)
 
-| Role | `attendance:write` | `attendance:read` | `reports:read` | `members:manage` | `admin:*` |
-|------|:---:|:---:|:---:|:---:|:---:|
-| `admin` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `professor` | ✅ | ✅ | ❌ | ❌ | ❌ |
-| `rh` | ❌ | ✅ | ✅ | ❌ | ❌ |
-| `student` | ❌ | ❌ | ❌ | ❌ | ❌ |
+Definido via `createAccessControl` em `infrastructure/auth.ts`. Os recursos e ações correspondem exatamente ao que foi registrado no `ac`.
 
-A role é verificada via `ctx.currentUser.role` (injetado pelo `derive`). Rotas que exigem permissão devem usar o guard `requirePermission()` antes do handler.
+| Role | `attendance:write` | `attendance:read` | `reports:read` | `users:*` | `devices:*` | `biometrics:*` |
+|------|:---:|:---:|:---:|:---:|:---:|:---:|
+| `admin` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `professor` | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
+| `rh` | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ |
+| `student` | ❌ | ✅ (próprio) | ❌ | ❌ | ❌ | ❌ |
+
+> A camada de aplicação é responsável por restringir `student` ao próprio `member_id`. Dispositivos ESP32 não usam este sistema de roles.
+
+A role é verificada via `currentUser` (injetado pelo `derive`). Rotas que exigem permissão devem usar o guard `requirePermission()` antes do handler.
 
 ---
 
 ## Injeção de Contexto via `derive`
 
-O contexto de auth é injetado em todas as rotas protegidas via `.derive()`. O handler nunca chama `auth.api.getSession()` diretamente.
+O contexto de auth é injetado em todas as rotas protegidas via `.derive()` pelo `authPlugin`. O handler **nunca** chama `auth.api.getSession()` diretamente.
 
 ```typescript
-// infrastructure/auth.ts — padrão de derive para rotas autenticadas
+// adapters/http/auth.plugin.ts — padrão de derive para rotas autenticadas
 async ({ headers }) => {
-  const session = await auth.api.getSession({ headers });
+  const session = await auth.api.getSession({ headers: headers as Record<string, string> });
   if (!session) throw new UnauthorizedError();
   return { currentUser: session.user, currentOrg: session.session.activeOrganizationId };
 }
@@ -47,29 +51,38 @@ async ({ headers }) => {
 
 ## Autenticação de Dispositivos IoT (ESP32)
 
-Dispositivos ESP32 não usam sessões JWT. Autenticam via header `X-Device-Token`.
+Dispositivos ESP32 não usam sessões JWT. Autenticam via três headers obrigatórios.
 
-### Fluxo de validação
+### Headers obrigatórios (firmware ESP32)
 
-1. O middleware `deviceAuthMiddleware` extrai o valor do header `X-Device-Token`
-2. Busca o dispositivo na tabela `devices` pelo `organization_id` do tenant
-3. Compara o token recebido com o hash bcrypt armazenado via `Bun.password.verify()`
-4. Se válido, injeta o objeto `authenticatedDevice` via `derive` para o handler
-5. Se inválido: `401 INVALID_DEVICE_TOKEN`
+| Header | Tipo | Descrição |
+|--------|------|-----------|
+| `X-Device-Token` | string | API key em plaintext — validada contra hash bcrypt |
+| `X-Organization-Id` | UUID | UUID do tenant ao qual o device pertence |
+| `X-Device-Id` | UUID | UUID do device — garante lookup determinístico em orgs com múltiplos ESP32 |
+
+### Fluxo de validação (`deviceAuthPlugin`)
+
+1. Extrai `X-Device-Token`, `X-Organization-Id` e `X-Device-Id` dos headers
+2. Retorna `401 INVALID_DEVICE_TOKEN` se qualquer header estiver ausente
+3. Busca o device ativo na tabela `devices` por `(organizationId, id, isActive = true)`
+4. Compara o token recebido com o hash bcrypt via `Bun.password.verify()`
+5. Se válido, injeta `authenticatedDevice` no contexto via `derive`
+6. Se inválido: `401 INVALID_DEVICE_TOKEN` (sem distinguir "device não encontrado" de "token errado" — timing-safe)
 
 ### Segurança da chave
 
 - A `apiKey` plaintext é exibida **apenas uma vez** no Portal Admin no momento do cadastro
-- Somente o hash bcrypt é armazenado na coluna `api_key_hash`
+- Somente o hash bcrypt é armazenado na coluna `api_key_hash` (Bun.password bcrypt)
 - Rotação de chave gera novo hash — a chave antiga é imediatamente invalidada
 
 ---
 
 ## Proteção de Rotas
 
-| Tipo de Rota | Middleware | Contexto Injetado |
-|-------------|-----------|-----------------|
-| Rotas de usuário | `authMiddleware` | `currentUser`, `currentOrg` |
-| Rotas de dispositivo | `deviceAuthMiddleware` | `authenticatedDevice` |
+| Tipo de Rota | Plugin | Contexto Injetado |
+|-------------|--------|-----------------|
+| Rotas de utilizador | `authPlugin` | `currentUser`, `currentOrg` |
+| Rotas de dispositivo | `deviceAuthPlugin` | `authenticatedDevice` |
 | Rotas públicas | — | — |
-| Rotas admin (`/v1/admin/`) | `authMiddleware` + `requireRole('admin')` | `currentUser` |
+| Rotas admin (`/v1/admin/`) | `authPlugin` + `requireRole('admin')` | `currentUser` |

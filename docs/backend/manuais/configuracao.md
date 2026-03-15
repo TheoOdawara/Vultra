@@ -12,8 +12,10 @@ Arquivo: `.env` na raiz do serviço. Todas as variáveis abaixo são obrigatóri
 |----------|---------|-----------|
 | `DATABASE_URL` | `postgres://user:pass@postgres:5432/vultra` | Connection string PostgreSQL |
 | `REDIS_URL` | `redis://redis:6379` | Connection string Redis |
-| `BETTER_AUTH_SECRET` | `<string aleátória 64 bytes>` | Segredo para assinatura de tokens JWT |
+| `BETTER_AUTH_SECRET` | `<string aleatória 64 bytes>` | Segredo para assinatura de tokens JWT |
 | `BETTER_AUTH_URL` | `http://localhost:3000` | URL base da API (para callbacks OAuth) |
+| `BETTER_AUTH_TRUSTED_ORIGINS` | `https://admin.vultra.app,https://rh.vultra.app` | CSV de origens permitidas no CORS e `trustedOrigins` do Better Auth |
+| `PORT` | `3000` | Porta do servidor ElysiaJS (default: `3000`) |
 | `NODE_ENV` | `production` | Ativa otimizações e desativa logs verbose |
 
 > Gerar `BETTER_AUTH_SECRET` com: `openssl rand -base64 64`

@@ -58,6 +58,7 @@ Registro imutável das decisões arquiteturais e suas justificativas.
 | [adrs/ADR-001-typebox-sobre-zod.md](./adrs/ADR-001-typebox-sobre-zod.md) | Uso de TypeBox em vez de Zod/Joi |
 | [adrs/ADR-002-arcface-modelo-padrao.md](./adrs/ADR-002-arcface-modelo-padrao.md) | ArcFace como modelo padrão de embeddings |
 | [adrs/ADR-003-circuit-breaker-redis.md](./adrs/ADR-003-circuit-breaker-redis.md) | Circuit Breaker na fila Redis |
+| [adrs/ADR-004-estrutura-pastas-modularizacao.md](./adrs/ADR-004-estrutura-pastas-modularizacao.md) | Estrutura de pastas do monorepo e modularização hexagonal |
 | [adrs/ADR-004-estrutura-pastas-modularizacao.md](./adrs/ADR-004-estrutura-pastas-modularizacao.md) | Estrutura de pastas e modularização do monorepo |
 
 ---

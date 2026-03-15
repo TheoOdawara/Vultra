@@ -125,7 +125,7 @@ export const auth = betterAuth({
     }),
   ],
 
-  trustedOrigins: process.env["BETTER_AUTH_TRUSTED_ORIGINS"]?.split(",") ?? [],
+  trustedOrigins: process.env.BETTER_AUTH_TRUSTED_ORIGINS?.split(",") ?? [],
 
   advanced: {
     database: {

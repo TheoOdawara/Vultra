@@ -2,6 +2,23 @@
 
 ---
 
+## [2026-03-15] Review & Fix — Revisão de segurança da feat(database)/full-database-schema
+> Branch: `feat(database)/full-database-schema`
+
+### Bugs corrigidos
+- [x] `package.json` — scripts `dev`/`build`/`start` apontavam para `src/index.ts` inexistente → corrigido para `src/main.ts`/`dist/main.js`
+- [x] `device-auth.plugin.ts` — lookup de device sem `deviceId` era não-determinístico em orgs com múltiplos ESP32 → adicionado header `X-Device-Id` + query por `(orgId, deviceId, isActive)`
+- [x] `.gitignore` — cobria apenas `apps/api-core/node_modules` → expandido para `**/node_modules`
+
+### Documentação atualizada
+- [x] `docs/backend/README.md` — ADR-004 adicionado na tabela de ADRs
+- [x] `docs/backend/manuais/autenticacao.md` — passkey marcado como indisponível; RBAC corrigido (removidos `members:manage`/`admin:*`); fluxo IoT atualizado com `X-Device-Id`; nomenclatura `authPlugin`/`deviceAuthPlugin` corrigida
+- [x] `docs/backend/manuais/configuracao.md` — variáveis `BETTER_AUTH_TRUSTED_ORIGINS` e `PORT` adicionadas
+- [x] `docs/backend/arquitetura/hexagonal.md` — bootstrap order corrigido (CORS + `mount(auth.handler)` presentes)
+- [x] `docs/database/manuais/migrations.md` — migrations 0010–0014 adicionadas à lista
+
+---
+
 ## [2026-03-15] Refactor — Migração para Arquitetura Hexagonal Definitiva
 > Branch: `feat(database)/full-database-schema`
 

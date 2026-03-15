@@ -16,7 +16,12 @@ migrations/
 ├── 0006_create_attendance_sessions.sql
 ├── 0007_create_attendance_records.sql
 ├── 0008_create_audit_logs.sql
-└── 0009_create_hnsw_index.sql
+├── 0009_create_hnsw_index.sql
+├── 0010_simplify_attendance_records.sql
+├── 0011_create_auth_core_tables.sql
+├── 0012_create_auth_organization_tables.sql
+├── 0013_create_auth_passkey_tables.sql
+└── 0014_add_members_user_fk.sql
 ```
 
 - Numeração **sequencial com 4 dígitos** (`0001`, `0002`, ...) — suporta até 9999 migrations sem renomear arquivos existentes

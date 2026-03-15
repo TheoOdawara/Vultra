@@ -1,5 +1,5 @@
 
-/apps/api-core/node_modules
+**/node_modules
 /infra/.env
 /apps/api-core/.env
 /apps/api-core/bun.lock

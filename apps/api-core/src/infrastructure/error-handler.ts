@@ -15,7 +15,7 @@
 import { Elysia } from "elysia";
 import { DomainError } from "../core/domain/errors/DomainError";
 
-const isProd = process.env["NODE_ENV"] === "production";
+const isProd = process.env.NODE_ENV === "production";
 
 export const globalErrorHandler = new Elysia({ name: "global-error-handler" }).onError(
   ({ error, code, set }) => {
@@ -46,6 +46,7 @@ export const globalErrorHandler = new Elysia({ name: "global-error-handler" }).o
     // ── 4. Fallback genérico (500) — nunca expor stack em produção ─────────
     set.status = 500;
     if (!isProd) {
+      // biome-ignore lint/suspicious/noConsole: log de debug intencional apenas em desenvolvimento
       console.error("[VULTRA] Erro não tratado:", error);
     }
     return {

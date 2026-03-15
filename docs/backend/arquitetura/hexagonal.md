@@ -63,11 +63,18 @@ src/
 
 ## Bootstrap do Servidor
 
-O ponto de entrada em `infrastructure/server.ts` usa `Bun.serve()` com `fetch` delegado ao app ElysiaJS. A ordem de montagem dos plugins é obrigatória:
+O ponto de entrada em `infrastructure/server.ts` compõe o app ElysiaJS. A ordem de montagem dos plugins é **obrigatória e inviolável**:
 
 ```
-globalErrorHandler → authMiddleware → [rotas de domínio com prefixo /v1]
+globalErrorHandler → CORS → mount(auth.handler) → grupo /v1 [rotas de domínio]
 ```
+
+| Ordem | Plugin/Bloco | Motivo |
+|-------|-------------|--------|
+| 1 | `globalErrorHandler` | Captura erros de todos os plugins seguintes |
+| 2 | `cors()` | Deve preceder auth para responder OPTIONS corretamente |
+| 3 | `mount(auth.handler)` | Better Auth em `/api/auth/*` — sem prefixo adicional |
+| 4 | `.group('/v1', ...)` | Todas as rotas de domínio com prefixo versionado |
 
 Todos os grupos de rotas recebem o prefixo `/v1` definido no nível do app.
 

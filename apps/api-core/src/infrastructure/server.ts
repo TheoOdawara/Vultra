@@ -19,7 +19,7 @@ export const app = new Elysia()
   // ── 2. CORS — origens confiáveis via env var ──────────────────────────────
   .use(
     cors({
-      origin: process.env["BETTER_AUTH_TRUSTED_ORIGINS"]?.split(",") ?? [],
+      origin: process.env.BETTER_AUTH_TRUSTED_ORIGINS?.split(",") ?? [],
       methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
       allowedHeaders: ["Content-Type", "Authorization", "X-Device-Token", "X-Organization-Id"],
       credentials: true,

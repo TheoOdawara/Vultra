@@ -5,11 +5,16 @@
  * `devices`, garantindo isolamento por `organizationId` do tenant.
  *
  * Fluxo:
- *  1. Extrai `X-Device-Token` e `X-Organization-Id` dos headers
- *  2. Busca o device ativo na tabela `devices` pelo organizationId
+ *  1. Extrai `X-Device-Token`, `X-Organization-Id` e `X-Device-Id` dos headers
+ *  2. Busca o device ativo na tabela `devices` pelo organizationId + deviceId
  *  3. Valida o token via `Bun.password.verify()` contra `api_key_hash`
  *  4. Injeta `authenticatedDevice` no contexto
  *  5. Se inválido → 401 INVALID_DEVICE_TOKEN
+ *
+ * Headers obrigatórios (firmware ESP32):
+ *  - X-Device-Token    → API key em plaintext (validada contra hash bcrypt)
+ *  - X-Organization-Id → UUID do tenant
+ *  - X-Device-Id       → UUID do device (evita ambiguidade em orgs com múltiplos ESP32)
  *
  * Referência: docs/backend/manuais/autenticacao.md
  */
@@ -26,13 +31,20 @@ export const deviceAuthPlugin = new Elysia({ name: "device-auth-plugin" }).deriv
   async ({ headers }): Promise<{ authenticatedDevice: Device }> => {
     const rawToken = headers["x-device-token"];
     const rawOrgId = headers["x-organization-id"];
+    const rawDeviceId = headers["x-device-id"];
 
-    if (!rawToken || !rawOrgId) throw new InvalidDeviceTokenError();
+    if (!rawToken || !rawOrgId || !rawDeviceId) throw new InvalidDeviceTokenError();
 
     const [device] = await db
       .select()
       .from(devices)
-      .where(and(eq(devices.organizationId, rawOrgId), eq(devices.isActive, true)))
+      .where(
+        and(
+          eq(devices.organizationId, rawOrgId),
+          eq(devices.id, rawDeviceId),
+          eq(devices.isActive, true)
+        )
+      )
       .limit(1);
 
     if (!device) throw new InvalidDeviceTokenError();

@@ -2,14 +2,21 @@
  * VULTRA — API Core — Entry point
  *
  * Inicia o servidor ElysiaJS via Bun.
- * Porta configurável via env var PORT (default: 3000).
+ * Porta configurável via env var PORT (obrigatória).
  */
 
-import { app } from "./infrastructure/server";
+import type { Server } from "bun";
+import { app } from "./infrastructure/server.ts";
 
-const port = Number(process.env["PORT"] ?? 3000);
+if (!process.env.PORT) {
+  throw new Error("[VULTRA] PORT env var não está definida. Verifique o .env");
+}
 
-app.listen(port, () => {
-  console.log(`[VULTRA] API Core rodando em http://localhost:${port}`);
-  console.log(`[VULTRA] Auth disponível em http://localhost:${port}/api/auth/ok`);
+const port = Number(process.env.PORT);
+
+app.listen(port, (server: Server<undefined>) => {
+  // biome-ignore lint/suspicious/noConsole: logs de startup intencionais
+  console.log(`[VULTRA] API Core rodando em http://${server.hostname}:${server.port}`);
+  // biome-ignore lint/suspicious/noConsole: logs de startup intencionais
+  console.log(`[VULTRA] Auth disponível em http://${server.hostname}:${server.port}/api/auth/ok`);
 });
