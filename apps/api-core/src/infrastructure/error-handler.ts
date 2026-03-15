@@ -12,43 +12,44 @@
  * Referência: docs/backend/manuais/error-handler.md
  */
 
-import { Elysia } from 'elysia';
-import { DomainError } from '../core/domain/errors/DomainError';
+import { Elysia } from "elysia";
+import { DomainError } from "../core/domain/errors/DomainError";
 
-const isProd = process.env['NODE_ENV'] === 'production';
+const isProd = process.env["NODE_ENV"] === "production";
 
-export const globalErrorHandler = new Elysia({ name: 'global-error-handler' })
-  .onError(({ error, code, set }) => {
+export const globalErrorHandler = new Elysia({ name: "global-error-handler" }).onError(
+  ({ error, code, set }) => {
     // ── 1. Erros de domínio conhecidos ─────────────────────────────────────
     if (error instanceof DomainError) {
       set.status = error.httpStatus;
       return {
-        error:   error.errorCode,
+        error: error.errorCode,
         message: error.message,
       };
     }
 
     // ── 2. Erros de validação TypeBox (400) ────────────────────────────────
-    if (code === 'VALIDATION') {
+    if (code === "VALIDATION") {
       set.status = 400;
       return {
-        error:   'VALIDATION_ERROR',
-        message: isProd ? 'Dados de entrada inválidos.' : error.message,
+        error: "VALIDATION_ERROR",
+        message: isProd ? "Dados de entrada inválidos." : error.message,
       };
     }
 
     // ── 3. NOT_FOUND de rota (404) ─────────────────────────────────────────
-    if (code === 'NOT_FOUND') {
+    if (code === "NOT_FOUND") {
       set.status = 404;
-      return { error: 'NOT_FOUND' };
+      return { error: "NOT_FOUND" };
     }
 
     // ── 4. Fallback genérico (500) — nunca expor stack em produção ─────────
     set.status = 500;
     if (!isProd) {
-      console.error('[VULTRA] Erro não tratado:', error);
+      console.error("[VULTRA] Erro não tratado:", error);
     }
     return {
-      error: 'INTERNAL_SERVER_ERROR',
+      error: "INTERNAL_SERVER_ERROR",
     };
-  });
+  }
+);

@@ -5,9 +5,9 @@
  * Porta configurável via env var PORT (default: 3000).
  */
 
-import { app } from './infrastructure/server';
+import { app } from "./infrastructure/server";
 
-const port = Number(process.env['PORT'] ?? 3000);
+const port = Number(process.env["PORT"] ?? 3000);
 
 app.listen(port, () => {
   console.log(`[VULTRA] API Core rodando em http://localhost:${port}`);

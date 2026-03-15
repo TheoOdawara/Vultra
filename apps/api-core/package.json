@@ -4,25 +4,29 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev":          "bun run --hot src/index.ts",
-    "build":        "bun build src/index.ts --outdir dist --target bun",
-    "start":        "bun dist/index.js",
-    "typecheck":    "tsc --noEmit",
-    "db:migrate":   "drizzle-kit migrate",
-    "db:studio":    "drizzle-kit studio"
+    "dev": "bun run --hot src/index.ts",
+    "build": "bun build src/index.ts --outdir dist --target bun",
+    "start": "bun dist/index.js",
+    "typecheck": "tsc --noEmit",
+    "lint": "biome lint ./src",
+    "format": "biome format --write ./src",
+    "check": "biome check --write ./src",
+    "db:migrate": "drizzle-kit migrate",
+    "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
-    "drizzle-orm":        "^0.36.0",
-    "elysia":             "^1.2.0",
-    "better-auth":        "^1.2.0",
-    "postgres":           "^3.4.5",
-    "@elysiajs/bearer":   "^1.2.0",
-    "@elysiajs/cors":     "^1.2.0",
-    "@sinclair/typebox":  "^0.34.0"
+    "drizzle-orm": "^0.36.0",
+    "elysia": "^1.2.0",
+    "better-auth": "^1.2.0",
+    "postgres": "^3.4.5",
+    "@elysiajs/bearer": "^1.2.0",
+    "@elysiajs/cors": "^1.2.0",
+    "@sinclair/typebox": "^0.34.0"
   },
   "devDependencies": {
-    "drizzle-kit":   "^0.28.0",
-    "bun-types":     "latest",
-    "typescript":    "^5.7.0"
+    "@biomejs/biome": "^2.4.7",
+    "bun-types": "latest",
+    "drizzle-kit": "^0.28.0",
+    "typescript": "^5.7.0"
   }
 }

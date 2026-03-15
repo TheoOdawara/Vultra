@@ -1,8 +1,8 @@
-import { pgTable, uuid, text, real, boolean, timestamp } from 'drizzle-orm/pg-core';
-import { sql } from 'drizzle-orm';
-import { organizations } from './organizations';
-import { members } from './members';
-import { vector } from './_types';
+import { sql } from "drizzle-orm";
+import { boolean, pgTable, real, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { vector } from "./_types";
+import { members } from "./members";
+import { organizations } from "./organizations";
 
 /**
  * Perfis biométricos — LGPD Art. 11 (dados de categoria especial)
@@ -16,39 +16,36 @@ import { vector } from './_types';
  *  - Partial UNIQUE em (member_id, model_version) WHERE is_active = TRUE → migration 0005
  *  - CHECK constraint em quality_score BETWEEN 0 AND 1 → migration 0005
  */
-export const biometricProfiles = pgTable('biometric_profiles', {
-  id: uuid('id')
-    .notNull()
-    .default(sql`gen_uuid_v7()`)
-    .primaryKey(),
+export const biometricProfiles = pgTable("biometric_profiles", {
+  id: uuid("id").notNull().default(sql`gen_uuid_v7()`).primaryKey(),
 
-  organizationId: uuid('organization_id')
+  organizationId: uuid("organization_id")
     .notNull()
-    .references(() => organizations.id, { onDelete: 'restrict' }),
+    .references(() => organizations.id, { onDelete: "restrict" }),
 
-  memberId: uuid('member_id')
+  memberId: uuid("member_id")
     .notNull()
-    .references(() => members.id, { onDelete: 'restrict' }),
+    .references(() => members.id, { onDelete: "restrict" }),
 
   /** Embedding facial 512-dim (ArcFace). Somente vetores, proibido imagem (LGPD). */
-  faceEmbedding: vector('face_embedding', { dimensions: 512 }).notNull(),
+  faceEmbedding: vector("face_embedding", { dimensions: 512 }).notNull(),
 
   /**
    * Versão do modelo que gerou o vetor.
    * OBRIGATÓRIO incluir `AND model_version = $currentModel` em queries de reconhecimento.
    * Consulte: docs/database/arquitetura/versionamento-embeddings.md
    */
-  modelVersion: text('model_version').notNull().default('ArcFace-v1'),
+  modelVersion: text("model_version").notNull().default("ArcFace-v1"),
 
   /** Score de qualidade do enroll [0, 1]. Mínimo recomendado: 0.7. */
-  qualityScore: real('quality_score').notNull(),
+  qualityScore: real("quality_score").notNull(),
 
   /** FALSE = desativado por migração de modelo ou revogação LGPD */
-  isActive: boolean('is_active').notNull().default(true),
+  isActive: boolean("is_active").notNull().default(true),
 
-  enrolledAt:    timestamp('enrolled_at',     { withTimezone: true }).notNull().defaultNow(),
-  lastMatchedAt: timestamp('last_matched_at', { withTimezone: true }),
+  enrolledAt: timestamp("enrolled_at", { withTimezone: true }).notNull().defaultNow(),
+  lastMatchedAt: timestamp("last_matched_at", { withTimezone: true }),
 });
 
-export type BiometricProfile    = typeof biometricProfiles.$inferSelect;
+export type BiometricProfile = typeof biometricProfiles.$inferSelect;
 export type NewBiometricProfile = typeof biometricProfiles.$inferInsert;

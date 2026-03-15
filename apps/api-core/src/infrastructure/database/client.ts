@@ -16,22 +16,22 @@
  * Referência: docs/database/arquitetura/rls.md
  */
 
-import { drizzle }   from 'drizzle-orm/postgres-js';
-import postgres      from 'postgres';
-import { sql }       from 'drizzle-orm';
-import * as schema   from './schema';
+import { sql } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
+import * as schema from "./schema";
 
-const DATABASE_URL = process.env['DATABASE_URL'];
+const DATABASE_URL = process.env["DATABASE_URL"];
 
 if (!DATABASE_URL) {
-  throw new Error('[database/client] DATABASE_URL não está definida. Verifique o .env');
+  throw new Error("[database/client] DATABASE_URL não está definida. Verifique o .env");
 }
 
 const queryClient = postgres(DATABASE_URL, {
-  max:             20,   // Tamanho do pool de conexões
-  idle_timeout:    30,   // Segundos até fechar conexão ociosa
-  connect_timeout: 10,   // Timeout de conexão inicial
-  prepare:         false, // Desabilita prepared statements para compatibilidade com RLS set_config
+  max: 20, // Tamanho do pool de conexões
+  idle_timeout: 30, // Segundos até fechar conexão ociosa
+  connect_timeout: 10, // Timeout de conexão inicial
+  prepare: false, // Desabilita prepared statements para compatibilidade com RLS set_config
 });
 
 export const db = drizzle(queryClient, { schema });
@@ -62,12 +62,10 @@ export type Database = typeof db;
  */
 export async function withTenantContext<T>(
   organizationId: string,
-  fn: (db: Database) => Promise<T>,
+  fn: (db: Database) => Promise<T>
 ): Promise<T> {
   return db.transaction(async (tx) => {
-    await tx.execute(
-      sql`SELECT set_config('app.current_org_id', ${organizationId}, TRUE)`,
-    );
+    await tx.execute(sql`SELECT set_config('app.current_org_id', ${organizationId}, TRUE)`);
 
     return fn(tx as unknown as Database);
   });
@@ -82,15 +80,11 @@ export async function withTenantContext<T>(
 export async function withFaceSearchContext<T>(
   organizationId: string,
   efSearch: number = 80,
-  fn: (db: Database) => Promise<T>,
+  fn: (db: Database) => Promise<T>
 ): Promise<T> {
   return db.transaction(async (tx) => {
-    await tx.execute(
-      sql`SELECT set_config('app.current_org_id', ${organizationId}, TRUE)`,
-    );
-    await tx.execute(
-      sql`SET LOCAL hnsw.ef_search = ${efSearch}`,
-    );
+    await tx.execute(sql`SELECT set_config('app.current_org_id', ${organizationId}, TRUE)`);
+    await tx.execute(sql`SET LOCAL hnsw.ef_search = ${efSearch}`);
 
     return fn(tx as unknown as Database);
   });

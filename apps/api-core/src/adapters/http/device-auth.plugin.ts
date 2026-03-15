@@ -14,38 +14,32 @@
  * Referência: docs/backend/manuais/autenticacao.md
  */
 
-import { Elysia }  from 'elysia';
-import { eq, and } from 'drizzle-orm';
-import { db }      from '../../infrastructure/database/client';
-import { devices } from '../../infrastructure/database/schema/index';
-import { InvalidDeviceTokenError } from '../../core/domain/errors/DomainError';
-import type { Device } from '../../infrastructure/database/schema/devices';
+import { and, eq } from "drizzle-orm";
+import { Elysia } from "elysia";
+import { InvalidDeviceTokenError } from "../../core/domain/errors/DomainError";
+import { db } from "../../infrastructure/database/client";
+import type { Device } from "../../infrastructure/database/schema/devices";
+import { devices } from "../../infrastructure/database/schema/index";
 
-export const deviceAuthPlugin = new Elysia({ name: 'device-auth-plugin' })
-  .derive(
-    { as: 'scoped' },
-    async ({ headers }): Promise<{ authenticatedDevice: Device }> => {
-      const rawToken  = headers['x-device-token'];
-      const rawOrgId  = headers['x-organization-id'];
+export const deviceAuthPlugin = new Elysia({ name: "device-auth-plugin" }).derive(
+  { as: "scoped" },
+  async ({ headers }): Promise<{ authenticatedDevice: Device }> => {
+    const rawToken = headers["x-device-token"];
+    const rawOrgId = headers["x-organization-id"];
 
-      if (!rawToken || !rawOrgId) throw new InvalidDeviceTokenError();
+    if (!rawToken || !rawOrgId) throw new InvalidDeviceTokenError();
 
-      const [device] = await db
-        .select()
-        .from(devices)
-        .where(
-          and(
-            eq(devices.organizationId, rawOrgId),
-            eq(devices.isActive, true)
-          )
-        )
-        .limit(1);
+    const [device] = await db
+      .select()
+      .from(devices)
+      .where(and(eq(devices.organizationId, rawOrgId), eq(devices.isActive, true)))
+      .limit(1);
 
-      if (!device) throw new InvalidDeviceTokenError();
+    if (!device) throw new InvalidDeviceTokenError();
 
-      const isValid = await Bun.password.verify(rawToken, device.apiKeyHash);
-      if (!isValid) throw new InvalidDeviceTokenError();
+    const isValid = await Bun.password.verify(rawToken, device.apiKeyHash);
+    if (!isValid) throw new InvalidDeviceTokenError();
 
-      return { authenticatedDevice: device };
-    }
-  );
+    return { authenticatedDevice: device };
+  }
+);

@@ -5,7 +5,7 @@
  * Este módulo define ambos via `customType` com serialização correta.
  */
 
-import { customType } from 'drizzle-orm/pg-core';
+import { customType } from "drizzle-orm/pg-core";
 
 // ---------------------------------------------------------------------------
 // vector(N) — pgvector
@@ -22,11 +22,11 @@ export const vector = customType<{
   },
   /** Serializa number[] → "[0.1,0.2,...]" para envio ao driver PostgreSQL */
   toDriver(value: number[]): string {
-    return `[${value.join(',')}]`;
+    return `[${value.join(",")}]`;
   },
   /** Deserializa "[0.1,0.2,...]" recebido do driver → number[] */
   fromDriver(value: string): number[] {
-    return value.slice(1, -1).split(',').map(Number);
+    return value.slice(1, -1).split(",").map(Number);
   },
 });
 
@@ -36,6 +36,6 @@ export const vector = customType<{
 // ---------------------------------------------------------------------------
 export const inet = customType<{ data: string; driverData: string }>({
   dataType() {
-    return 'inet';
+    return "inet";
   },
 });

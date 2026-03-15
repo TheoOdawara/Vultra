@@ -21,57 +21,56 @@
  * Referência: docs/backend/manuais/autenticacao.md
  */
 
-import { betterAuth }          from 'better-auth';
-import { drizzleAdapter }      from 'better-auth/adapters/drizzle';
-import { organization }        from 'better-auth/plugins';
-import { multiSession }        from 'better-auth/plugins';
-import { createAccessControl } from 'better-auth/plugins/access';
+import { betterAuth } from "better-auth";
+import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { multiSession, organization } from "better-auth/plugins";
+import { createAccessControl } from "better-auth/plugins/access";
 // NOTE: passkey plugin não está disponível no better-auth 1.5.5.
 
-import { db } from './database/client';
+import { db } from "./database/client";
 import {
-  authUsers,
-  authSessions,
   authAccounts,
-  authVerifications,
-  authOrganizations,
-  authMembers,
   authInvitations,
-} from './database/schema/index';
+  authMembers,
+  authOrganizations,
+  authSessions,
+  authUsers,
+  authVerifications,
+} from "./database/schema/index";
 
 // ─────────────────────────────────────────────
 // RBAC — AccessControl matrix
 // Consulte docs/backend/manuais/autenticacao.md para matriz completa.
 // ─────────────────────────────────────────────
 const ac = createAccessControl({
-  attendance: ['write', 'read']  as const,
-  reports:    ['read']           as const,
-  users:      ['create', 'update', 'delete', 'read'] as const,
-  devices:    ['create', 'update', 'delete', 'read'] as const,
-  biometrics: ['enroll', 'delete', 'read']           as const,
+  attendance: ["write", "read"] as const,
+  reports: ["read"] as const,
+  users: ["create", "update", "delete", "read"] as const,
+  devices: ["create", "update", "delete", "read"] as const,
+  biometrics: ["enroll", "delete", "read"] as const,
 });
 
 const adminRole = ac.newRole({
-  attendance: ['write', 'read'],
-  reports:    ['read'],
-  users:      ['create', 'update', 'delete', 'read'],
-  devices:    ['create', 'update', 'delete', 'read'],
-  biometrics: ['enroll', 'delete', 'read'],
+  attendance: ["write", "read"],
+  reports: ["read"],
+  users: ["create", "update", "delete", "read"],
+  devices: ["create", "update", "delete", "read"],
+  biometrics: ["enroll", "delete", "read"],
 });
 
 const professorRole = ac.newRole({
-  attendance: ['write', 'read'],
+  attendance: ["write", "read"],
 });
 
 const rhRole = ac.newRole({
-  attendance: ['read'],
-  reports:    ['read'],
+  attendance: ["read"],
+  reports: ["read"],
 });
 
 // student: acesso de leitura às próprias presenças (a camada de aplicação
 // restringe ao próprio membro_id). Dispositivos ESP32 não usam este role.
 const studentRole = ac.newRole({
-  attendance: ['read'],
+  attendance: ["read"],
 });
 
 // ─────────────────────────────────────────────
@@ -84,19 +83,19 @@ export const auth = betterAuth({
    */
 
   database: drizzleAdapter(db, {
-    provider: 'pg',
+    provider: "pg",
     /**
      * Mapeia os nomes de modelo Better Auth para as tabelas Drizzle `auth_*`.
      * Os nomes das chaves devem corresponder exatamente ao esperado pelo Better Auth.
      */
     schema: {
-      user:         authUsers,
-      session:      authSessions,
-      account:      authAccounts,
+      user: authUsers,
+      session: authSessions,
+      account: authAccounts,
       verification: authVerifications,
       organization: authOrganizations,
-      member:       authMembers,
-      invitation:   authInvitations,
+      member: authMembers,
+      invitation: authInvitations,
     },
   }),
 
@@ -108,10 +107,10 @@ export const auth = betterAuth({
     organization({
       ac,
       roles: {
-        admin:     adminRole,
+        admin: adminRole,
         professor: professorRole,
-        rh:        rhRole,
-        student:   studentRole,
+        rh: rhRole,
+        student: studentRole,
       },
       /**
        * Apenas super-admins provisionam organizations via endpoint dedicado,
@@ -126,7 +125,7 @@ export const auth = betterAuth({
     }),
   ],
 
-  trustedOrigins: process.env['BETTER_AUTH_TRUSTED_ORIGINS']?.split(',') ?? [],
+  trustedOrigins: process.env["BETTER_AUTH_TRUSTED_ORIGINS"]?.split(",") ?? [],
 
   advanced: {
     database: {
@@ -134,7 +133,7 @@ export const auth = betterAuth({
        * Better Auth gera IDs como UUID (v4) nativamente.
        * Os IDs do domínio continuam UUID v7 via gen_uuid_v7() no PostgreSQL.
        */
-      generateId: 'uuid',
+      generateId: "uuid",
     },
   },
 });

@@ -11,23 +11,27 @@
  * Referência: docs/backend/manuais/autenticacao.md
  */
 
-import { Elysia } from 'elysia';
-import { auth }   from '../../infrastructure/auth';
-import { UnauthorizedError } from '../../core/domain/errors/DomainError';
+import { Elysia } from "elysia";
+import { UnauthorizedError } from "../../core/domain/errors/DomainError";
+import { auth } from "../../infrastructure/auth";
 
-export const authPlugin = new Elysia({ name: 'auth-plugin' })
-  .derive(
-    { as: 'scoped' },
-    async ({ headers }): Promise<{ currentUser: typeof auth.$Infer.Session.user; currentOrg: string | undefined | null }> => {
-      // Converte os headers do Elysia (Record<string, string>) para o formato
-      // esperado pelo Better Auth (Headers ou Record<string, string>).
-      const session = await auth.api.getSession({ headers: headers as Record<string, string> });
+export const authPlugin = new Elysia({ name: "auth-plugin" }).derive(
+  { as: "scoped" },
+  async ({
+    headers,
+  }): Promise<{
+    currentUser: typeof auth.$Infer.Session.user;
+    currentOrg: string | undefined | null;
+  }> => {
+    // Converte os headers do Elysia (Record<string, string>) para o formato
+    // esperado pelo Better Auth (Headers ou Record<string, string>).
+    const session = await auth.api.getSession({ headers: headers as Record<string, string> });
 
-      if (!session) throw new UnauthorizedError();
+    if (!session) throw new UnauthorizedError();
 
-      return {
-        currentUser: session.user,
-        currentOrg:  session.session.activeOrganizationId,
-      };
-    }
-  );
+    return {
+      currentUser: session.user,
+      currentOrg: session.session.activeOrganizationId,
+    };
+  }
+);
