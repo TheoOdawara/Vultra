@@ -78,11 +78,11 @@ Se quiser usar o `db.query.*` do Drizzle nas tabelas do Better Auth, gere o sche
 
 Após configurar o auth, criar a estrutura base da API:
 
-- [ ] `src/main.ts` — ponto de entrada com `Bun.serve` + instância do ElysiaJS
-- [ ] `src/app.ts` — composição dos plugins e rotas
-- [ ] `src/infrastructure/plugins/auth.plugin.ts` — wrappers de `derive` para `currentUser` / `currentOrg`
-- [ ] `src/infrastructure/plugins/device-auth.plugin.ts` — middleware `X-Device-Token`
-- [ ] `src/infrastructure/error-handler.ts` — handler global de erros (ver [docs/backend/manuais/error-handler.md](docs/backend/manuais/error-handler.md))
+- [x] `src/main.ts` — ponto de entrada com `Bun.serve` + instância do ElysiaJS (completo)
+- [x] `src/infrastructure/server.ts` — composição dos plugins e rotas (refatorado)
+- [x] `src/adapters/http/auth.plugin.ts` — wrappers de `derive` para `currentUser` / `currentOrg` (refatorado)
+- [x] `src/adapters/http/device-auth.plugin.ts` — middleware `X-Device-Token` (refatorado)
+- [x] `src/infrastructure/error-handler.ts` — handler global de erros (ver [docs/backend/manuais/error-handler.md](docs/backend/manuais/error-handler.md))
 
 ---
 
