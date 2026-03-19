@@ -37,6 +37,19 @@
 
 ---
 
+## Tabelas Better Auth
+
+> Consulte [arquitetura/schema.md](./arquitetura/schema.md#tabelas-better-auth-prefixo-auth_) para descrição completa.
+
+Criadas nas migrations **0011–0013** com prefixo `auth_` (evita colisão com tabelas de domínio):
+- **Core:** `auth_users`, `auth_sessions`, `auth_accounts`, `auth_verifications`
+- **Plugin Organization:** `auth_organizations`, `auth_members`, `auth_invitations`
+- **Plugin Passkey:** `auth_passkeys`
+
+A migration **0014** concretiza a FK entre `members.user_id → auth_users.id`.
+
+---
+
 ## Regras de Ouro
 
 1. **Multitenancy inviolável** — todo `SELECT/INSERT/UPDATE/DELETE` filtra por `organization_id`.

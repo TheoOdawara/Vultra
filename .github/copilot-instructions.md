@@ -39,8 +39,42 @@ O Vultra é um ecossistema SaaS Multitenant para gestão de presenças via recon
 - **Sugestões de Código:** Sempre incluir o bloco de validação TypeBox `t.Object()` nas rotas.
 - **Ambiente:** Considerar sempre o ambiente de desenvolvimento Windows 11 e deploy via Docker.
 
+## � 7. PROTOCOLO OBRIGATÓRIO DE RESPOSTA (IMUTÁVEL — aplicar em TODA conversa, sessão compactada ou não)
+
+Este protocolo é **inegociável** e deve ser seguido em **todas** as interações, sem exceção:
+
+### Passo 1 — Consulta de Contexto (ANTES de qualquer ação)
+Consultar obrigatoriamente, na seguinte ordem:
+1. **Skills relevantes** para a tarefa solicitada (verificar lista de skills disponíveis).
+2. **Documentações relevantes** em `/docs` (backend, database, frontend conforme o escopo).
+3. **`copilot-instructions.md`** — indispensável, sempre consultado.
+
+### Passo 2 — Plano de Ação (ANTES de executar)
+- Descrever **detalhadamente** o que será feito: arquivos a criar/editar, padrões a seguir, decisões técnicas.
+- **Aguardar aprovação explícita** do utilizador antes de prosseguir.
+- Não iniciar nenhuma implementação sem confirmação.
+
+### Passo 3 — Relatório de Execução (APÓS aprovação e conclusão)
+Ao terminar, gerar um relatório com:
+- ✅ O que foi feito (arquivos criados/editados, funcionalidades implementadas).
+- ⚠️ Decisões técnicas tomadas e justificativas.
+- 📋 Sugestões de próximos passos ou atualizações de `/docs` necessárias.
+
+### Passo 4 — Relatório de Conhecimento Utilizado
+Listar as fontes de conhecimento consultadas:
+- Skills utilizadas (nome + trecho relevante aplicado).
+- Documentos de `/docs` lidos (caminho + motivo).
+- ADRs ou guias que fundamentaram as decisões.
+
+### Passo 5 - Atualizar documentação
+Atualizar toda documentação que deve ser atualizada: 
+- Docs tem um index que aponta para toda documentação
+
+---
+
 ## 🚨 CHECKLIST DE RESPOSTA (Obrigatório para o Copilot)
 1. Verificaste a pasta `/docs` antes de responder?
 2. A solução respeita o isolamento de `organizationId`?
 3. O código utiliza TypeBox em vez de outras libs de validação?
 4. Se for uma nova funcionalidade, incluíste a sugestão de atualizar os ficheiros em `/docs`?
+5. Seguiste os 4 passos do Protocolo Obrigatório de Resposta (Seção 7)?

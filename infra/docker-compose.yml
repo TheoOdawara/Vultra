@@ -1,0 +1,71 @@
+# =============================================================================
+# VULTRA — Docker Compose (Desenvolvimento Local)
+# =============================================================================
+# Stack: PostgreSQL 16 + pgvector 0.7 | Redis 7
+
+name: vultra-dev
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: vultra-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER:     ${POSTGRES_USER:-vultra}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB:       ${POSTGRES_DB:-vultra_db}
+      PGDATA:            /var/lib/postgresql/data/pgdata
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-vultra} -d ${POSTGRES_DB:-vultra_dev}"]
+      interval: 10s
+      timeout:  5s
+      retries:  5
+      start_period: 10s
+    networks:
+      - vultra-net
+
+  # ---------------------------------------------------------------------------
+  # Redis 7 — Fila de mensagens entre api-core e ai-service
+  # Referência: docs/backend/arquitetura/fila-redis.md
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: vultra-redis
+    restart: unless-stopped
+    command: >
+      redis-server
+      --requirepass ${REDIS_PASSWORD}
+      --maxmemory   256mb
+      --maxmemory-policy allkeys-lru
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout:  5s
+      retries:  5
+      start_period: 5s
+    networks:
+      - vultra-net
+
+# =============================================================================
+# Volumes nomeados — persistência local entre restarts
+# =============================================================================
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+# =============================================================================
+# Rede interna
+# =============================================================================
+networks:
+  vultra-net:
+    driver: bridge
