@@ -2,7 +2,7 @@
 
 > **← [Voltar ao Backend](../README.md)**
 
-A comunicação entre a **API Core (Bun)** e o **AI Service (Python)** é feita exclusivamente via filas Redis. Não há chamadas HTTP diretas entre os serviços.
+A comunicação entre a **API Core (Bun)** e o **AI Service (Python)** é, em produção, feita via filas Redis para garantir escalabilidade e resiliência. Para PoC locais (ex.: câmera do computador) pode ser utilizada comunicação HTTP síncrona direta; no entanto, a arquitetura de produção deve privilegiar filas Redis e Circuit Breaker.
 
 ---
 
