@@ -1,7 +1,13 @@
 ---
+name: elysia-typebox
 description: >-
-  Aplicar ao criar ou editar rotas ElysiaJS, schemas TypeBox, middleware ou
-  qualquer handler HTTP no api-core do Vultra.
+  Aplicar ao criar ou editar qualquer handler HTTP no api-core do Vultra: rotas
+  ElysiaJS (*.routes.ts), schemas TypeBox (t.Object(), t.String(), t.Number()…),
+  middleware de autenticação via derive, bootstrap do servidor (server.ts),
+  validação de body/query/params/response, guards, ou prefixos /v1/. Use esta
+  skill sempre que escrever endpoints HTTP, schemas de validação TypeBox, integrar
+  rotas com use cases, ou configurar o servidor Elysia. Atenção: Zod, Joi e Yup
+  são proibidos no Vultra (ADR-001).
 ---
 
 # ElysiaJS + TypeBox — Rotas Vultra

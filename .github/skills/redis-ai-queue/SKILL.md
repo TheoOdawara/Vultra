@@ -1,5 +1,14 @@
 ---
-description: "Redis LPUSH/BLPOP queue protocol entre API Core e AI Service com Circuit Breaker."
+name: redis-ai-queue
+description: >-
+  Aplicar ao criar ou modificar a comunicação assíncrona entre API Core e AI
+  Service: AIQueueAdapter.ts, protocolo LPUSH/BLPOP Redis, Circuit Breaker
+  (estados CLOSED/OPEN/HALF-OPEN), timeouts BRPOP, endpoint de saúde
+  /v1/health/ai-service, novos job types (reconhecimento facial, análise de
+  sentimento), ou debugar falhas/timeouts com o microserviço Python/DeepFace.
+  Use esta skill sempre que mencionar fila Redis, embedding via Python, circuito
+  aberto, AIServiceUnavailableError, latência de reconhecimento facial, ou
+  integração com o AI Service.
 ---
 
 # Redis AI Queue

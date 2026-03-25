@@ -1,7 +1,13 @@
 ---
+name: better-auth
 description: >-
-  Aplicar ao criar middleware de autenticação, proteção de rotas, RBAC, autenticação
-  de dispositivos IoT (ESP32) ou qualquer lógica de sessão com Better Auth.
+  Aplicar ao criar ou editar qualquer lógica de autenticação no Vultra: middleware
+  de sessão, proteção de rotas, RBAC com roles (admin/professor/rh/student),
+  autenticação de dispositivos IoT (ESP32) via X-Device-Token, configuração do
+  auth.ts com plugins Organization/Passkeys/Multi-session, ou validação de sessão.
+  Use esta skill sempre que os termos "login", "sessão", "permissão", "role",
+  "device token", "ESP32 auth", "requireRole", "withAuth" ou "organizationId da
+  sessão" aparecerem na conversa.
 ---
 
 # Better Auth — Autenticação e RBAC Vultra

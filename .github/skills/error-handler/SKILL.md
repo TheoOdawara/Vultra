@@ -1,5 +1,13 @@
 ---
-description: "Error handling centralizado — DomainError → HTTP semântico via globalErrorHandler ElysiaJS."
+name: error-handler
+description: >-
+  Aplicar ao criar novos erros de domínio (DomainError), modificar o
+  globalErrorHandler ElysiaJS, mapear novos códigos de erro para HTTP status
+  semântico, debugar respostas de erro inconsistentes, ou adicionar logging/
+  auditoria de erros no Vultra. Use esta skill sempre que precisar lançar um erro
+  em use cases ou adapters, criar uma nova subclasse de DomainError com code e
+  httpStatus, ou garantir que o globalErrorHandler seja o primeiro plugin em
+  server.ts.
 ---
 
 # Error Handler
