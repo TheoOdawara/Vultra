@@ -1,5 +1,18 @@
 ---
+<<<<<<< HEAD:.github/skills/hexagonal-arch/SKILL.md
 description: "Aplicar ao criar use cases, entidades de domínio, ports, repositórios, adapters ou qualquer nova estrutura de pastas no api-core."
+=======
+name: hexagonal-arch
+description: >-
+  Aplicar ao criar ou reorganizar qualquer estrutura no api-core seguindo Clean
+  Architecture: use cases (core/use-cases/), entidades e value objects de domínio
+  (core/domain/), ports/interfaces (core/ports/), repositórios Drizzle
+  (adapters/repositories/), adapters de fila (adapters/queue/), container de DI
+  (infrastructure/container.ts), ou qualquer nova feature de negócio. Use esta
+  skill sempre que criar um novo use case, uma nova camada de serviço, definir
+  uma interface de repositório, ou precisar saber onde um arquivo deve ficar na
+  estrutura de pastas do api-core.
+>>>>>>> 4f002c0 (feat(search): add BM25 search engine for UI/UX style guides with design system generation and persistence options):.agents/skills/hexagonal-arch/SKILL.md
 ---
 
 # Arquitetura Hexagonal — API Core Vultra

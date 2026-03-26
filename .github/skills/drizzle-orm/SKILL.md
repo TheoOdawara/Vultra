@@ -1,7 +1,13 @@
 ---
+name: drizzle-orm
 description: >-
-  Aplicar ao criar schemas Drizzle, queries, migrations SQL manuais, tipos
-  customizados vector/inet, ou qualquer acesso ao PostgreSQL no api-core.
+  Aplicar ao criar ou editar qualquer acesso ao PostgreSQL no api-core: schemas
+  Drizzle (pgTable), queries SELECT/INSERT/UPDATE/DELETE com multitenancy,
+  migrations SQL manuais (drizzle-kit generate é proibido), tipos customizados
+  vector(512)/inet, busca vetorial com pgvector (operador <=>), withTenantContext(),
+  ou configuração do client.ts. Use esta skill sempre que tocar em tabelas,
+  migrations, organizationId no banco, embeddings biométricos, RLS, HNSW index,
+  ou qualquer operação com drizzle-orm ou postgres.js.
 ---
 
 # Drizzle ORM — Vultra (PostgreSQL 16 + pgvector 0.7)

@@ -1,3 +1,14 @@
+---
+name: criador-skills
+description: >-
+  Aplicar ao criar uma nova skill para o projeto Vultra, atualizar uma skill
+  existente que está desatualizada ou incorreta, ou quando uma área do código
+  está gerando respostas genéricas demais. Use esta skill sempre que o usuário
+  pedir para "criar uma skill", "adicionar skill", "documentar um padrão como
+  skill", ou quando uma nova tecnologia/padrão adotado precisa ser ensinado ao
+  agente no contexto específico do Vultra.
+---
+
 # Criador de Skills — Vultra
 
 ## Overview
@@ -35,10 +46,11 @@ O modelo de referência é a skill [`elysiajs/SKILL.md`](../elysiajs/SKILL.md), 
 
 ```markdown
 ---
-applyTo: "<glob do(s) arquivo(s) ou pasta(s) onde essa skill se aplica>"
+name: "<nome-da-skill>"
 description: >-
   Uma linha explicando quando o agente deve usar essa skill.
-  Sê específico sobre o domínio técnico coberto.
+  Seja específico e "empurre" o agente a usar a skill — liste termos-gatilho
+  como "sempre que mencionar X, Y ou Z".
 ---
 
 # [Nome da Tecnologia/Padrão] — Vultra
@@ -96,18 +108,16 @@ Ative esta skill quando o usuário pedir para:
 
 ---
 
-## Frontmatter: `applyTo`
+## Frontmatter: `name` e `description`
 
-O campo `applyTo` define **quando o VS Code aplica a skill automaticamente**. Use globs do workspace relativos à raiz:
+O campo `name` é o identificador da skill (deve coincidir com o nome da pasta). O campo `description` é o **principal mecanismo de trigger** — o agente decide se usa a skill com base nele. Seja específico e "empurre":
 
 ```yaml
-# Skill aplicada a qualquer arquivo no database/
-applyTo: "apps/api-core/src/infrastructure/database/**"
-
-# Skill aplicada a múltiplas pastas
-applyTo: >
-  apps/api-core/src/adapters/http/**,
-  apps/api-core/src/adapters/http/routes/**
+# Skill com trigger amplo e específico
+name: "minha-skill"
+description: >-
+  Aplicar ao criar X ou Y no projeto. Use esta skill sempre que
+  mencionar [termo-A], [termo-B], ou [contexto-C].
 ```
 
 ---
@@ -132,7 +142,7 @@ Use a estrutura com subpasta quando a skill precisar de arquivos de referência 
 
 | Regra | Motivo |
 |-------|--------|
-| Sempre incluir frontmatter `applyTo` | O VS Code precisa saber quando aplicar a skill |
+| Sempre incluir frontmatter `name:` e `description:` | O agente precisa do `name` para identificar a skill e do `description` para saber quando usá-la |
 | Registar a skill no `skills-lock.json` (raiz) | Obrigatório — controle de integridade do ecossistema |
 | Código funcional copy-pasteable | O agente usa literalmente os exemplos |
 | Seções curtas e focadas | Skills longas perdem efetividade — divida em skills menores |
@@ -166,11 +176,3 @@ sha256sum .agents/skills/<nome-da-skill>/SKILL.md | cut -d' ' -f1
 - [`skills-lock.json`](../../../skills-lock.json) — registrar após criar cada skill
 - [`docs/README.md`](../../../docs/README.md) — hub de documentação do Vultra
 - `.github/copilot-instructions.md` — instruções globais do projeto
-
-4. **LÓGICA DE PENSAMENTO (CoT)**: Force o agente a pensar antes de responder (Ex: "Analise o problema > Identifique os riscos > Proponha a solução").
-5. **VALIDAÇÃO**: Defina como a resposta deve ser validada antes de ser entregue ao usuário.
-
-## OUTPUT ESPERADO:
-Forneça o prompt da nova skill dentro de um bloco de código Markdown, organizado com headers (#, ##) e bullet points para máxima legibilidade.
-
-

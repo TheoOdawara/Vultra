@@ -2,29 +2,24 @@
   "version": 1,
   "skills": {
     "better-auth": {
-      "source": ".github/skills/better-auth",
+      "source": ".agents/skills/better-auth",
       "sourceType": "local",
-      "computedHash": "f41ec94ee47207b3a6ed9bf0864b8f4bd7b206d7143936297e82d56ddb321299"
-    },
-    "better-auth-best-practices": {
-      "source": "better-auth/skills",
-      "sourceType": "github",
-      "computedHash": "9ab075b5061be2a5f299c10505667345cc1ec76e8de4120901cfd586643e776f"
+      "computedHash": "ba0d98331a8d400e6c39918f4e2ef48d614a6b4129d1a175b002911ad2594eee"
     },
     "criador-skills": {
-      "source": ".github/skills/criador-skills",
+      "source": ".agents/skills/criador-skills",
       "sourceType": "local",
-      "computedHash": "74773234b9c5b201f333c5deca3c163b8d562e1fc1c988edc020d0b8e3b7de57"
+      "computedHash": "67fd1b35f9863073d31e28055e38757e8852ace0acc587fa455ba1cf0e1b7ec4"
     },
     "drizzle-orm": {
-      "source": ".github/skills/drizzle-orm",
+      "source": ".agents/skills/drizzle-orm",
       "sourceType": "local",
-      "computedHash": "5e8c77af4267589707a21d3d6dc4653f27eca06c6e0391dae450056a4cc46454"
+      "computedHash": "c44be9cb4976df13410bf97d8ca30883fdd6968f4cafe9ef629e1d5fdd858d7d"
     },
     "elysia-typebox": {
-      "source": ".github/skills/elysia-typebox",
+      "source": ".agents/skills/elysia-typebox",
       "sourceType": "local",
-      "computedHash": "14e9bb617661851b508dc2e69f40340b9474c67c435ba63d53dd0a22b25edaa0"
+      "computedHash": "689234182043df9f3738d26037ad3d6e0892a51b6db7ed49c4e541b76148d36d"
     },
     "elysiajs": {
       "source": "elysiajs/skills",
@@ -34,27 +29,22 @@
     "error-handler": {
       "source": ".github/skills/error-handler",
       "sourceType": "local",
-      "computedHash": "abf689e1150ab17f332725a16e78407c74da069a9f959c5603b6eb18ec18529b"
+      "computedHash": "b9a30155243e3fcbc7c8b56d6a85b3d9e57b216b2f1a9e153122fd3f084ad286"
     },
     "hexagonal-arch": {
       "source": ".github/skills/hexagonal-arch",
       "sourceType": "local",
-      "computedHash": "fcf5fc4e93ab0d2029ed148a38df3e2a4cc1e5424ae84a43b161ccde382b5a34"
+      "computedHash": "969adfa2cf375a054702a2e6be40a278e61236ffe58ec3c6baed24a78b925dea"
     },
     "lgpd-biometrics": {
       "source": ".github/skills/lgpd-biometrics",
       "sourceType": "local",
-      "computedHash": "73f34b8d1156078201b67bf689563bc72115652c2c0329deda23ebd1b31bf55e"
+      "computedHash": "0a3a716e8af207332317440ea1cbc60e9a0958bb7b0a3419784b8c64a4df4a5b"
     },
     "redis-ai-queue": {
       "source": ".github/skills/redis-ai-queue",
       "sourceType": "local",
-      "computedHash": "dd18d96837fa64a97b8987a27725ab144a8847fa2e8f83b51040f78b392a1f41"
-    },
-    "security-best-practices": {
-      "source": "supercent-io/skills-template",
-      "sourceType": "github",
-      "computedHash": "c5ddd50338549d28b2edd45cec131d6a231349b0671a093b3b7e3b51d4780ab8"
+      "computedHash": "35d0d5f63eb38322ed35609a0df65cde25bac96dfad47239c834523007d7e64b"
     },
     "skill-creator": {
       "source": "anthropics/skills",

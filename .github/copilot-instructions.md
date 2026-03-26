@@ -226,4 +226,4 @@ Quando o usuário entregar um `AUDIT-REPORT.md`:
 - **Biometria não persiste imagem:** Nunca. Em nenhuma camada. Em nenhum log.
 - **TypeBox obrigatório:** Nenhuma rota sem validação de schema.
 - **PowerShell Only:** Sem comandos Linux/WSL.
-- **UI não é responsabilidade do backend:** Entregar componentes funcionais. Decisões visuais seguem obrigatoriamente a skill `ui-ux-pro-max`.Aprova
+- **UI não é responsabilidade do backend:** Entregar componentes funcionais. Decisões visuais seguem obrigatoriamente a skill `ui-ux-pro-max`.

@@ -1,5 +1,14 @@
 ---
-description: "Conformidade LGPD para dados biométricos — processamento RAM-only, minimização de dados e direitos do titular."
+name: lgpd-biometrics
+description: >-
+  Aplicar ao implementar ou revisar qualquer fluxo biométrico no Vultra: registro
+  facial (enrollment), reconhecimento (recognition), exclusão de dados do titular
+  (direito ao esquecimento LGPD Art. 18), consentimento biométrico, audit logs
+  imutáveis, ou operações em biometric_profiles. Use esta skill sempre que tocar
+  em frame_base64, embeddings faciais, vector(512), ArcFace, soft delete de
+  biometria, consentimento, migrations de dados sensíveis, ou qualquer coisa que
+  envolva imagens de rosto. Regra cardinal: NENHUMA imagem persiste — apenas o
+  vetor numérico.
 ---
 
 # LGPD Biometrics
