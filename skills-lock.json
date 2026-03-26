@@ -2,31 +2,6 @@
   "version": 1,
   "skills": {
     "better-auth": {
-<<<<<<< HEAD
-      "source": ".github/skills/better-auth",
-      "sourceType": "local",
-      "computedHash": "f41ec94ee47207b3a6ed9bf0864b8f4bd7b206d7143936297e82d56ddb321299"
-    },
-    "better-auth-best-practices": {
-      "source": "better-auth/skills",
-      "sourceType": "github",
-      "computedHash": "9ab075b5061be2a5f299c10505667345cc1ec76e8de4120901cfd586643e776f"
-    },
-    "criador-skills": {
-      "source": ".github/skills/criador-skills",
-      "sourceType": "local",
-      "computedHash": "74773234b9c5b201f333c5deca3c163b8d562e1fc1c988edc020d0b8e3b7de57"
-    },
-    "drizzle-orm": {
-      "source": ".github/skills/drizzle-orm",
-      "sourceType": "local",
-      "computedHash": "5e8c77af4267589707a21d3d6dc4653f27eca06c6e0391dae450056a4cc46454"
-    },
-    "elysia-typebox": {
-      "source": ".github/skills/elysia-typebox",
-      "sourceType": "local",
-      "computedHash": "14e9bb617661851b508dc2e69f40340b9474c67c435ba63d53dd0a22b25edaa0"
-=======
       "source": ".agents/skills/better-auth",
       "sourceType": "local",
       "computedHash": "ba0d98331a8d400e6c39918f4e2ef48d614a6b4129d1a175b002911ad2594eee"
@@ -45,7 +20,6 @@
       "source": ".agents/skills/elysia-typebox",
       "sourceType": "local",
       "computedHash": "689234182043df9f3738d26037ad3d6e0892a51b6db7ed49c4e541b76148d36d"
->>>>>>> 4f002c0 (feat(search): add BM25 search engine for UI/UX style guides with design system generation and persistence options)
     },
     "elysiajs": {
       "source": "elysiajs/skills",
@@ -70,31 +44,17 @@
     "redis-ai-queue": {
       "source": ".github/skills/redis-ai-queue",
       "sourceType": "local",
-<<<<<<< HEAD
-      "computedHash": "dd18d96837fa64a97b8987a27725ab144a8847fa2e8f83b51040f78b392a1f41"
-    },
-    "security-best-practices": {
-      "source": "supercent-io/skills-template",
-      "sourceType": "github",
-      "computedHash": "c5ddd50338549d28b2edd45cec131d6a231349b0671a093b3b7e3b51d4780ab8"
-=======
       "computedHash": "35d0d5f63eb38322ed35609a0df65cde25bac96dfad47239c834523007d7e64b"
     },
     "skill-creator": {
       "source": "anthropics/skills",
       "sourceType": "github",
-      "computedHash": "b122f4d1e91aa1d83027e050b5b37c3156203ee85458d7b1360bc48167c9e02a"
-    },
-    "vultra-context": {
-      "source": ".agents/skills/vultra-context",
-      "sourceType": "local",
-      "computedHash": "e80f948aade55742d15d1145e461776b93e795c2a61dae2d2980dbb0a9822c59"
+      "computedHash": "57f470f512f45bdac598e302bc72fd62bf2b649fc7fad032efe97720149cde4d"
     },
     "ui-ux-pro-max": {
       "source": "nextlevelbuilder/ui-ux-pro-max-skill",
       "sourceType": "github",
-      "computedHash": "0a413bf988d06481f69bb81df2070741c3ba12dd9f1be2706d57f259c905992d"
->>>>>>> 4f002c0 (feat(search): add BM25 search engine for UI/UX style guides with design system generation and persistence options)
+      "computedHash": "6337038fe1fe6bbe1b9f252ab678ee575859190bab6f0f246f4061824eb40875"
     }
   }
 }

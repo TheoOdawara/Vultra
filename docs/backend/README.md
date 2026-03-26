@@ -14,7 +14,7 @@ Esta seção cobre dois serviços distintos que operam em conjunto:
 | **API Core** | Bun + ElysiaJS + Better Auth | Autenticação, lógica de negócio, persistência, WebSocket |
 | **AI Service** | Python + FastAPI + DeepFace | Geração de embeddings faciais e análise de sentimento |
 
-A comunicação entre os dois serviços é feita exclusivamente via **filas Redis** (sem chamadas HTTP diretas).
+A comunicação entre os dois serviços é feita preferencialmente via **filas Redis** (fila para produção e integração com ESP32). Para provas de conceito locais (ex.: câmera do computador) é permitida comunicação HTTP síncrona direta com o AI Service; a arquitetura de produção deve permanecer baseada em filas.
 
 ---
 
