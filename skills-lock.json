@@ -85,6 +85,11 @@
       "sourceType": "github",
       "computedHash": "b122f4d1e91aa1d83027e050b5b37c3156203ee85458d7b1360bc48167c9e02a"
     },
+    "vultra-context": {
+      "source": ".agents/skills/vultra-context",
+      "sourceType": "local",
+      "computedHash": "e80f948aade55742d15d1145e461776b93e795c2a61dae2d2980dbb0a9822c59"
+    },
     "ui-ux-pro-max": {
       "source": "nextlevelbuilder/ui-ux-pro-max-skill",
       "sourceType": "github",
