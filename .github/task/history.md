@@ -78,3 +78,29 @@
 ### Verificação
 - [x] `bun run typecheck` — zero erros ✅
 - [x] `bun run db:migrate` — 14 migrations, 15 tabelas ✅
+
+---
+
+## [2026-03-28] [AI] AI Service — HTTP Sync Handler + Redis Worker
+> Branch: `feat(ai)/ai-service-http-redis-worker`
+
+### Implementado
+- [x] Etapa 1: Planejamento — consultados docs/face/, ADR-005, lgpd-biometrics, redis-ai-queue, security-best-practices
+- [x] Etapa 2: `POST /process-image` — pipeline RAM-only (base64 → RetinaFace → crop → ArcFace 512d → descarte); validações: 1 face, ≥50px, blur>100, centering 0.3–0.7, brightness 40–220, quality_score; erros estruturados; payload max 1MB; timeout 3s
+- [x] Etapa 3: Redis worker `BLPOP ai:recognition:queue` — job desserializado via Pydantic; resultado publicado em `ai:recognition:result:{jobId}` com SETEX TTL 60s; credenciais 100% via env vars
+- [x] Etapa 4: `GET /health` — retorna `{status, model, uptime_s}` sem expor detalhes de infra; Swagger desabilitado em produção (DEBUG=false)
+- [x] Etapa 5: 18/18 testes pytest passando (mocks InsightFace + Redis + Worker); zero imagem persistida verificado por teste LGPD
+
+### Arquivos criados em `apps/ai-service/`
+- `main.py`, `config.py`, `requirements.txt`, `Dockerfile`, `.env.example`, `pytest.ini`, `.dockerignore`
+- `schemas/http_schemas.py`, `schemas/job_schemas.py`
+- `services/face_service.py` — FaceService RAM-only, thread pool executor
+- `validators/frame_validator.py` — decode_frame + validate_quality
+- `workers/redis_worker.py` — RedisWorker asyncio BLPOP consumer
+- `tests/conftest.py`, `tests/test_health.py`, `tests/test_process_image.py`
+
+### Notas técnicas
+- `asyncio.run_in_executor` obrigatório para InsightFace (síncrono; não bloqueia event loop)
+- Import de `insightface.app.FaceAnalysis` deferido dentro de `load_models()` para permitir mock em testes sem InsightFace instalado
+- Filas: `ai:recognition:queue` / `ai:recognition:result:{jobId}` conforme decisão do sprint
+- Bug de teste corrigido: `FaceServiceError` importada localmente nos testes que a usam como side_effect (evita split de identidade de classe após reload de módulo)

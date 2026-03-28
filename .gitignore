@@ -4,3 +4,7 @@
 /apps/api-core/.env
 
 /apps/api-core/bun.lock
+**/__pycache__
+**/*.pyc
+/apps/ai-service/.pytest_cache
+/apps/ai-service/.venv
