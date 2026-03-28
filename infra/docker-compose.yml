@@ -54,6 +54,41 @@ services:
     networks:
       - vultra-net
 
+  # ---------------------------------------------------------------------------
+  # AI Service — FastAPI + InsightFace (RetinaFace + ArcFace 512d)
+  # Referência: apps/ai-service/
+  # ---------------------------------------------------------------------------
+  ai-service:
+    build:
+      context: ../apps/ai-service
+      dockerfile: Dockerfile
+    container_name: vultra-ai-service
+    restart: unless-stopped
+    environment:
+      REDIS_URL:         redis://:${REDIS_PASSWORD}@redis:6379
+      AI_QUEUE_NAME:     ai:recognition:queue
+      AI_RESULT_PREFIX:  ai:recognition:result:
+      MODEL_NAME:        buffalo_l
+      MAX_PAYLOAD_BYTES: 1048576
+      JOB_TIMEOUT_S:     3.0
+      RESULT_TTL_S:      60
+      DEBUG:             "false"
+      HOST:              0.0.0.0
+      PORT:              8000
+    ports:
+      - "8000:8000"
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 15s
+      timeout:  5s
+      retries:  3
+      start_period: 30s
+    networks:
+      - vultra-net
+
 # =============================================================================
 # Volumes nomeados — persistência local entre restarts
 # =============================================================================
