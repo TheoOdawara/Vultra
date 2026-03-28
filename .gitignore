@@ -8,3 +8,5 @@
 **/*.pyc
 /apps/ai-service/.pytest_cache
 /apps/ai-service/.venv
+
+/apps/ai-service/.env

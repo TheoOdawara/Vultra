@@ -20,7 +20,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-vultra} -d ${POSTGRES_DB:-vultra_dev}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-vultra} -d ${POSTGRES_DB:-vultra_db}"]
       interval: 10s
       timeout:  5s
       retries:  5
@@ -65,9 +65,9 @@ services:
     container_name: vultra-ai-service
     restart: unless-stopped
     environment:
-      REDIS_URL:         redis://:${REDIS_PASSWORD}@redis:6379
-      AI_QUEUE_NAME:     ai:recognition:queue
-      AI_RESULT_PREFIX:  ai:recognition:result:
+      REDIS_URL:         "redis://:${REDIS_PASSWORD}@redis:6379"
+      AI_QUEUE_NAME:     "ai:recognition:queue"
+      AI_RESULT_PREFIX:  "ai:recognition:result:"
       MODEL_NAME:        buffalo_l
       MAX_PAYLOAD_BYTES: 1048576
       JOB_TIMEOUT_S:     3.0
