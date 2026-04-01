@@ -1,1 +1,31 @@
-# PR Pre-Approval Fixes - feat(database)/full-database-schema\n\nStatus: In progress\n\n## Tasks\n\n### 1. Lint and format api-core src\nCommand: `bun --cwd apps/api-core x biome check src --write`\n[ ] Complete\n\n### 2. Update NEXT-STEPS.md\n- Mark auth config complete (add note)\n- Check Elysia app status\n[ ] Edit file\n\n### 3. Commit changes\n`git add . && git commit -m \"docs(chore): complete NEXT-STEPS auth + biome format\"`\n[ ] Push\n\n### 4. Test\n`bun --cwd apps/api-core dev`\n[ ] Server starts with auth\n\n### 5. PR approved\nReady to merge\n\nLast updated: $(date)
+# TODO: Fix Import Errors in api-core
+
+**Approved Plan Steps:**
+
+## 1. Fix Import Paths ✓ (Complete)
+- [x] apps/api-core/src/adapters/http/attendance.routes.ts - Fix AIJobQueue import  
+- [x] apps/api-core/src/adapters/http/biometric.routes.ts - Fix AIJobQueue import
+- [x] apps/api-core/src/adapters/http/health.routes.ts - Fix AIJobQueue import
+- [x] apps/api-core/src/infrastructure/server.ts - Add .ts to ai-job.queue import
+- [x] apps/api-core/src/core/use-cases/attendance.use-cases.ts - Add .ts to repo imports
+- [x] apps/api-core/src/core/use-cases/biometrics.use-cases.ts - Add .ts to repo imports
+
+## 2. Install Dependencies & Lint (In Progress)
+- [ ] cd apps/api-core && bun install 
+- [ ] cd apps/api-core && bun biome check src --write
+
+## 3. Fix TS Config (Complete) 
+- [x] apps/api-core/tsconfig.json - Added DOM/node types
+
+## 4. Fix TypeScript Strict Errors
+- [ ] Handler params 'any' types (elysia context)
+- [ ] exactOptionalPropertyTypes issues
+
+## 5. Python Deps
+- [ ] cd apps/ai-service && uv sync / pip install -e .
+
+## 6. Test Startup
+- [ ] cd apps/api-core && bun run src/main.ts
+
+**Progress: Import paths fixed. Run `bun install` in apps/api-core to resolve module errors, then biome lint.**
+

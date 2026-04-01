@@ -4,12 +4,18 @@ FaceService — RAM-only face processing with InsightFace.
 Pipeline (order is inviolable per LGPD / ADR-005):
   1. base64 decode → numpy BGR array (no disk I/O)
   2. RetinaFace detection (via InsightFace FaceAnalysis)
-  3. Validate: exactly 1 face, size ≥ 50px, blur > 100, centering, brightness
-  4. ArcFace: generate 512-dimensional embedding
-  5. Discard image reference — GC reclaims memory
-  6. Return embedding + quality_score + processing_ms
+"""
+FaceService — processamento facial RAM-only com InsightFace.
 
-Nothing from steps 1–4 is persisted; only the numeric vector leaves this service.
+Pipeline (ordem inviolável por LGPD / ADR-005):
+    1. base64 decode → numpy BGR array (sem I/O em disco)
+    2. RetinaFace detection (InsightFace FaceAnalysis)
+    3. Validar: exatamente 1 face, tamanho ≥ 50px, blur > 80, brilho adequado
+    4. ArcFace: gerar embedding 512d
+    5. Descartar imagem da RAM
+    6. Retornar embedding + quality_score + processing_ms
+
+Nada dos passos 1–4 é persistido; apenas o vetor numérico sai do serviço.
 """
 from __future__ import annotations
 
@@ -17,19 +23,20 @@ import asyncio
 import logging
 import time
 from concurrent.futures import ThreadPoolExecutor
-from typing import TYPE_CHECKING
 
 from config import Settings
 from validators.frame_validator import decode_frame, validate_quality
 
-if TYPE_CHECKING:
-    pass
-
 logger = logging.getLogger(__name__)
 
-
 class FaceServiceError(Exception):
-    """Raised when the pipeline cannot produce a valid embedding."""
+        """Erro de pipeline: não foi possível gerar embedding válido."""
+        def __init__(self, error_code: str, detail: str = "") -> None:
+                self.error_code = error_code
+                super().__init__(detail or error_code)
+
+class FaceService:
+        def __init__(self, settings: Settings) -> None:
 
     def __init__(self, error_code: str, detail: str = "") -> None:
         self.error_code = error_code
@@ -48,9 +55,15 @@ class FaceService:
         """
         Warm-up: load InsightFace model pack into RAM.
         Called once at FastAPI startup (lifespan).
+<<<<<<< HEAD
         Import is deferred here so tests can mock it without InsightFace installed.
         """
         from insightface.app import FaceAnalysis  # deferred import for testability
+=======
+        Deferred import so tests can mock without InsightFace installed.
+        """
+        from insightface.app import FaceAnalysis  # deferred for testability
+>>>>>>> 3e716ea (fix: ensure all dependencies and imports are correct for both api-core and ai-service (pyproject, package.json, venv, type imports, and all code))
 
         logger.info("Loading InsightFace model '%s'…", self._settings.model_name)
         self._app = FaceAnalysis(
@@ -71,7 +84,11 @@ class FaceService:
 
     def _process_sync(self, frame_base64: str) -> dict:
         """
+<<<<<<< HEAD
         Synchronous processing — runs in a thread pool to avoid blocking asyncio.
+=======
+        Synchronous processing — runs in thread pool to avoid blocking asyncio.
+>>>>>>> 3e716ea (fix: ensure all dependencies and imports are correct for both api-core and ai-service (pyproject, package.json, venv, type imports, and all code))
         All operations are in RAM. No disk I/O at any step.
         """
         start_ms = time.monotonic() * 1000.0
@@ -85,7 +102,11 @@ class FaceService:
             )
 
         img = decode_result.image
+<<<<<<< HEAD
         assert img is not None  # satisfy type checker
+=======
+        assert img is not None
+>>>>>>> 3e716ea (fix: ensure all dependencies and imports are correct for both api-core and ai-service (pyproject, package.json, venv, type imports, and all code))
 
         try:
             # Step 2: RetinaFace — detect faces (part of FaceAnalysis)
@@ -127,7 +148,11 @@ class FaceService:
 
     async def process_frame(self, frame_base64: str) -> dict:
         """
+<<<<<<< HEAD
         Async entry point: delegates synchronous InsightFace work to a thread pool
+=======
+        Async entry point: delegates synchronous InsightFace work to thread pool
+>>>>>>> 3e716ea (fix: ensure all dependencies and imports are correct for both api-core and ai-service (pyproject, package.json, venv, type imports, and all code))
         so it does not block the asyncio event loop.
         """
         loop = asyncio.get_event_loop()

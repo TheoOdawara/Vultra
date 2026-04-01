@@ -17,5 +17,6 @@
   },
   "[json]": {
     "editor.defaultFormatter": "biomejs.biome"
-  }
+  },
+  "python-envs.defaultEnvManager": "ms-python.python:system"
 }

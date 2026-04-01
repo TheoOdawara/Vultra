@@ -1,20 +1,21 @@
 {
   "compilerOptions": {
-    "lib":                        ["ESNext"],
-    "target":                     "ESNext",
-    "module":                     "ESNext",
-    "moduleDetection":            "force",
-    "moduleResolution":           "bundler",
+    "lib": ["ESNext", "DOM"],
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleDetection": "force",
+    "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true,
-    "verbatimModuleSyntax":       true,
-    "strict":                     true,
-    "noUncheckedIndexedAccess":   true,
+    "verbatimModuleSyntax": true,
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
-    "skipLibCheck":               true,
-    "noEmit":                    true,
+    "skipLibCheck": true,
+    "noEmit": true,
     "allowImportingTsExtensions": true,
-    "types":                     ["bun-types"]
+    "types": ["bun-types", "node"]
   },
-  "include":  ["src/**/*", "drizzle.config.ts"],
-  "exclude":  ["node_modules", "dist"]
+  "include": ["src/**/*", "drizzle.config.ts", "src/main.ts"],
+  "exclude": ["node_modules", "dist"]
 }
+

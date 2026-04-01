@@ -1,101 +1,124 @@
 /**
- * VULTRA — Classe base para todos os erros de domínio.
+ * VULTRA — Domain Errors
  *
- * Subclasses devem definir `errorCode` e `httpStatus` como readonly
- * e passá-los ao construtor via `super()`.
+ * All domain errors extend DomainError with an errorCode (string) and
+ * httpStatus (number). The global error handler reads these properties
+ * to build the HTTP response — handlers never construct error responses manually.
  *
- * Referência: docs/backend/manuais/error-handler.md
+ * Conventions:
+ *   errorCode  → SCREAMING_SNAKE_CASE, matches the error map in error-handler.ts
+ *   httpStatus → standard HTTP semantics
  */
-export abstract class DomainError extends Error {
-  abstract readonly errorCode: string;
-  abstract readonly httpStatus: number;
 
-  constructor(message: string) {
-    super(message);
+export class DomainError extends Error {
+  constructor(
+    public readonly errorCode: string,
+    public readonly httpStatus: number,
+    message?: string,
+  ) {
+    super(message ?? errorCode);
     this.name = this.constructor.name;
-    // Mantém stack trace correto em ambientes V8/Bun
-    if (Error.captureStackTrace) {
-      Error.captureStackTrace(this, this.constructor);
-    }
   }
 }
 
-// ─── Erros de Presença ────────────────────────────────────────────────────────
-
-export class AttendanceConflictError extends DomainError {
-  readonly errorCode = "ATTENDANCE_CONFLICT" as const;
-  readonly httpStatus = 409;
-  constructor(message = "Presença já registrada para este membro nesta sessão.") {
-    super(message);
-  }
-}
-
-export class SessionAlreadyClosedError extends DomainError {
-  readonly errorCode = "SESSION_ALREADY_CLOSED" as const;
-  readonly httpStatus = 409;
-  constructor(message = "Sessão de chamada já encerrada.") {
-    super(message);
-  }
-}
-
-export class FaceNotRecognizedError extends DomainError {
-  readonly errorCode = "FACE_NOT_RECOGNIZED" as const;
-  readonly httpStatus = 404;
-  constructor(message = "Face não reconhecida acima do threshold de confiança.") {
-    super(message);
-  }
-}
-
-export class LowConfidenceMatchError extends DomainError {
-  readonly errorCode = "LOW_CONFIDENCE_MATCH" as const;
-  readonly httpStatus = 422;
-  constructor(message = "Score de confiança abaixo do threshold mínimo.") {
-    super(message);
-  }
-}
-
-// ─── Erros de Autenticação / Autorização ─────────────────────────────────────
+// ── Auth ──────────────────────────────────────────────────────────────────────
 
 export class UnauthorizedError extends DomainError {
-  readonly errorCode = "UNAUTHORIZED" as const;
-  readonly httpStatus = 401;
-  constructor(message = "Autenticação necessária.") {
-    super(message);
+  constructor() {
+    super("UNAUTHORIZED", 401, "Authentication required");
+  }
+}
+
+export class ForbiddenError extends DomainError {
+  constructor() {
+    super("INSUFFICIENT_PERMISSIONS", 403, "Insufficient permissions");
   }
 }
 
 export class InvalidDeviceTokenError extends DomainError {
-  readonly errorCode = "INVALID_DEVICE_TOKEN" as const;
-  readonly httpStatus = 401;
-  constructor(message = "Token de dispositivo inválido ou expirado.") {
-    super(message);
+  constructor() {
+    super("INVALID_DEVICE_TOKEN", 401, "Invalid or missing device token");
   }
 }
 
-export class InsufficientPermissionsError extends DomainError {
-  readonly errorCode = "INSUFFICIENT_PERMISSIONS" as const;
-  readonly httpStatus = 403;
-  constructor(message = "Permissão insuficiente para esta operação.") {
-    super(message);
-  }
-}
-
-// ─── Erros de Recurso ─────────────────────────────────────────────────────────
+// ── Organization ──────────────────────────────────────────────────────────────
 
 export class OrganizationNotFoundError extends DomainError {
-  readonly errorCode = "ORGANIZATION_NOT_FOUND" as const;
-  readonly httpStatus = 404;
-  constructor(message = "Organização não encontrada.") {
-    super(message);
+  constructor() {
+    super("ORGANIZATION_NOT_FOUND", 404, "Organization not found");
   }
 }
 
-// ─── Erros de Infraestrutura ──────────────────────────────────────────────────
+// ── Attendance ────────────────────────────────────────────────────────────────
+
+export class AttendanceConflictError extends DomainError {
+  constructor() {
+    super(
+      "ATTENDANCE_CONFLICT",
+      409,
+      "Presence already recorded for this member in this session",
+    );
+  }
+}
+
+export class SessionAlreadyClosedError extends DomainError {
+  constructor() {
+    super("SESSION_ALREADY_CLOSED", 409, "Attendance session is already closed");
+  }
+}
+
+export class SessionNotFoundError extends DomainError {
+  constructor() {
+    super("SESSION_NOT_FOUND", 404, "Attendance session not found");
+  }
+}
+
+// ── Face recognition ──────────────────────────────────────────────────────────
+
+export class FaceNotRecognizedError extends DomainError {
+  constructor() {
+    super("FACE_NOT_RECOGNIZED", 404, "No member matched above the confidence threshold");
+  }
+}
+
+export class LowConfidenceMatchError extends DomainError {
+  constructor(public readonly confidence: number) {
+    super(
+      "LOW_CONFIDENCE_MATCH",
+      422,
+      `Match confidence ${confidence.toFixed(3)} is below the threshold — manual review required`,
+    );
+  }
+}
+
+// ── Biometrics ────────────────────────────────────────────────────────────────
+
+export class BiometricProfileNotFoundError extends DomainError {
+  constructor() {
+    super("BIOMETRIC_PROFILE_NOT_FOUND", 404, "No active biometric profile found for member");
+  }
+}
+
+export class BiometricEnrollConflictError extends DomainError {
+  constructor() {
+    super(
+      "BIOMETRIC_ENROLL_CONFLICT",
+      409,
+      "An active biometric profile already exists for this member and model version",
+    );
+  }
+}
+
+// ── AI Service ────────────────────────────────────────────────────────────────
 
 export class AIServiceUnavailableError extends DomainError {
-  readonly errorCode = "AI_SERVICE_UNAVAILABLE" as const;
-  readonly httpStatus = 503;
-  constructor(message = "AI Service indisponível. Tente novamente em instantes.") {
-    super(message);
+  constructor(public readonly retryAfter: number = 30) {
+    super("AI_SERVICE_UNAVAILABLE", 503, "AI service is currently unavailable");
+  }
+}
+
+export class AIJobTimeoutError extends DomainError {
+  constructor() {
+    super("AI_SERVICE_UNAVAILABLE", 503, "AI job timed out — service may be degraded");
   }
 }
