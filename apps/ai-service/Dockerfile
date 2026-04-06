@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 FROM python:3.11-slim AS builder
 
 WORKDIR /app
@@ -44,7 +43,6 @@ USER appuser
 EXPOSE 8000
 
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
-=======
 # =============================================================================
 # VULTRA — AI Service Dockerfile
 # Base: python:3.11-slim
@@ -96,4 +94,3 @@ HEALTHCHECK --interval=15s --timeout=5s --start-period=30s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]
->>>>>>> 3e716ea (fix: ensure all dependencies and imports are correct for both api-core and ai-service (pyproject, package.json, venv, type imports, and all code))
