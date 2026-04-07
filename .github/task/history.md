@@ -104,3 +104,38 @@
 - Import de `insightface.app.FaceAnalysis` deferido dentro de `load_models()` para permitir mock em testes sem InsightFace instalado
 - Filas: `ai:recognition:queue` / `ai:recognition:result:{jobId}` conforme decisão do sprint
 - Bug de teste corrigido: `FaceServiceError` importada localmente nos testes que a usam como side_effect (evita split de identidade de classe após reload de módulo)
+
+---
+
+## [2026-04-06] Parcialmente implementado (sem aprovação formal) — Sprint Reconhecimento Facial
+
+> Descoberto via auditoria de código na sessão 84c54233.
+> Os itens abaixo foram implementados incrementalmente sem o fluxo plan→aprovação→testes→code.
+> Nenhuma subtask foi formalmente marcada `[x]` — a limpeza do todo.md foi feita por análise de código.
+
+### API Core — Infraestrutura de Biometria (parcial)
+
+- [x] `EnrollBiometricUseCase` — AI queue → quality gate (0.5 min) → persist embedding
+- [x] `RevokeBiometricUseCase` — soft-delete `is_active = FALSE` + zero-fill `face_embedding`
+- [x] `BiometricsRepository.enroll` — deativa perfil anterior antes de inserir novo
+- [x] `BiometricsRepository.revoke` — `is_active = FALSE` + `face_embedding = NULL` (LGPD)
+- [x] `BiometricsRepository.findBySimilarity` — pgvector `<=>` cosine, filtro orgId + modelVersion + isActive
+- [x] `BiometricsRepository.touchLastMatched` — atualiza `last_matched_at` após match
+- [x] `POST /v1/biometric/enroll` — rota funcional (prefix `/biometric`, não `/face`)
+- [x] `DELETE /v1/biometric/:memberId` — rota funcional (param `memberId`, não `profileId`)
+- [x] `AIJobQueue` Circuit Breaker Redis — CLOSED/OPEN/HALF_OPEN, 5 falhas, 30s cooldown
+- [x] `IAIQueueAdapter` port — interface desacoplada para use cases
+- [x] `GET /v1/health/ai-service` — expõe estado do Circuit Breaker
+
+### Database — Colunas e índices já existentes desde migrações anteriores
+
+- [x] `biometric_profiles.quality_score REAL` — migration 0005
+- [x] `biometric_profiles.model_version TEXT` — migration 0005
+- [x] `biometric_profiles.is_active BOOLEAN DEFAULT TRUE` — migration 0005
+- [x] RLS em `biometric_profiles` com policy de isolamento por `organization_id` — migration 0005
+- [x] Índice HNSW em `face_embedding` (vector_cosine_ops) — migration 0009
+
+### Audit Log — Base de infraestrutura
+
+- [x] Tabela `audit_logs` com trigger de imutabilidade (`trg_audit_logs_immutable`) — migration 0008
+- [x] Schema Drizzle `schema/audit-logs.ts` — `auditLogs` pgTable com tipos corretos
