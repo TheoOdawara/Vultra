@@ -1,7 +1,7 @@
 # Backlog — Reconhecimento Facial (Sprint Ativa)
 
 > Sprint ativa desde: 2026-03-27
-> Última auditoria: 2026-04-06 (sessão 84c54233)
+> Última auditoria: 2026-04-07 (sessão 84c54233)
 > Decisões confirmadas no plano (sessão dedc54a7):
 > - Reutilizar tabela `biometric_profiles` (não criar `face_embeddings`)
 > - Modo primário: Redis + Circuit Breaker; HTTP síncrono apenas atalho local
@@ -14,7 +14,32 @@
 
 ---
 
-# Tarefa: [FEAT] Use Cases — VerifyFace + ListFaces
+# Tarefa: [FIX] Merge Conflicts — AI Service Python + package.json corrompido
+
+> Origem: commit `8f3710f` (Vinicius Larsen, 01/04/2026)
+> O AI Service está 100% inoperante. O `bun install` também falha.
+
+## Specs
+- Escopo: resolver todos os conflitos de merge não resolvidos deixados no commit `8f3710f`
+- Critérios de aceite: nenhum arquivo com `<<<<<<<`; `package.json` válido; AI Service sobe sem erro; `bun install` passa; `__pycache__` removido do tracking
+
+## Plano
+- [ ] Etapa 1: Corrigir `apps/api-core/package.json` — remover o bloco duplicado injetado dentro de `"dependencies"` (o arquivo inteiro foi colado na linha 18); validar com `python3 -c "import json; json.load(open('package.json'))"`
+- [ ] Etapa 2: Resolver conflict markers em `apps/ai-service/config.py` (1 bloco `<<<<<<<`)
+- [ ] Etapa 3: Resolver conflict markers em `apps/ai-service/main.py` (7 blocos `<<<<<<<`)
+- [ ] Etapa 4: Resolver conflict markers em `apps/ai-service/services/face_service.py` (3 blocos)
+- [ ] Etapa 5: Resolver conflict markers em `apps/ai-service/validators/frame_validator.py` (2 blocos)
+- [ ] Etapa 6: Resolver conflict markers em `apps/ai-service/workers/redis_worker.py` (4 blocos)
+- [ ] Etapa 7: Remover `__pycache__` do tracking (`git rm -r --cached apps/ai-service/**/__pycache__`) e garantir que `.gitignore` cubra `**/__pycache__` e `**/*.pyc`
+- [ ] Etapa 8: `python -m py_compile` em todos os arquivos .py para confirmar sintaxe válida
+- [ ] Etapa 9: `cd apps/api-core && bun install` sem erros
+
+## Post-Mortem
+- Conflitos ocorreram porque Vinicius mergeou sem resolver todos os conflitos antes do commit
+
+---
+
+
 
 ## Specs
 - Escopo: dois use cases ausentes que completam o CRUD biométrico
