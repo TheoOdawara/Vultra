@@ -1,5 +1,9 @@
 # Backlog — Reconhecimento Facial (Sprint Ativa)
 
+> Diretório canônico de task management: `.github/tasks/`
+> Fonte de verdade do backlog ativo do Vultra. Antes de editar, migrar itens concluídos para `history.md`.
+> GitHub Project: `Vultra` — https://github.com/users/TheoOdawara/projects/1
+ 
 > Sprint ativa desde: 2026-03-27
 > Última auditoria: 2026-04-07 (sessão 84c54233)
 > Decisões confirmadas no plano (sessão dedc54a7):
@@ -16,6 +20,7 @@
 
 # Tarefa: [FIX] Merge Conflicts — AI Service Python + package.json corrompido
 
+> GitHub Issue: #3
 > Origem: commit `8f3710f` (Vinicius Larsen, 01/04/2026)
 > O AI Service está 100% inoperante. O `bun install` também falha.
 
@@ -41,6 +46,9 @@
 
 
 
+# Tarefa: [FEAT] Use Cases — Implementar VerifyFaceUseCase + ListFacesUseCase
+
+> GitHub Issue: #4
 ## Specs
 - Escopo: dois use cases ausentes que completam o CRUD biométrico
 - Contratos:
@@ -65,6 +73,7 @@
 
 # Tarefa: [FEAT] Rotas — Corrigir prefix + adicionar /v1/face/verify e /v1/face/list
 
+> GitHub Issue: #5
 ## Specs
 - Escopo: alinhar rotas existentes ao contrato planejado e adicionar as duas faltantes
 - Contratos:
@@ -90,6 +99,7 @@
 
 # Tarefa: [FEAT] AuditLogRepository + Integração nos Use Cases
 
+> GitHub Issue: #6
 ## Specs
 - Escopo: repositório de audit log (insert-only) + chamadas em todos os use cases biométricos
 - Contratos:
@@ -113,6 +123,7 @@
 
 # Tarefa: [FEAT] Migration 0015 — Colunas adicionais em biometric_profiles
 
+> GitHub Issue: #7
 ## Specs
 - Escopo: adicionar colunas de auditoria de deleção e device tracking que o plano original exige
 - Contratos: colunas `device_id UUID NULL`, `created_by UUID NULL`, `deleted_at TIMESTAMPTZ NULL`, `deleted_by UUID NULL`
@@ -138,6 +149,7 @@
 
 # Tarefa: [FEAT] Testes — Unitários (Use Cases) + Integração (Rotas /v1/face)
 
+> GitHub Issue: #8
 ## Specs
 - Escopo: cobertura completa dos 4 use cases biométricos e das 4 rotas `/v1/face`
 - Runner: `bun test` — sem Jest ou Vitest
@@ -169,6 +181,7 @@
 
 # Tarefa: [FIX] TypeScript Strict Errors + Bun Install
 
+> GitHub Issue: #9
 ## Specs
 - Escopo: zerar erros de TypeScript e garantir que o projeto compila limpo
 - Contexto: pendente desde TODO.md raiz (handler params `any`, exactOptionalPropertyTypes)
@@ -189,6 +202,7 @@
 
 # Tarefa: [DOCS] Documentação — Face Recognition (contratos, fluxos, LGPD)
 
+> GitHub Issue: #10
 ## Specs
 - Escopo: atualizar docs para refletir o estado real da implementação
 - Critérios de aceite: `docs/face/README.md` com contratos reais; ADR-006 registrado se necessário

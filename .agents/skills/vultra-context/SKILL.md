@@ -88,10 +88,12 @@ apps/api-core/src/
 │   └── use-cases/           ← RecordAttendanceUseCase, EnrollBiometricUseCase
 │
 ├── adapters/                ← Ports & Adapters (implement core interfaces)
-│   ├── http/
-│   │   ├── routes/          ← attendance.routes.ts, members.routes.ts
-│   │   ├── middleware/      ← auth.middleware.ts, device.middleware.ts
-│   │   └── schemas/         ← TypeBox schemas (attendance.schema.ts)
+│   ├── http/                ← adapters HTTP Elysia do estado atual
+│   │   ├── attendance.routes.ts
+│   │   ├── biometric.routes.ts
+│   │   ├── health.routes.ts
+│   │   ├── auth.plugin.ts
+│   │   └── device-auth.plugin.ts
 │   ├── repositories/        ← AttendanceRepository, BiometricRepository
 │   └── queue/               ← AIJobQueue.ts (Redis publisher)
 │

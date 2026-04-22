@@ -79,6 +79,6 @@ export const attendanceRoutes = new Elysia({ prefix: '/v1/attendance' })
 - [`elysiajs/SKILL.md`](../elysiajs/SKILL.md) — referência completa da API ElysiaJS
 
 ### Arquivos do projeto
-- `apps/api-core/src/adapters/http/` — pasta de destino dos handlers (a criar)
+- `apps/api-core/src/adapters/http/` — rotas e plugins HTTP atuais do api-core
 - [`docs/backend/guias/typebox-rotas.md`](../../../docs/backend/guias/typebox-rotas.md)
 - [`docs/backend/adrs/ADR-001-typebox-sobre-zod.md`](../../../docs/backend/adrs/ADR-001-typebox-sobre-zod.md)

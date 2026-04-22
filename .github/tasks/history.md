@@ -1,5 +1,8 @@
 # History — TODOs Concluídos
 
+> Diretório canônico de task management: `.github/tasks/`
+> Registro append-only das entregas concluídas no Vultra.
+
 ---
 
 ## [2026-03-15] Review & Fix — Revisão de segurança da feat(database)/full-database-schema

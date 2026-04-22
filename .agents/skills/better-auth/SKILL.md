@@ -4,7 +4,7 @@ description: >-
   Aplicar ao criar ou editar qualquer lógica de autenticação no Vultra: middleware
   de sessão, proteção de rotas, RBAC com roles (admin/professor/rh/student),
   autenticação de dispositivos IoT (ESP32) via X-Device-Token, configuração do
-  auth.ts com plugins Organization/Passkeys/Multi-session, ou validação de sessão.
+  auth.ts com plugins Organization/RBAC/Multi-session, ou validação de sessão.
   Use esta skill sempre que os termos "login", "sessão", "permissão", "role",
   "device token", "ESP32 auth", "requireRole", "withAuth" ou "organizationId da
   sessão" aparecerem na conversa.
@@ -14,7 +14,7 @@ description: >-
 
 ## Overview
 
-O Vultra usa **Better Auth** com os plugins Organization, RBAC, Passkeys (WebAuthn/FIDO2) e Multi-session (máx. 3 simultâneas). Usuários humanos autenticam via sessão; dispositivos ESP32 via header `X-Device-Token` validado com bcrypt. O `organizationId` **sempre** vem da sessão — nunca de parâmetros externos.
+O Vultra usa **Better Auth** com os plugins Organization, RBAC e Multi-session (máx. 3 simultâneas). Passkeys permanecem planejadas, mas **não** estão disponíveis na versão atualmente adotada no repositório. Usuários humanos autenticam via sessão; dispositivos ESP32 via headers `X-Device-Token` + `X-Device-Id`, com verificação segura do token. O `organizationId` **sempre** vem da sessão — nunca de parâmetros externos.
 
 ---
 
@@ -31,7 +31,7 @@ O Vultra usa **Better Auth** com os plugins Organization, RBAC, Passkeys (WebAut
 ## Quick Start
 
 ```typescript
-// middleware/auth.middleware.ts — usuário humano
+// adapters/http/auth.plugin.ts — usuário humano
 export function withAuth(app: Elysia) {
   return app.derive(async ({ headers }) => {
     const session = await auth.api.getSession({ headers });
@@ -43,7 +43,7 @@ export function withAuth(app: Elysia) {
   });
 }
 
-// middleware/device-auth.middleware.ts — dispositivo ESP32
+// adapters/http/device-auth.plugin.ts — dispositivo ESP32
 export function withDeviceAuth(app: Elysia) {
   return app.derive(async ({ headers }) => {
     const token = headers['x-device-token'];
@@ -93,6 +93,7 @@ export function withDeviceAuth(app: Elysia) {
 - [`elysiajs/integrations/better-auth.md`](../elysiajs/integrations/better-auth.md)
 
 ### Arquivos do projeto
-- `apps/api-core/src/infrastructure/auth.ts` — a criar: configuração do Better Auth
-- `apps/api-core/src/adapters/http/middleware/` — a criar: pasta dos middlewares
+- `apps/api-core/src/infrastructure/auth.ts` — configuração atual do Better Auth
+- `apps/api-core/src/adapters/http/auth.plugin.ts` — plugin HTTP para sessão humana
+- `apps/api-core/src/adapters/http/device-auth.plugin.ts` — plugin HTTP para autenticação de dispositivo
 - [`docs/backend/manuais/autenticacao.md`](../../../docs/backend/manuais/autenticacao.md)

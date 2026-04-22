@@ -1,5 +1,8 @@
 # Lessons Learned
 
+> Diretório canônico de task management: `.github/tasks/`
+> Registre aqui erros repetíveis, regras derivadas e correções que precisem ser reaproveitadas em assets versionados do Vultra.
+
 ## 2026-03-14 — Arquivos de Tarefa Obrigatórios
 **O que não fazer:** Iniciar planeamento sem consultar/atualizar `todo.md` e `lessons.md`
 **Padrão correto:**
@@ -16,11 +19,12 @@
 - Criar migration/schema para uso futuro mas não registar no adapter
 - Adicionar comentário explícito em `auth-schema.ts` indicando versão mínima necessária
 
-## 2026-03-14 — Ambiente exclusivo Bun + PowerShell redirect
-**O que não fazer:** Usar `npm`, `npx` ou qualquer variação. Usar `2>&1` em comandos com `bun run` no PowerShell (quebra o script)
+## 2026-03-14 — Ambiente Bun-first e shell portável
+**O que não fazer:** Usar `npm`, `npx`, `yarn` ou `pnpm` no fluxo JS/TS do monorepo. Introduzir comandos dependentes de PowerShell/Windows quando a execução precisa permanecer portável para Linux e CI.
 **Padrão correto:**
 - Sempre usar `bun` para executar scripts: `bun run typecheck`, `bun run dev`, etc.
-- Para capturar output no PowerShell: usar apenas `| Out-String` ou deixar sem redirect
+- Preferir comandos compatíveis com shell POSIX e com a esteira de CI do repositório
+- Documentar em `docs/` qualquer exceção de ambiente se algum app exigir tooling específico
 - `bun x` substitui `npx`; `bun i` substitui `npm install`
 
 ## 2026-03-14 — UUID geração no Better Auth
