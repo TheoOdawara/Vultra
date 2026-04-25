@@ -10,3 +10,4 @@
 /apps/ai-service/.venv
 
 /apps/ai-service/.env
+/apps/api-core/dist
