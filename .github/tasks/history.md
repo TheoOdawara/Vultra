@@ -142,3 +142,193 @@
 
 - [x] Tabela `audit_logs` com trigger de imutabilidade (`trg_audit_logs_immutable`) — migration 0008
 - [x] Schema Drizzle `schema/audit-logs.ts` — `auditLogs` pgTable com tipos corretos
+
+---
+
+## [2026-04-25] Execução 01 — [FIX] Merge Conflicts — AI Service Python + package.json corrompido
+> Branch: `fix/facial-recognition-recovery`
+> GitHub Issue: #3
+
+### Corrigido
+- [x] `apps/api-core/package.json` — removido JSON duplicado injetado dentro de `dependencies`; arquivo voltou a ser JSON válido
+- [x] `apps/ai-service/config.py` — consolidado `Settings` + `get_settings()` sem conflict markers
+- [x] `apps/ai-service/main.py` — consolidado bootstrap FastAPI, lifespan, middleware e rotas sem duplicações
+- [x] `apps/ai-service/services/face_service.py` — removidas duplicações estruturais; `FaceServiceError` e `FaceService` reconstituídos
+- [x] `apps/ai-service/validators/frame_validator.py` — removidas duplicações; `decode_frame()` e `validate_quality()` consolidados
+- [x] `apps/ai-service/workers/redis_worker.py` — removidas duplicações; loop BLPOP e publicação de resultados restaurados
+- [x] `apps/ai-service/**/__pycache__` e `*.pyc` removidos do tracking
+
+### Verificação observada
+- [x] Busca por `<<<<<<<|=======|>>>>>>>` no repositório → sem resultados
+- [x] Parse JSON de `apps/api-core/package.json` → exit code 0
+- [x] `python -m py_compile` no AI Service → exit code 0
+- [x] Import da app principal do AI Service (`main.app`) → exit code 0
+- [x] `cd apps/api-core && bun install` → exit code 0
+
+---
+
+## [2026-04-25] Execução 02 — [FIX] TypeScript Strict Errors + Bun Install
+> Branch: `fix/facial-recognition-recovery`
+> GitHub Issue: #9
+
+### Resultado
+- [x] `cd apps/api-core && bun install` → exit code 0
+- [x] `cd apps/api-core && bun run typecheck` → exit code 0
+- [x] Nenhuma correção adicional foi necessária nos arquivos do `api-core`
+
+---
+
+## [2026-04-25] Execução 03 — [DATA] Migration 0015 — Colunas adicionais em biometric_profiles
+> Branch: `fix/facial-recognition-recovery`
+> GitHub Issue: #7
+
+### Estrutura de dados atualizada
+- [x] `apps/api-core/src/infrastructure/database/migrations/0015_biometric_profiles_audit_columns.sql` criada
+- [x] `apps/api-core/src/infrastructure/database/migrations/meta/_journal.json` atualizado com entry idx 14
+- [x] `apps/api-core/src/infrastructure/database/schema/biometric-profiles.ts` atualizado com `deviceId`, `createdBy`, `deletedAt`, `deletedBy` e `faceEmbedding` nullable
+- [x] `apps/api-core/src/infrastructure/database/schema/index.ts` atualizado para `membersRelations.biometricProfiles: many(biometricProfiles)`
+
+### Contrato base do backend alinhado
+- [x] `apps/api-core/src/infrastructure/auth.ts` — `advanced.database.generateId = 'uuid'` definido explicitamente
+- [x] `apps/api-core/src/adapters/repositories/biometrics.repo.ts` — contrato final preparado para:
+  - revoke por `profileId`
+  - listagem por `organizationId` + `memberId?`
+  - similaridade com filtro opcional `memberId`
+- [x] `apps/api-core/src/core/use-cases/biometrics.use-cases.ts` — revoke ajustado para preencher `deleted_at` / `deleted_by` via repositório
+
+### Verificação observada
+- [x] `cd apps/api-core && bun run db:migrate` → exit code 0
+- [x] `cd apps/api-core && bun run typecheck` → exit code 0
+
+---
+
+## [2026-04-25] Execução 04 — [FEAT] Testes — Fase 1 (Criar cenários TDD para Use Cases + Rotas /v1/face)
+> Branch: `fix/facial-recognition-recovery`
+> GitHub Issue: #8
+
+### Arquivos criados
+- [x] `apps/api-core/src/__tests__/use-cases/biometrics.use-cases.test.ts`
+- [x] `apps/api-core/src/__tests__/routes/face.routes.test.ts`
+
+### Cobertura criada
+- [x] `EnrollBiometricUseCase` — sucesso, `NO_FACE`, qualidade `< 0.40`, CB aberto, org isolation
+- [x] `VerifyFaceUseCase` — `MATCH`, `POSSÍVEL`, `SEM_MATCH`, CB aberto, sem perfis cadastrados, `memberId` fora do tenant → `404` antes do AI Service
+- [x] `ListFacesUseCase` — lista vazia, filtro `memberId`, org isolation
+- [x] `RevokeBiometricUseCase` — sucesso, perfil inexistente, org isolation
+- [x] Rotas `/v1/face/*` — sucesso por endpoint, `422`, `413`, `401`, `403`, `404`, `429`, `503` com e sem `Retry-After`
+- [x] Cutover legado `/v1/biometric/*` → `404`
+
+### Gate de aprovação
+- [x] `architect` → APROVADA
+- [x] `specs-collector` → APROVADA
+- [x] usuário → aprovação explícita para prosseguir
+
+---
+
+## [2026-04-25] Execução 05 — [FEAT] Use Cases — Implementar VerifyFaceUseCase + ListFacesUseCase
+> Branch: `fix/facial-recognition-recovery`
+> GitHub Issue: #4
+
+### Implementado
+- [x] `apps/api-core/src/core/use-cases/biometrics.use-cases.ts`
+  - `VerifyFaceUseCase` implementado com thresholds `MATCH` / `POSSÍVEL` / `SEM_MATCH`
+  - validação de `memberId` fora do tenant antes de acionar o AI Service
+  - `touchLastMatched` somente em `MATCH`
+  - `SEM_MATCH` retorna `confidence=0` e sem `memberId`
+  - `ListFacesUseCase` implementado consumindo listagem sanitizada do repositório
+
+### Ajustes auxiliares para liberar validação
+- [x] correções de lint/typing mínimas em arquivos do `api-core` necessários para `bun run lint` voltar a passar
+
+### Verificação observada
+- [x] `cd apps/api-core && bun run lint` → exit code 0
+- [x] `cd apps/api-core && bun run typecheck` → exit code 0
+- [x] `cd apps/api-core && bun run format` → exit code 0
+- [x] `cd apps/api-core && bun run build` → exit code 0
+- [x] `cd apps/api-core && bun test src/__tests__/use-cases/biometrics.use-cases.test.ts` → exit code 0 (`17 pass / 0 fail`)
+
+---
+
+## [2026-04-25] Execução 06 — [FEAT] Rotas — Corrigir prefix + adicionar /v1/face/verify e /v1/face/list
+> Branch: `fix/facial-recognition-recovery`
+> GitHub Issue: #5
+
+### Implementado
+- [x] `apps/api-core/src/adapters/http/face.routes.ts` criado como superfície canônica
+- [x] `POST /v1/face/enroll` ativado na nova superfície
+- [x] `POST /v1/face/verify` implementado com `jobId` gerado na rota
+- [x] `GET /v1/face/list` implementado com retorno sanitizado
+- [x] `DELETE /v1/face/:profileId` implementado consumindo lookup por `(profileId, organizationId)`
+- [x] legado `/v1/biometric/*` passou a responder `404`
+
+### Autorização e limites
+- [x] `apps/api-core/src/infrastructure/auth.ts` consolidado como fonte canônica de permissões biométricas
+- [x] RBAC real aplicado via `derive` + `checkPermission`
+- [x] rate limiting por usuário e organização aplicado com `429` + `Retry-After`
+- [x] `AI_SERVICE_UNAVAILABLE` padronizado em `503` com e sem `Retry-After` conforme cooldown conhecido
+
+### Verificação observada
+- [x] `cd apps/api-core && bun run lint` → exit code 0
+- [x] `cd apps/api-core && bun run typecheck` → exit code 0
+- [x] `cd apps/api-core && bun run format` → exit code 0
+- [x] `cd apps/api-core && bun run build` → exit code 0
+- [x] `cd apps/api-core && bun test src/__tests__/routes/face.routes.test.ts` → exit code 0 (`30 pass / 0 fail`)
+
+---
+
+## [2026-04-25] Execução 07 — [FEAT] AuditLogRepository + Integração nos Use Cases
+> Branch: `fix/facial-recognition-recovery`
+> GitHub Issue: #6
+
+### Implementado
+- [x] `apps/api-core/src/adapters/repositories/audit-log.repository.ts` criado como repositório insert-only
+- [x] `EnrollBiometricUseCase` auditando `BIOMETRIC_PROFILE_ENROLLED`
+- [x] `VerifyFaceUseCase` auditando `BIOMETRIC_PROFILE_VERIFIED` em `MATCH`, `POSSÍVEL`, `SEM_MATCH` e `404 NOT_FOUND`
+- [x] `RevokeBiometricUseCase` auditando `BIOMETRIC_PROFILE_REVOKED` em sucesso e `404 NOT_FOUND`
+- [x] `face.routes.ts` passando `actorId`, `actorType='user'` e `ipAddress`
+- [x] payload sanitizado sem `frameBase64` ou embedding
+
+### Verificação observada
+- [x] `cd apps/api-core && bun run lint` → exit code 0
+- [x] `cd apps/api-core && bun run typecheck` → exit code 0
+- [x] `cd apps/api-core && bun run format` → exit code 0
+- [x] `cd apps/api-core && bun run build` → exit code 0
+- [x] `cd apps/api-core && bun test src/__tests__/use-cases/biometrics.use-cases.test.ts src/__tests__/routes/face.routes.test.ts` → exit code 0 (`47 pass / 0 fail`)
+
+---
+
+## [2026-04-25] Execução 08 — [FEAT] Testes — Fase 2 (Fazer a suíte biométrica passar)
+> Branch: `fix/facial-recognition-recovery`
+> GitHub Issue: #8
+
+### Resultado
+- [x] Nenhuma correção adicional foi necessária para a suíte biométrica da sprint
+- [x] Sem `skip` nos testes biométricos alvo
+- [x] Isolamento entre tenants observável como `404`
+
+### Verificação observada
+- [x] `cd apps/api-core && bun run lint` → exit code 0
+- [x] `cd apps/api-core && bun run typecheck` → exit code 0
+- [x] `cd apps/api-core && bun run format` → exit code 0
+- [x] `cd apps/api-core && bun run build` → exit code 0
+- [x] `cd apps/api-core && bun test` → exit code 0 (`47 pass / 0 fail`)
+
+---
+
+## [2026-04-25] Execução 09 — [DOCS] Documentação — Face Recognition (contratos, fluxos, LGPD)
+> Branch: `fix/facial-recognition-recovery`
+> GitHub Issue: #10
+
+### Documentação atualizada
+- [x] `docs/backend/adrs/ADR-006-biometric-profiles-e-rate-limiting-biometria.md` criado
+- [x] `docs/face/README.md` reescrito com contratos finais `/v1/face/*`, thresholds, erros publicados, Redis + Circuit Breaker e LGPD
+- [x] `docs/database/arquitetura/schema.md` atualizado com a migration 0015 em `biometric_profiles`
+- [x] `docs/backend/README.md` atualizado para referenciar o ADR-006
+- [x] `docs/README.md` atualizado para indexar a documentação de face recognition
+
+### Decisões refletidas
+- [x] `biometric_profiles` consolidado como recurso canônico da biometria facial
+- [x] `verify` documentado como `200` com `MATCH | POSSÍVEL | SEM_MATCH`
+- [x] legado `/v1/biometric/*` documentado como `404`
+- [x] revoke por `profileId` documentado
+- [x] rate limiting biométrico por usuário e organização documentado

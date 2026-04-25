@@ -1,7 +1,7 @@
 # 🏗️ Schema — Tabelas e Relacionamentos
 
 > **← [Voltar ao Database](../README.md)**
-> **Última revisão:** Março 2026 — schema completo (migrations 0001–0014, incluindo tabelas Better Auth)
+> **Última revisão:** Abril 2026 — schema alinhado até a migration `0015`
 
 ---
 
@@ -12,8 +12,10 @@ organizations  (sem RLS — gerida pelo super-admin)
     │
     ├── members  (soft-delete via deleted_at)
     │       │
-    │       └── biometric_profiles  (vector(512) — LGPD Art. 11)
+    │       └── biometric_profiles  (vector(512) nullable — LGPD Art. 11)
+    │               ↳ recurso canônico da biometria facial
     │               ↳ is_active: FALSE em migrações de modelo ou revogação
+    │               ↳ revoke LGPD: face_embedding = NULL + deleted_at/deleted_by
     │               ↳ Índice HNSW em face_embedding (migration 0009)
     │
     ├── devices  (ESP32-CAM — auth via X-Device-Token / api_key_hash)
@@ -73,15 +75,21 @@ auth_users → auth_passkeys
 | `id` | UUID PK | `gen_uuid_v7()` |
 | `organization_id` | UUID FK | Isolamento de tenant |
 | `member_id` | UUID FK | — |
-| `face_embedding` | `vector(512)` | **Nunca armazenar imagem — somente vetor** (LGPD Art. 11) |
+| `face_embedding` | `vector(512)` nullable | **Nunca armazenar imagem — somente vetor**. Nullable desde a migration `0015` para suportar revoke LGPD |
 | `model_version` | TEXT | Ex: `'ArcFace-v1'` — **sempre preencher; filtrar em queries de reconhecimento** |
-| `quality_score` | REAL CHECK | Score de qualidade do enroll `[0, 1]`. Mínimo recomendado: `0.7`. Rejeitar `< 0.5` |
+| `quality_score` | REAL CHECK | Score de qualidade do enroll `[0, 1]`. A implementação atual rejeita enroll `< 0.50` |
 | `is_active` | BOOLEAN | `FALSE` = desativado por migração de modelo ou revogação LGPD |
+| `device_id` | UUID nullable | Identificador do dispositivo de captura, quando aplicável. Adicionado na migration `0015` |
+| `created_by` | UUID nullable | UUID do ator que criou o perfil biométrico. Adicionado na migration `0015` |
 | `enrolled_at` | TIMESTAMPTZ | Data do cadastro biométrico |
 | `last_matched_at` | TIMESTAMPTZ nullable | Última vez que o rosto foi reconhecido |
+| `deleted_at` | TIMESTAMPTZ nullable | Timestamp de revogação/soft-delete LGPD. Adicionado na migration `0015` |
+| `deleted_by` | UUID nullable | UUID do ator que executou a revogação. Adicionado na migration `0015` |
 
 > **Índice HNSW** em `face_embedding` com `vector_cosine_ops` — migration `0009`, ver [manuais/indexacao.md](../manuais/indexacao.md).  
 > **UNIQUE parcial:** `(member_id, model_version) WHERE is_active = TRUE` — garante um perfil ativo por (membro, modelo).  
+> **Migration `0015`:** adiciona colunas de rastreabilidade (`device_id`, `created_by`) e de revoke LGPD (`deleted_at`, `deleted_by`), além de tornar `face_embedding` nullable.  
+> **Recurso canônico da feature facial:** `biometric_profiles` (ver [ADR-006](../../backend/adrs/ADR-006-biometric-profiles-e-rate-limiting-biometria.md)).  
 > Para risco de migração de `model_version`, ver [arquitetura/versionamento-embeddings.md](./versionamento-embeddings.md).
 
 ---
@@ -198,4 +206,3 @@ auth_users → auth_passkeys
 
 > **FK `members.user_id`:** migration `0014` concretiza a FK lógica existente desde `0003`.
 > Altera `user_id` de `UUID` para `TEXT` (alinhamento com `auth_users.id`) com `ON DELETE SET NULL`.
-

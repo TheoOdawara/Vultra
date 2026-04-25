@@ -1,7 +1,7 @@
 # ⚙️ VULTRA — Backend
 
 > **← [Voltar ao Hub Principal](../README.md)**
-> **Área:** Backend (API Core + Microserviço de IA) | **Última revisão:** Fevereiro 2026
+> **Área:** Backend (API Core + Microserviço de IA) | **Última revisão:** Abril 2026
 
 ---
 
@@ -12,7 +12,7 @@ Esta seção cobre dois serviços distintos que operam em conjunto:
 | Serviço | Stack | Responsabilidade |
 |---------|-------|-----------------|
 | **API Core** | Bun + ElysiaJS + Better Auth | Autenticação, lógica de negócio, persistência, WebSocket |
-| **AI Service** | Python + FastAPI + DeepFace | Geração de embeddings faciais e análise de sentimento |
+| **AI Service** | Python + FastAPI + InsightFace | Geração de embeddings faciais e análise de sentimento |
 
 A comunicação entre os dois serviços é feita preferencialmente via **filas Redis** (fila para produção e integração com ESP32). Para provas de conceito locais (ex.: câmera do computador) é permitida comunicação HTTP síncrona direta com o AI Service; a arquitetura de produção deve permanecer baseada em filas.
 
@@ -59,7 +59,7 @@ Registro imutável das decisões arquiteturais e suas justificativas.
 | [adrs/ADR-002-arcface-modelo-padrao.md](./adrs/ADR-002-arcface-modelo-padrao.md) | ArcFace como modelo padrão de embeddings |
 | [adrs/ADR-003-circuit-breaker-redis.md](./adrs/ADR-003-circuit-breaker-redis.md) | Circuit Breaker na fila Redis |
 | [adrs/ADR-004-estrutura-pastas-modularizacao.md](./adrs/ADR-004-estrutura-pastas-modularizacao.md) | Estrutura de pastas do monorepo e modularização hexagonal |
-| [adrs/ADR-004-estrutura-pastas-modularizacao.md](./adrs/ADR-004-estrutura-pastas-modularizacao.md) | Estrutura de pastas e modularização do monorepo |
+| [adrs/ADR-006-biometric-profiles-e-rate-limiting-biometria.md](./adrs/ADR-006-biometric-profiles-e-rate-limiting-biometria.md) | `biometric_profiles` como recurso biométrico canônico e rate limiting da superfície `/v1/face/*` |
 
 ---
 
