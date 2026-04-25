@@ -9,8 +9,6 @@ import { app } from "./infrastructure/server";
 
 const port = Number(process.env.PORT ?? 3000);
 
-app.listen(port, () => {
-  console.info(`[VULTRA] API Core listening on http://0.0.0.0:${port}`);
-});
+app.listen(port);
 
 export type App = typeof app;

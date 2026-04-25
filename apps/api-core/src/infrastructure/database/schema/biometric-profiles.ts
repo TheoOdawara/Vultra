@@ -28,7 +28,7 @@ export const biometricProfiles = pgTable("biometric_profiles", {
     .references(() => members.id, { onDelete: "restrict" }),
 
   /** Embedding facial 512-dim (ArcFace). Somente vetores, proibido imagem (LGPD). */
-  faceEmbedding: vector("face_embedding", { dimensions: 512 }).notNull(),
+  faceEmbedding: vector("face_embedding", { dimensions: 512 }),
 
   /**
    * Versão do modelo que gerou o vetor.
@@ -43,8 +43,20 @@ export const biometricProfiles = pgTable("biometric_profiles", {
   /** FALSE = desativado por migração de modelo ou revogação LGPD */
   isActive: boolean("is_active").notNull().default(true),
 
+  /** Dispositivo associado ao enroll, quando houver rastreabilidade de captura. */
+  deviceId: uuid("device_id"),
+
+  /** UUID do ator que criou o perfil biométrico. */
+  createdBy: uuid("created_by"),
+
   enrolledAt: timestamp("enrolled_at", { withTimezone: true }).notNull().defaultNow(),
   lastMatchedAt: timestamp("last_matched_at", { withTimezone: true }),
+
+  /** Soft-delete LGPD: preenchido quando o perfil é revogado/excluído logicamente. */
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
+
+  /** UUID do ator que executou a revogação/exclusão lógica. */
+  deletedBy: uuid("deleted_by"),
 });
 
 export type BiometricProfile = typeof biometricProfiles.$inferSelect;

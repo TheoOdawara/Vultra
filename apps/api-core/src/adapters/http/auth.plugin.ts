@@ -12,8 +12,11 @@
  */
 
 import { Elysia } from "elysia";
+import { and, eq } from "drizzle-orm";
 import { UnauthorizedError } from "../../core/domain/errors/DomainError";
 import { auth } from "../../infrastructure/auth";
+import { db } from "../../infrastructure/database/client";
+import { authMembers } from "../../infrastructure/database/schema";
 
 export const authPlugin = new Elysia({ name: "auth-plugin" }).derive(
   { as: "scoped" },
@@ -22,6 +25,7 @@ export const authPlugin = new Elysia({ name: "auth-plugin" }).derive(
   }): Promise<{
     currentUser: typeof auth.$Infer.Session.user;
     currentOrg: string | undefined | null;
+    currentRole: string | null;
   }> => {
     // Converte os headers do Elysia (Record<string, string>) para o formato
     // esperado pelo Better Auth (Headers ou Record<string, string>).
@@ -29,9 +33,23 @@ export const authPlugin = new Elysia({ name: "auth-plugin" }).derive(
 
     if (!session) throw new UnauthorizedError();
 
+    const currentOrg = session.session.activeOrganizationId;
+    const currentMember = currentOrg
+      ? await db
+          .select({
+            role: authMembers.role,
+          })
+          .from(authMembers)
+          .where(
+            and(eq(authMembers.organizationId, currentOrg), eq(authMembers.userId, session.user.id))
+          )
+          .limit(1)
+      : [];
+
     return {
       currentUser: session.user,
-      currentOrg: session.session.activeOrganizationId,
+      currentOrg,
+      currentRole: currentMember[0]?.role ?? null,
     };
   }
 );

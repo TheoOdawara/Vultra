@@ -14,14 +14,15 @@
 import { createId } from "@paralleldrive/cuid2";
 import Elysia, { t } from "elysia";
 import { authPlugin } from "./auth.plugin";
-import { AIJobQueue } from "../queue/ai-job.queue.ts";
+import type { AIJobQueue } from "../queue/ai-job.queue.ts";
+import { AuditLogRepository } from "../repositories/audit-log.repository.ts";
 import { BiometricsRepository } from "../repositories/biometrics.repo.ts";
 import {
   EnrollBiometricUseCase,
   RevokeBiometricUseCase,
 } from "../../core/use-cases/biometrics.use-cases";
 import { db } from "../../infrastructure/database/client";
-import { ForbiddenError, OrganizationNotFoundError } from "../../core/domain/errors/DomainError";
+import { OrganizationNotFoundError } from "../../core/domain/errors/DomainError";
 
 // Lazy-initialized singletons (Redis injected at server startup)
 let _aiQueue: AIJobQueue | null = null;
@@ -30,12 +31,13 @@ export function initBiometricRoutes(aiQueue: AIJobQueue) {
   _aiQueue = aiQueue;
 }
 
-function getUseCases(organizationId: string) {
+function getUseCases() {
   if (!_aiQueue) throw new Error("AIJobQueue not initialized");
   const biometricsRepo = new BiometricsRepository(db);
+  const auditLogRepo = new AuditLogRepository(db);
   return {
-    enroll: new EnrollBiometricUseCase(_aiQueue, biometricsRepo),
-    revoke: new RevokeBiometricUseCase(biometricsRepo),
+    enroll: new EnrollBiometricUseCase(_aiQueue, biometricsRepo, auditLogRepo),
+    revoke: new RevokeBiometricUseCase(biometricsRepo, auditLogRepo),
   };
 }
 
@@ -47,16 +49,19 @@ export const biometricRoutes = new Elysia({ prefix: "/biometric" })
     "/enroll",
     async ({ body, currentOrg, currentUser }) => {
       if (!currentOrg) throw new OrganizationNotFoundError();
+      const actorId = currentUser?.id ?? body.memberId;
 
       // Only admins can enroll biometrics
       // (role check delegated to RBAC middleware in production; simple guard here)
-      const { enroll } = getUseCases(currentOrg);
+      const { enroll } = getUseCases();
 
       const result = await enroll.execute({
         jobId: createId(),
         frameBase64: body.frameBase64,
         memberId: body.memberId,
         organizationId: currentOrg,
+        actorId,
+        actorType: "user",
       });
 
       return {
@@ -84,19 +89,23 @@ export const biometricRoutes = new Elysia({ prefix: "/biometric" })
           "Processes a JPEG frame via AI Service and stores the resulting 512-dim embedding. " +
           "The frame is NEVER persisted (LGPD Art. 11).",
       },
-    },
+    }
   )
 
   // ── DELETE /v1/biometric/:memberId ──────────────────────────────────────
   .delete(
     "/:memberId",
-    async ({ params, currentOrg }) => {
+    async ({ params, currentOrg, currentUser }) => {
       if (!currentOrg) throw new OrganizationNotFoundError();
+      const actorId = currentUser?.id ?? params.memberId;
 
-      const { revoke } = getUseCases(currentOrg);
+      const { revoke } = getUseCases();
       await revoke.execute({
         memberId: params.memberId,
         organizationId: currentOrg,
+        deletedBy: actorId,
+        actorId,
+        actorType: "user",
       });
 
       return { success: true };
@@ -113,5 +122,5 @@ export const biometricRoutes = new Elysia({ prefix: "/biometric" })
           "Sets is_active = FALSE and nullifies the face_embedding vector. " +
           "Required for LGPD right-to-erasure requests.",
       },
-    },
+    }
   );

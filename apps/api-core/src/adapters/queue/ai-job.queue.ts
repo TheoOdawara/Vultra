@@ -12,12 +12,8 @@
  * share the same state consistently.
  */
 
-import { createId } from "@paralleldrive/cuid2";
 import type { Redis } from "ioredis";
-import {
-  AIJobTimeoutError,
-  AIServiceUnavailableError,
-} from "../../core/domain/errors/DomainError";
+import { AIJobTimeoutError, AIServiceUnavailableError } from "../../core/domain/errors/DomainError";
 import type {
   AIJobResult,
   CircuitHealth,
@@ -27,15 +23,14 @@ import type {
 
 // ── Circuit Breaker config (ADR-003) ──────────────────────────────────────────
 
-const CB_FAILURE_THRESHOLD = 5;    // consecutive failures to open circuit
-const CB_SUCCESS_THRESHOLD = 2;    // consecutive successes in HALF_OPEN to close
-const CB_COOLDOWN_MS = 30_000;     // 30s before OPEN → HALF_OPEN transition
-const JOB_TIMEOUT_MS = 3_000;      // max wait for AI result
+const CB_FAILURE_THRESHOLD = 5; // consecutive failures to open circuit
+const CB_SUCCESS_THRESHOLD = 2; // consecutive successes in HALF_OPEN to close
+const CB_COOLDOWN_MS = 30_000; // 30s before OPEN → HALF_OPEN transition
+const JOB_TIMEOUT_MS = 3_000; // max wait for AI result
 const RESULT_POLL_INTERVAL_MS = 50; // polling interval for result key
-const RESULT_TTL_S = 60;
 
 // Redis keys
-const CB_STATE_KEY = "vultra:circuit:ai:state";         // "CLOSED" | "OPEN" | "HALF_OPEN"
+const CB_STATE_KEY = "vultra:circuit:ai:state"; // "CLOSED" | "OPEN" | "HALF_OPEN"
 const CB_FAILURE_COUNT_KEY = "vultra:circuit:ai:failures";
 const CB_LAST_FAILURE_KEY = "vultra:circuit:ai:last_failure";
 const CB_OPEN_AT_KEY = "vultra:circuit:ai:open_at";
@@ -45,7 +40,7 @@ export class AIJobQueue implements IAIQueueAdapter {
   constructor(
     private readonly redis: Redis,
     private readonly queueName: string = "ai:recognition:queue",
-    private readonly resultPrefix: string = "ai:recognition:result:",
+    private readonly resultPrefix: string = "ai:recognition:result:"
   ) {}
 
   // ── Public API ────────────────────────────────────────────────────────────

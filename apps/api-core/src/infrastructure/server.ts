@@ -21,7 +21,7 @@ import {
   attendanceUserRoutes,
   initAttendanceRoutes,
 } from "../adapters/http/attendance.routes";
-import { biometricRoutes, initBiometricRoutes } from "../adapters/http/biometric.routes";
+import { faceRoutes, initFaceRoutes } from "../adapters/http/face.routes";
 import { healthRoutes, initHealthRoutes } from "../adapters/http/health.routes";
 
 if (!process.env.REDIS_URL) {
@@ -32,17 +32,17 @@ if (!process.env.REDIS_URL) {
 
 const redis = new Redis(process.env.REDIS_URL);
 
-redis.on("error", (err) => console.error("[Redis]", err));
-redis.on("connect", () => console.info("[Redis] Connected"));
+redis.on("error", () => undefined);
+redis.on("connect", () => undefined);
 
 const aiQueue = new AIJobQueue(
   redis,
   process.env.AI_QUEUE_NAME ?? "ai:recognition:queue",
-  process.env.AI_RESULT_PREFIX ?? "ai:recognition:result:",
+  process.env.AI_RESULT_PREFIX ?? "ai:recognition:result:"
 );
 
 // Inject AIJobQueue into route modules
-initBiometricRoutes(aiQueue);
+initFaceRoutes(aiQueue);
 initAttendanceRoutes(aiQueue);
 initHealthRoutes(aiQueue);
 
@@ -60,7 +60,7 @@ export const app = new Elysia()
         .map((s) => s.trim())
         .filter(Boolean),
       credentials: true,
-    }),
+    })
   )
 
   // 3. Better Auth handler — /api/auth/*
@@ -68,9 +68,5 @@ export const app = new Elysia()
 
   // 4. Domain routes under /v1
   .group("/v1", (v1) =>
-    v1
-      .use(attendanceUserRoutes)
-      .use(attendanceDeviceRoutes)
-      .use(biometricRoutes)
-      .use(healthRoutes),
+    v1.use(attendanceUserRoutes).use(attendanceDeviceRoutes).use(faceRoutes).use(healthRoutes)
   );
