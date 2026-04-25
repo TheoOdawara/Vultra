@@ -14,7 +14,7 @@ export class DomainError extends Error {
   constructor(
     public readonly errorCode: string,
     public readonly httpStatus: number,
-    message?: string,
+    message?: string
   ) {
     super(message ?? errorCode);
     this.name = this.constructor.name;
@@ -53,11 +53,7 @@ export class OrganizationNotFoundError extends DomainError {
 
 export class AttendanceConflictError extends DomainError {
   constructor() {
-    super(
-      "ATTENDANCE_CONFLICT",
-      409,
-      "Presence already recorded for this member in this session",
-    );
+    super("ATTENDANCE_CONFLICT", 409, "Presence already recorded for this member in this session");
   }
 }
 
@@ -86,7 +82,7 @@ export class LowConfidenceMatchError extends DomainError {
     super(
       "LOW_CONFIDENCE_MATCH",
       422,
-      `Match confidence ${confidence.toFixed(3)} is below the threshold — manual review required`,
+      `Match confidence ${confidence.toFixed(3)} is below the threshold — manual review required`
     );
   }
 }
@@ -104,8 +100,20 @@ export class BiometricEnrollConflictError extends DomainError {
     super(
       "BIOMETRIC_ENROLL_CONFLICT",
       409,
-      "An active biometric profile already exists for this member and model version",
+      "An active biometric profile already exists for this member and model version"
     );
+  }
+}
+
+export class PayloadTooLargeError extends DomainError {
+  constructor() {
+    super("PAYLOAD_TOO_LARGE", 413, "Payload exceeds the maximum allowed size");
+  }
+}
+
+export class RateLimitExceededError extends DomainError {
+  constructor(public readonly retryAfter: number) {
+    super("RATE_LIMIT_EXCEEDED", 429, "Too many requests");
   }
 }
 

@@ -6,8 +6,8 @@
  */
 
 export interface AIJobResult {
-  embedding: number[];      // 512-dimensional ArcFace vector
-  qualityScore: number;     // [0, 1]
+  embedding: number[]; // 512-dimensional ArcFace vector
+  qualityScore: number; // [0, 1]
   processingMs: number;
 }
 

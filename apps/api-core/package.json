@@ -15,23 +15,6 @@
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
-{
-  "name": "@vultra/api-core",
-  "version": "0.1.0",
-  "private": true,
-  "type": "module",
-  "scripts": {
-    "dev": "bun run --hot src/main.ts",
-    "build": "bun build src/main.ts --outdir dist --target bun",
-    "start": "bun dist/main.js",
-    "typecheck": "tsc --noEmit",
-    "lint": "biome lint ./src",
-    "format": "biome format --write ./src",
-    "check": "biome check --write ./src",
-    "db:migrate": "drizzle-kit migrate",
-    "db:studio": "drizzle-kit studio"
-  },
-  "dependencies": {
     "@elysiajs/bearer": "^1.4.3",
     "@elysiajs/cors": "^1.4.1",
     "@paralleldrive/cuid2": "^3.3.0",

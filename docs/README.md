@@ -53,8 +53,8 @@ O **VULTRA** é um ecossistema SaaS Multitenant de ponta para **gestão de prese
 │  ┌──────────────┐ ┌────────────┐  ┌───────────────────────┐              │
 │  │  PostgreSQL  │ │   Redis    │  │  AI Microservice      │              │
 │  │  + pgvector  │ │  (Queues)  │  │  (Python + FastAPI +  │              │
-│  │  vector(512) │ │            │  │   DeepFace)           │              │
-│  └──────────────┘ └────────────┘  └───────────────────────┘              │ 
+│  │  vector(512) │ │            │  │   InsightFace)        │              │
+│  └──────────────┘ └────────────┘  └───────────────────────┘              │
 │                                                                          │
 │  ┌──────────────────────────────────────────────┐                        │
 │  │         IoT LAYER (ESP32-CAM)                │                        │
@@ -81,7 +81,12 @@ Cada área possui a seguinte estrutura interna:
 ### ⚙️ Camada de Backend
 | Documento | Descrição | Prioridade |
 |-----------|-----------|------------|
-| [backend/README.md](./backend/README.md) | Índice — API Core (Bun/ElysiaJS) + AI Service (FastAPI/DeepFace) | **CRÍTICA** |
+| [backend/README.md](./backend/README.md) | Índice — API Core (Bun/ElysiaJS) + AI Service (FastAPI/InsightFace) | **CRÍTICA** |
+
+### 🧠 Biometria Facial
+| Documento | Descrição | Prioridade |
+|-----------|-----------|------------|
+| [face/README.md](./face/README.md) | Contratos canônicos `/v1/face/*`, thresholds, rate limiting, Redis + Circuit Breaker e LGPD | **CRÍTICA** |
 
 ### 🖥️ Camada de Frontend
 | Documento | Descrição | Audiência |
@@ -104,7 +109,7 @@ PROIBIDO: Persistir imagens brutas no banco de dados
 PERMITIDO: Apenas vetores numéricos float32[512] (embeddings)
 
 Fluxo obrigatório:
-  Imagem (ESP32-CAM) → RAM → DeepFace.represent() → vector(512) → PostgreSQL
+  Imagem (ESP32-CAM) → RAM → InsightFace/ArcFace → vector(512) → PostgreSQL
                          ↑
               Imagem descartada aqui. Nunca persiste em disco.
 ```
@@ -140,7 +145,7 @@ src/
 │  Auth        │ Better Auth (Org, RBAC, Passkeys)│
 │  Database    │ PostgreSQL 16 + pgvector 0.7     │
 │  Cache/Queue │ Redis 7                          │
-│  AI Engine   │ Python 3.11 + FastAPI + DeepFace │
+│  AI Engine   │ Python 3.11 + FastAPI + InsightFace │
 │  Hardware    │ ESP32-CAM (C++/Arduino)          │
 │  Deploy      │ Docker + Docker Compose          │
 │  CI/CD       │ GitHub Actions                   │
@@ -198,4 +203,4 @@ Antes de implementar qualquer feature, confirme:
 ## 👥 Equipe e Contato
 
 > Documentação mantida pelo **Arquitetos Principais do VULTRA**.
-> Última revisão: **Fevereiro de 2026**
+> Última revisão: **Abril de 2026**

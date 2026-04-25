@@ -40,10 +40,7 @@ export const membersRelations = relations(members, ({ one, many }) => ({
     fields: [members.organizationId],
     references: [organizations.id],
   }),
-  biometricProfile: one(biometricProfiles, {
-    fields: [members.id],
-    references: [biometricProfiles.memberId],
-  }),
+  biometricProfiles: many(biometricProfiles),
   attendanceRecords: many(attendanceRecords),
 }));
 

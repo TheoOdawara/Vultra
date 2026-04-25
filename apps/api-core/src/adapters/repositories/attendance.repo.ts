@@ -5,38 +5,35 @@
  * All queries include organization_id filter (multitenancy).
  */
 
-import { and, eq, sql } from "drizzle-orm";
-import type { NodePgDatabase } from "drizzle-orm/node-postgres";
-import type { NewAttendanceRecord, NewAttendanceSession } from "../../infrastructure/database/schema";
+import { and, eq } from "drizzle-orm";
+import type {
+  NewAttendanceRecord,
+  NewAttendanceSession,
+} from "../../infrastructure/database/schema";
+import type { Db } from "../../infrastructure/database/client";
 import { attendanceRecords, attendanceSessions } from "../../infrastructure/database/schema";
 
 export class AttendanceRepository {
-  constructor(private readonly db: NodePgDatabase<any>) {}
+  constructor(private readonly db: Db) {}
 
   // ── Sessions ──────────────────────────────────────────────────────────────
 
-  async findSessionById(
-    sessionId: string,
-    organizationId: string,
-  ) {
+  async findSessionById(sessionId: string, organizationId: string) {
     const [session] = await this.db
       .select()
       .from(attendanceSessions)
       .where(
         and(
           eq(attendanceSessions.id, sessionId),
-          eq(attendanceSessions.organizationId, organizationId),
-        ),
+          eq(attendanceSessions.organizationId, organizationId)
+        )
       )
       .limit(1);
     return session ?? null;
   }
 
   async createSession(data: NewAttendanceSession) {
-    const [session] = await this.db
-      .insert(attendanceSessions)
-      .values(data)
-      .returning();
+    const [session] = await this.db.insert(attendanceSessions).values(data).returning();
     return session;
   }
 
@@ -47,8 +44,8 @@ export class AttendanceRepository {
       .where(
         and(
           eq(attendanceSessions.id, sessionId),
-          eq(attendanceSessions.organizationId, organizationId),
-        ),
+          eq(attendanceSessions.organizationId, organizationId)
+        )
       );
   }
 
@@ -63,20 +60,14 @@ export class AttendanceRepository {
       .select({ id: attendanceRecords.id })
       .from(attendanceRecords)
       .where(
-        and(
-          eq(attendanceRecords.sessionId, sessionId),
-          eq(attendanceRecords.memberId, memberId),
-        ),
+        and(eq(attendanceRecords.sessionId, sessionId), eq(attendanceRecords.memberId, memberId))
       )
       .limit(1);
     return !!row;
   }
 
   async createRecord(data: NewAttendanceRecord) {
-    const [record] = await this.db
-      .insert(attendanceRecords)
-      .values(data)
-      .returning();
+    const [record] = await this.db.insert(attendanceRecords).values(data).returning();
     return record;
   }
 

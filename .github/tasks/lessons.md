@@ -32,3 +32,19 @@
 **Padrão correto:** Usar `advanced.database.generateId: 'uuid'` nativo do Better Auth
 - O generateId aceita string literal `'uuid'` | `'serial'` | `false` ou função custom
 - Os UUIDs do domínio continuam sendo v7 via `gen_uuid_v7()` no PostgreSQL (DEFAULT das colunas SQL)
+
+## 2026-04-25 — Estabilização pós-merge quebrado
+**O que não fazer:** Tratar o repositório como recuperado apenas porque os arquivos “parecem” corretos após resolver conflitos manualmente.
+**Padrão correto:**
+1. Buscar markers `<<<<<<<|=======|>>>>>>>` no repositório inteiro
+2. Validar `package.json` com parser real
+3. Rodar `python -m py_compile` nos módulos Python afetados
+4. Confirmar import/startup mínimo da app principal
+5. Remover `__pycache__` e `*.pyc` do tracking antes de seguir para a próxima execução
+
+## 2026-04-25 — PostgreSQL local deve isolar porta por projeto
+**O que não fazer:** Assumir `localhost:5432` como porta segura para qualquer stack local do monorepo.
+**Padrão correto:**
+1. Verificar se a porta está ocupada por outro serviço externo ao projeto
+2. Alinhar `DATABASE_URL`, `infra/.env` e `docker-compose.yml` para a porta efetiva do stack local
+3. Validar `bun run db:migrate` contra o PostgreSQL do próprio projeto antes de tratar a execução de dados como concluída

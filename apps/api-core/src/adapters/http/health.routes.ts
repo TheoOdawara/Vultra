@@ -31,11 +31,7 @@ export const healthRoutes = new Elysia({ prefix: "/health" }).get(
   {
     response: t.Object({
       status: t.Union([t.Literal("ok"), t.Literal("degraded"), t.Literal("unavailable")]),
-      circuitState: t.Union([
-        t.Literal("CLOSED"),
-        t.Literal("OPEN"),
-        t.Literal("HALF_OPEN"),
-      ]),
+      circuitState: t.Union([t.Literal("CLOSED"), t.Literal("OPEN"), t.Literal("HALF_OPEN")]),
       failureCount: t.Number({ minimum: 0 }),
       lastFailureAt: t.Nullable(t.String()),
     }),
@@ -43,5 +39,5 @@ export const healthRoutes = new Elysia({ prefix: "/health" }).get(
       summary: "AI Service circuit breaker health",
       tags: ["ops"],
     },
-  },
+  }
 );

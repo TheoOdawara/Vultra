@@ -99,6 +99,13 @@
       "when": 1773532803000,
       "tag": "0014_add_members_user_fk",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1773532804000,
+      "tag": "0015_biometric_profiles_audit_columns",
+      "breakpoints": true
     }
   ]
 }

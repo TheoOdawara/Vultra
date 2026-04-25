@@ -23,8 +23,8 @@ import {
 
 // ── Config ────────────────────────────────────────────────────────────────────
 
-const FACE_MATCH_THRESHOLD = 0.85;       // ArcFace cosine similarity — confirmed match
-const LOW_CONFIDENCE_THRESHOLD = 0.75;   // Below this → FACE_NOT_RECOGNIZED
+const FACE_MATCH_THRESHOLD = 0.85; // ArcFace cosine similarity — confirmed match
+const LOW_CONFIDENCE_THRESHOLD = 0.75; // Below this → FACE_NOT_RECOGNIZED
 const CURRENT_MODEL_VERSION = "ArcFace-v1";
 
 // ── RecordAttendance ──────────────────────────────────────────────────────────
@@ -50,14 +50,14 @@ export class RecordAttendanceUseCase {
   constructor(
     private readonly aiQueue: IAIQueueAdapter,
     private readonly biometricsRepo: BiometricsRepository,
-    private readonly attendanceRepo: AttendanceRepository,
+    private readonly attendanceRepo: AttendanceRepository
   ) {}
 
   async execute(input: RecordAttendanceInput): Promise<RecordAttendanceOutput> {
     // 1. Verify session exists and is open
     const session = await this.attendanceRepo.findSessionById(
       input.sessionId,
-      input.organizationId,
+      input.organizationId
     );
     if (!session) throw new SessionNotFoundError();
     if (session.status !== "open") throw new SessionAlreadyClosedError();
@@ -74,7 +74,7 @@ export class RecordAttendanceUseCase {
     const match = await this.biometricsRepo.findBySimilarity(
       aiResult.embedding,
       input.organizationId,
-      CURRENT_MODEL_VERSION,
+      CURRENT_MODEL_VERSION
     );
 
     if (!match) throw new FaceNotRecognizedError();
@@ -89,10 +89,7 @@ export class RecordAttendanceUseCase {
     }
 
     // 5. Duplicate check — same member cannot be registered twice in same session
-    const isDuplicate = await this.attendanceRepo.existsRecord(
-      input.sessionId,
-      match.memberId,
-    );
+    const isDuplicate = await this.attendanceRepo.existsRecord(input.sessionId, match.memberId);
     if (isDuplicate) throw new AttendanceConflictError();
 
     // 6. Persist attendance record (no image — only metadata and scores)
@@ -108,9 +105,7 @@ export class RecordAttendanceUseCase {
     if (!record) throw new Error("Failed to create attendance record");
 
     // 7. Update last_matched_at on biometric profile (non-blocking)
-    this.biometricsRepo
-      .touchLastMatched(match.memberId, input.organizationId)
-      .catch(() => {}); // fire-and-forget, don't fail the response
+    this.biometricsRepo.touchLastMatched(match.memberId, input.organizationId).catch(() => {}); // fire-and-forget, don't fail the response
 
     return {
       recordId: record.id,
@@ -159,7 +154,7 @@ export class CloseSessionUseCase {
   async execute(input: CloseSessionInput): Promise<void> {
     const session = await this.attendanceRepo.findSessionById(
       input.sessionId,
-      input.organizationId,
+      input.organizationId
     );
     if (!session) throw new SessionNotFoundError();
     if (session.status !== "open") throw new SessionAlreadyClosedError();
@@ -183,15 +178,12 @@ export class ManualRecordUseCase {
   async execute(input: ManualRecordInput) {
     const session = await this.attendanceRepo.findSessionById(
       input.sessionId,
-      input.organizationId,
+      input.organizationId
     );
     if (!session) throw new SessionNotFoundError();
     if (session.status !== "open") throw new SessionAlreadyClosedError();
 
-    const isDuplicate = await this.attendanceRepo.existsRecord(
-      input.sessionId,
-      input.memberId,
-    );
+    const isDuplicate = await this.attendanceRepo.existsRecord(input.sessionId, input.memberId);
     if (isDuplicate) throw new AttendanceConflictError();
 
     return this.attendanceRepo.createManualRecord({

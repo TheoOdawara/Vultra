@@ -20,9 +20,64 @@
 
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { organization, multiSession } from "better-auth/plugins";
+import { createAccessControl, multiSession, organization } from "better-auth/plugins";
 import { db } from "./database/client";
 import * as authSchema from "./database/schema/auth-schema";
+
+export const accessControl = createAccessControl({
+  attendance: ["write", "read"],
+  reports: ["read"],
+  biometrics: ["enroll", "verify", "list", "delete"],
+} as const);
+
+export const organizationRoles = {
+  admin: accessControl.newRole({
+    attendance: ["write", "read"],
+    reports: ["read"],
+    biometrics: ["enroll", "verify", "list", "delete"],
+  }),
+  professor: accessControl.newRole({
+    attendance: ["write", "read"],
+    biometrics: ["enroll", "verify", "list", "delete"],
+  }),
+  rh: accessControl.newRole({
+    attendance: ["read"],
+    reports: ["read"],
+    biometrics: ["verify", "list"],
+  }),
+  student: accessControl.newRole({
+    attendance: ["read"],
+  }),
+} as const;
+
+type PermissionRequest = Partial<Record<keyof typeof accessControl.statements, readonly string[]>>;
+
+export function checkPermission(
+  role: string | null | undefined,
+  permission: PermissionRequest
+): boolean {
+  if (!role) {
+    return false;
+  }
+
+  const resolvedRole = organizationRoles[role as keyof typeof organizationRoles];
+  if (!resolvedRole) {
+    return false;
+  }
+
+  return Object.entries(permission).every(([resource, actions]) => {
+    if (!actions) {
+      return true;
+    }
+
+    const allowedActions =
+      resolvedRole.statements[resource as keyof typeof resolvedRole.statements] ?? [];
+
+    return actions.every((action) =>
+      (allowedActions as readonly string[]).includes(action as string)
+    );
+  });
+}
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -35,6 +90,12 @@ export const auth = betterAuth({
     },
   }),
 
+  advanced: {
+    database: {
+      generateId: "uuid",
+    },
+  },
+
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: false, // set to true in production
@@ -43,6 +104,8 @@ export const auth = betterAuth({
   plugins: [
     organization({
       allowUserToCreateOrganization: false, // only super-admin provisions orgs
+      ac: accessControl,
+      roles: organizationRoles,
     }),
     multiSession({
       maximumSessions: 3,

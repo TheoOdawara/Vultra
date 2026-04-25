@@ -6,16 +6,32 @@
  * Vector similarity search uses pgvector cosine distance (<=>).
  */
 
-import { and, eq, sql } from "drizzle-orm";
-import type { NodePgDatabase } from "drizzle-orm/node-postgres";
+import { and, desc, eq, sql } from "drizzle-orm";
+import type { Db } from "../../infrastructure/database/client";
 import { biometricProfiles } from "../../infrastructure/database/schema";
 
 const CURRENT_MODEL_VERSION = "ArcFace-v1";
 
 export interface SimilarityMatch {
+  profileId: string;
   memberId: string;
   similarity: number;
   modelVersion: string;
+}
+
+export interface BiometricProfileLookup {
+  profileId: string;
+  organizationId: string;
+  memberId: string;
+  modelVersion: string;
+  qualityScore: number;
+  isActive: boolean;
+  deviceId: string | null;
+  createdBy: string | null;
+  enrolledAt: Date;
+  lastMatchedAt: Date | null;
+  deletedAt: Date | null;
+  deletedBy: string | null;
 }
 
 export interface EnrollParams {
@@ -26,8 +42,34 @@ export interface EnrollParams {
   modelVersion?: string;
 }
 
+interface FindBySimilarityRow {
+  id: string;
+  member_id: string;
+  similarity: string | number;
+  model_version: string;
+}
+
+interface ReturningIdRow {
+  id: string;
+}
+
 export class BiometricsRepository {
-  constructor(private readonly db: NodePgDatabase<any>) {}
+  constructor(private readonly db: Db) {}
+
+  private readonly lookupSelection = {
+    profileId: biometricProfiles.id,
+    organizationId: biometricProfiles.organizationId,
+    memberId: biometricProfiles.memberId,
+    modelVersion: biometricProfiles.modelVersion,
+    qualityScore: biometricProfiles.qualityScore,
+    isActive: biometricProfiles.isActive,
+    deviceId: biometricProfiles.deviceId,
+    createdBy: biometricProfiles.createdBy,
+    enrolledAt: biometricProfiles.enrolledAt,
+    lastMatchedAt: biometricProfiles.lastMatchedAt,
+    deletedAt: biometricProfiles.deletedAt,
+    deletedBy: biometricProfiles.deletedBy,
+  };
 
   /**
    * Find the most similar biometric profile for a given embedding.
@@ -40,11 +82,14 @@ export class BiometricsRepository {
     embedding: number[],
     organizationId: string,
     modelVersion: string = CURRENT_MODEL_VERSION,
+    memberId?: string
   ): Promise<SimilarityMatch | null> {
     const vectorLiteral = `[${embedding.join(",")}]`;
+    const memberFilter = memberId ? sql`AND member_id = ${memberId}::uuid` : sql``;
 
     const rows = await this.db.execute(sql`
       SELECT
+        id,
         member_id,
         1 - (face_embedding <=> ${vectorLiteral}::vector) AS similarity,
         model_version
@@ -53,18 +98,67 @@ export class BiometricsRepository {
         organization_id = ${organizationId}::uuid
         AND model_version = ${modelVersion}
         AND is_active = TRUE
+        ${memberFilter}
       ORDER BY face_embedding <=> ${vectorLiteral}::vector
       LIMIT 1
     `);
 
     if (rows.rows.length === 0) return null;
 
-    const row = rows.rows[0] as any;
+    const row = rows.rows[0] as FindBySimilarityRow | undefined;
+    if (!row) return null;
+
     return {
+      profileId: row.id,
       memberId: row.member_id,
-      similarity: parseFloat(row.similarity),
+      similarity: Number(row.similarity),
       modelVersion: row.model_version,
     };
+  }
+
+  /**
+   * List active biometric profiles for a tenant, optionally filtered by member.
+   * The embedding vector is intentionally excluded from the returned shape.
+   */
+  async findByOrgAndMember(
+    organizationId: string,
+    memberId?: string
+  ): Promise<BiometricProfileLookup[]> {
+    const conditions = [
+      eq(biometricProfiles.organizationId, organizationId),
+      eq(biometricProfiles.isActive, true),
+    ];
+
+    if (memberId) {
+      conditions.push(eq(biometricProfiles.memberId, memberId));
+    }
+
+    const rows = await this.db
+      .select(this.lookupSelection)
+      .from(biometricProfiles)
+      .where(and(...conditions))
+      .orderBy(desc(biometricProfiles.enrolledAt));
+
+    return rows;
+  }
+
+  async findActiveProfileById(
+    profileId: string,
+    organizationId: string
+  ): Promise<BiometricProfileLookup | null> {
+    const [profile] = await this.db
+      .select(this.lookupSelection)
+      .from(biometricProfiles)
+      .where(
+        and(
+          eq(biometricProfiles.id, profileId),
+          eq(biometricProfiles.organizationId, organizationId),
+          eq(biometricProfiles.isActive, true)
+        )
+      )
+      .limit(1);
+
+    return profile ?? null;
   }
 
   /**
@@ -82,8 +176,8 @@ export class BiometricsRepository {
         and(
           eq(biometricProfiles.memberId, params.memberId),
           eq(biometricProfiles.modelVersion, modelVersion),
-          eq(biometricProfiles.isActive, true),
-        ),
+          eq(biometricProfiles.isActive, true)
+        )
       );
 
     const vectorLiteral = `[${params.faceEmbedding.join(",")}]`;
@@ -97,7 +191,12 @@ export class BiometricsRepository {
       RETURNING id
     `);
 
-    return (result.rows[0] as any).id;
+    const row = result.rows[0] as ReturningIdRow | undefined;
+    if (!row) {
+      throw new Error("Failed to persist biometric profile");
+    }
+
+    return row.id;
   }
 
   /**
@@ -111,22 +210,29 @@ export class BiometricsRepository {
         and(
           eq(biometricProfiles.memberId, memberId),
           eq(biometricProfiles.organizationId, organizationId),
-          eq(biometricProfiles.isActive, true),
-        ),
+          eq(biometricProfiles.isActive, true)
+        )
       );
   }
 
   /**
    * Soft-revoke a member's biometric profile (LGPD Art. 18, VI).
-   * Sets is_active = FALSE and nullifies the embedding vector.
+   * Sets is_active = FALSE, nullifies the embedding vector and records deletion audit columns.
    */
-  async revoke(memberId: string, organizationId: string): Promise<void> {
-    await this.db.execute(sql`
+  async revoke(profileId: string, organizationId: string, deletedBy: string): Promise<boolean> {
+    const result = await this.db.execute(sql`
       UPDATE biometric_profiles
-      SET is_active = FALSE, face_embedding = NULL
-      WHERE member_id = ${memberId}::uuid
+      SET
+        is_active = FALSE,
+        face_embedding = NULL,
+        deleted_at = NOW(),
+        deleted_by = ${deletedBy}::uuid
+      WHERE id = ${profileId}::uuid
         AND organization_id = ${organizationId}::uuid
         AND is_active = TRUE
+      RETURNING id
     `);
+
+    return result.rows.length > 0;
   }
 }

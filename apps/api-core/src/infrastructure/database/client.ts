@@ -42,12 +42,10 @@ export type Db = typeof db;
 export async function withTenantContext<T>(
   database: Db,
   organizationId: string,
-  fn: () => Promise<T>,
+  fn: () => Promise<T>
 ): Promise<T> {
   return database.transaction(async (tx) => {
-    await tx.execute(
-      sql`SELECT set_config('app.current_org_id', ${organizationId}, TRUE)`,
-    );
+    await tx.execute(sql`SELECT set_config('app.current_org_id', ${organizationId}, TRUE)`);
     return fn();
   });
 }

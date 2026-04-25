@@ -15,204 +15,36 @@
 > - Frame base64 máx 1 MB | timeout HTTP/Redis 3000 ms | TTL Redis 60 s | CB abre após 5 falhas
 > - Rate limiting: user 5 RPS burst 10 bloqueio 60 s | org 20 RPS bloqueio 60 s
 > - Segurança (OWASP/LGPD): Proteção contra injeção, headers de segurança, logs sem PII, isolamento estrito por tenant.
+> - Revogação biométrica: contrato canônico `DELETE /v1/face/:profileId` (decisão confirmada em 2026-04-25)
+> - Verify: `POST /v1/face/verify` responde `200` com resultado estruturado (`MATCH` | `POSSÍVEL` | `SEM_MATCH`); erros HTTP ficam reservados para input inválido, auth/authz, rate limit e indisponibilidade do AI Service
+> - Semântica de `memberId?` no verify: filtro opcional 1:N dentro da organização; se informado, a busca por similaridade considera apenas perfis ativos do membro
+> - Cutover de rota: substituição imediata de `/v1/biometric/*` por `/v1/face/*`, sem alias temporário
+> - Legado `/v1/biometric/*`: após o cutover deve responder `404`
+> - Rate limiting: autenticação antes do limiter; resposta `429` com header `Retry-After`; vence o primeiro limite excedido entre usuário e organização
+> - Ordem técnica: migration/schema/repositório de `biometric_profiles` devem ser alinhados antes da implementação final de verify/list/audit log
+> - Ordem mandatória de execução desta sprint: Execução 01 [FIX] merge/package → Execução 02 [FIX] TypeScript strict + bun install → Execução 03 [DATA] migration/schema biometria → Execução 04 [FEAT] testes (fase 1: criar cenários/vermelho) → Execução 05 [FEAT] use cases biométricos → Execução 06 [FEAT] rotas `/v1/face` → Execução 07 [FEAT] audit log biométrico → Execução 08 [FEAT] testes (fase 2: fazer todos passar) → Execução 09 [DOCS]
+> - Verify sem match ou sem perfis cadastrados: responder `200` com `result='SEM_MATCH'`, `confidence=0`, sem `memberId` no payload de resposta
+> - `jobId` em enroll/verify é gerado na camada de rota via `createId()` e repassado ao use case
+> - Precedência em verify com `memberId`: se o membro informado não existir no tenant atual, responder `404`; se existir, seguir fluxo normal e responder `200` com resultado biométrico
+> - Revoke HTTP: sucesso em `200 { success: true }`; `profileId` inexistente ou fora da organização responde `404`
+> - Audit log biométrico: somente requisições autenticadas que alcançam o use case geram entrada em `audit_logs`; erros prévios de schema/auth/authz/rate-limit não entram nessa tabela
+> - Identidade do ator biométrico: Better Auth deve gerar IDs UUID string (`advanced.database.generateId='uuid'`); colunas `actor_id`, `created_by` e `deleted_by` permanecem `UUID`
+> - Contratos HTTP observáveis: TypeBox/input inválido responde `422`; isolamento entre tenants em recursos biométricos responde `404`
+> - Indisponibilidade do AI Service / Circuit Breaker: responder `503` com código `AI_SERVICE_UNAVAILABLE`; quando houver `retryAfter`, expor também header `Retry-After`
+> - `Retry-After` só é obrigatório quando o Circuit Breaker estiver OPEN e houver cooldown conhecido; timeouts/degradação sem cooldown explícito retornam `503` sem esse header
 
 ---
 
-# Tarefa: [FIX] Merge Conflicts — AI Service Python + package.json corrompido
+## Sequência Operacional 01→09
 
-> GitHub Issue: #3
-> Origem: commit `8f3710f` (Vinicius Larsen, 01/04/2026)
-> O AI Service está 100% inoperante. O `bun install` também falha.
-
-## Specs
-- Escopo: resolver todos os conflitos de merge não resolvidos deixados no commit `8f3710f`
-- Critérios de aceite: nenhum arquivo com `<<<<<<<`; `package.json` válido; AI Service sobe sem erro; `bun install` passa; `__pycache__` removido do tracking
-
-## Plano
-- [ ] Etapa 1: Corrigir `apps/api-core/package.json` — remover o bloco duplicado injetado dentro de `"dependencies"` (o arquivo inteiro foi colado na linha 18); validar com `python3 -c "import json; json.load(open('package.json'))"`
-- [ ] Etapa 2: Resolver conflict markers em `apps/ai-service/config.py` (1 bloco `<<<<<<<`)
-- [ ] Etapa 3: Resolver conflict markers em `apps/ai-service/main.py` (7 blocos `<<<<<<<`)
-- [ ] Etapa 4: Resolver conflict markers em `apps/ai-service/services/face_service.py` (3 blocos)
-- [ ] Etapa 5: Resolver conflict markers em `apps/ai-service/validators/frame_validator.py` (2 blocos)
-- [ ] Etapa 6: Resolver conflict markers em `apps/ai-service/workers/redis_worker.py` (4 blocos)
-- [ ] Etapa 7: Remover `__pycache__` do tracking (`git rm -r --cached apps/ai-service/**/__pycache__`) e garantir que `.gitignore` cubra `**/__pycache__` e `**/*.pyc`
-- [ ] Etapa 8: `python -m py_compile` em todos os arquivos .py para confirmar sintaxe válida
-- [ ] Etapa 9: `cd apps/api-core && bun install` sem erros
-
-## Post-Mortem
-- Conflitos ocorreram porque Vinicius mergeou sem resolver todos os conflitos antes do commit
+1. **Execução 01** — restaurar estado executável do repositório (`[FIX] Merge Conflicts`)
+2. **Execução 02** — limpar instalação e typecheck base (`[FIX] TypeScript Strict + Bun Install`)
+3. **Execução 03** — alinhar dados/schema/auth para a modelagem final (`[DATA] Migration 0015`)
+4. **Execução 04** — criar suíte TDD biométrica e abrir gate de aprovação (`[FEAT] Testes — Fase 1`)
+5. **Execução 05** — implementar os use cases biométricos finais
+6. **Execução 06** — expor os contratos HTTP finais em `/v1/face`
+7. **Execução 07** — integrar auditoria biométrica ponta a ponta
+8. **Execução 08** — fazer a suíte passar integralmente (`[FEAT] Testes — Fase 2`)
+9. **Execução 09** — consolidar documentação e ADR-006
 
 ---
-
-
-
-# Tarefa: [FEAT] Use Cases — Implementar VerifyFaceUseCase + ListFacesUseCase
-
-> GitHub Issue: #4
-## Specs
-- Escopo: dois use cases ausentes que completam o CRUD biométrico
-- Contratos:
-  - `VerifyFaceUseCase.execute({ jobId, frameBase64, memberId?, organizationId })` → `{ result: 'MATCH'|'POSSÍVEL'|'SEM_MATCH', memberId?, confidence, processingMs }`
-  - `ListFacesUseCase.execute({ organizationId, memberId? })` → `BiometricProfile[]` sem expor `face_embedding`
-- Critérios de aceite: thresholds conforme ADR, todos os caminhos com org isolation, `ListFacesUseCase` nunca retorna o vetor
-
-## Plano
-- [ ] Etapa 1: Implementar `VerifyFaceUseCase` em `core/use-cases/biometrics.use-cases.ts`
-  - AI queue → `findBySimilarity` → aplicar thresholds (MATCH/POSSÍVEL/SEM_MATCH) → `touchLastMatched` se MATCH → retornar resultado
-  - `LowConfidenceMatchError` quando POSSÍVEL; `FaceNotRecognizedError` quando SEM_MATCH
-- [ ] Etapa 2: Implementar `ListFacesUseCase` em `core/use-cases/biometrics.use-cases.ts`
-  - Listar perfis ativos por `organizationId` + `memberId?` — sem expor `face_embedding`
-- [ ] Etapa 3: Adicionar `BiometricsRepository.findByOrgAndMember(orgId, memberId?)` em `adapters/repositories/biometrics.repo.ts`
-  - Retornar `{ id, memberId, qualityScore, modelVersion, enrolledAt, lastMatchedAt }[]` — sem embedding
-- [ ] Etapa 4: `bun run typecheck` zero erros
-
-## Post-Mortem
-- N/A
-
----
-
-# Tarefa: [FEAT] Rotas — Corrigir prefix + adicionar /v1/face/verify e /v1/face/list
-
-> GitHub Issue: #5
-## Specs
-- Escopo: alinhar rotas existentes ao contrato planejado e adicionar as duas faltantes
-- Contratos:
-  - `POST /v1/face/enroll` (renomear de `/biometric/enroll`)
-  - `POST /v1/face/verify` — body: `{ frameBase64, memberId? }`, roles: admin/professor/rh
-  - `GET /v1/face/list` — query: `{ memberId? }`, roles: admin/professor/rh
-  - `DELETE /v1/face/:profileId` — param `profileId` (renomear de `memberId`), roles: admin/professor
-- Critérios de aceite: prefix `/face` em todas; RBAC real via `derive`; TypeBox strict; schemas sem `additionalProperties`
-
-## Plano
-- [ ] Etapa 1: Renomear `adapters/http/biometric.routes.ts` → `face.routes.ts`; alterar prefix para `/face`; atualizar import em `server.ts`
-- [ ] Etapa 2: Implementar RBAC real nas rotas (substituir comentário "simple guard" por `derive` com `checkPermission`)
-- [ ] Etapa 3: Adicionar `POST /v1/face/verify` — TypeBox body, roles admin/professor/rh, delegar a `VerifyFaceUseCase`
-- [ ] Etapa 4: Adicionar `GET /v1/face/list` — TypeBox query, roles admin/professor/rh, delegar a `ListFacesUseCase`
-- [ ] Etapa 5: Corrigir param `DELETE /v1/face/:profileId` (era `:memberId` — revogar por profileId ou memberId? — decidir e documentar)
-- [ ] Etapa 6: Configurar rate limiting (5 RPS/user, burst 10; 20 RPS/org) com plugin Elysia
-- [ ] Etapa 7: `bun run typecheck` zero erros
-
-## Post-Mortem
-- Decidir se `DELETE` revoga por `profileId` ou `memberId` (atualmente é por `memberId`)
-
----
-
-# Tarefa: [FEAT] AuditLogRepository + Integração nos Use Cases
-
-> GitHub Issue: #6
-## Specs
-- Escopo: repositório de audit log (insert-only) + chamadas em todos os use cases biométricos
-- Contratos:
-  - `AuditLogRepository.insert({ organizationId, actorId, actorType, action, resourceType, resourceId, payload, ipAddress? })` — sem update/delete
-  - Ações a registrar: `BIOMETRIC_PROFILE_ENROLLED`, `BIOMETRIC_PROFILE_VERIFIED`, `BIOMETRIC_PROFILE_REVOKED`
-  - `payload` NUNCA deve conter `frameBase64` nem vetor embedding (LGPD)
-- Critérios de aceite: toda chamada de enroll/verify/revoke gera um audit log; payload sem dados sensíveis
-
-## Plano
-- [ ] Etapa 1: Criar `adapters/repositories/audit-log.repository.ts` — método `insert` only, usando schema `auditLogs`
-- [ ] Etapa 2: Injetar `AuditLogRepository` no `EnrollBiometricUseCase` — registrar `BIOMETRIC_PROFILE_ENROLLED` com `quality_score`, `model_version`, `member_id` no payload
-- [ ] Etapa 3: Injetar no `VerifyFaceUseCase` — registrar `BIOMETRIC_PROFILE_VERIFIED` com `result`, `confidence`, `member_id` no payload
-- [ ] Etapa 4: Injetar no `RevokeBiometricUseCase` — registrar `BIOMETRIC_PROFILE_REVOKED` com `member_id` no payload
-- [ ] Etapa 5: Passar `ipAddress` da camada de rota para os use cases (disponível no contexto Elysia via `request.headers`)
-- [ ] Etapa 6: `bun run typecheck` zero erros
-
-## Post-Mortem
-- N/A
-
----
-
-# Tarefa: [FEAT] Migration 0015 — Colunas adicionais em biometric_profiles
-
-> GitHub Issue: #7
-## Specs
-- Escopo: adicionar colunas de auditoria de deleção e device tracking que o plano original exige
-- Contratos: colunas `device_id UUID NULL`, `created_by UUID NULL`, `deleted_at TIMESTAMPTZ NULL`, `deleted_by UUID NULL`
-- Critérios de aceite: migration aplica sem erros; schema Drizzle reflete as novas colunas
-
-## Plano
-- [ ] Etapa 1: Criar `migrations/0015_biometric_profiles_audit_columns.sql`
-  - `ALTER TABLE biometric_profiles ADD COLUMN IF NOT EXISTS device_id UUID NULL`
-  - `ALTER TABLE biometric_profiles ADD COLUMN IF NOT EXISTS created_by UUID NULL`
-  - `ALTER TABLE biometric_profiles ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ NULL`
-  - `ALTER TABLE biometric_profiles ADD COLUMN IF NOT EXISTS deleted_by UUID NULL`
-  - `COMMENT ON COLUMN` em cada nova coluna
-  - Atualizar `meta/_journal.json` com entry idx 14
-- [ ] Etapa 2: Atualizar `schema/biometric-profiles.ts` com as 4 novas colunas
-- [ ] Etapa 3: Atualizar `RevokeBiometricUseCase` para preencher `deleted_at` e `deleted_by` ao revogar
-- [ ] Etapa 4: `bun run db:migrate` — confirmar aplicação sem erros
-- [ ] Etapa 5: `bun run typecheck` zero erros
-
-## Post-Mortem
-- N/A
-
----
-
-# Tarefa: [FEAT] Testes — Unitários (Use Cases) + Integração (Rotas /v1/face)
-
-> GitHub Issue: #8
-## Specs
-- Escopo: cobertura completa dos 4 use cases biométricos e das 4 rotas `/v1/face`
-- Runner: `bun test` — sem Jest ou Vitest
-- Localização: `apps/api-core/src/__tests__/`
-- Critérios de aceite: `bun test` passa sem erros; org isolation coberto em TODOS os casos
-
-## Plano
-- [ ] Etapa 1: Criar estrutura `apps/api-core/src/__tests__/use-cases/` e `__tests__/routes/`
-- [ ] Etapa 2: Testes unitários — `__tests__/use-cases/biometrics.use-cases.test.ts`
-  - `EnrollBiometricUseCase`: sucesso, frame sem face (NO_FACE), qualidade baixa (<0.5), CB aberto, org isolation
-  - `VerifyFaceUseCase`: MATCH (>0.85), POSSÍVEL (0.75–0.85), SEM_MATCH (<0.75), CB aberto, sem perfis cadastrados
-  - `ListFacesUseCase`: lista vazia, lista com filtro memberId, org isolation (orgB não vê dados de orgA)
-  - `RevokeBiometricUseCase`: sucesso, perfil inexistente, org isolation
-- [ ] Etapa 3: Testes de integração — `__tests__/routes/face.routes.test.ts`
-  - Sucesso em cada endpoint (200/201)
-  - Input inválido/malicioso bloqueado pelo TypeBox (400/422)
-  - Payload > 1MB rejeitado (413)
-  - Sem token → 401
-  - Role errada → 403
-  - Org isolation → outro orgId não vê dados (404 ou 403)
-  - Rate limiting → burst acima de 10 req → 429
-- [ ] Etapa 4: `bun test` — todos passando, nenhum `skip`
-- [ ] Etapa 5: Cobertura dos caminhos críticos confirmada
-
-## Post-Mortem
-- N/A
-
----
-
-# Tarefa: [FIX] TypeScript Strict Errors + Bun Install
-
-> GitHub Issue: #9
-## Specs
-- Escopo: zerar erros de TypeScript e garantir que o projeto compila limpo
-- Contexto: pendente desde TODO.md raiz (handler params `any`, exactOptionalPropertyTypes)
-- Critérios de aceite: `bun run typecheck` zero erros; `bun install` sem warnings críticos
-
-## Plano
-- [ ] Etapa 1: `cd apps/api-core && bun install`
-- [ ] Etapa 2: `bun run typecheck` — listar todos os erros atuais
-- [ ] Etapa 3: Corrigir handler params `any` (Elysia context) nos arquivos de rota
-- [ ] Etapa 4: Corrigir `exactOptionalPropertyTypes` issues
-- [ ] Etapa 5: `cd apps/api-core && bun biome check src --write` (lint)
-- [ ] Etapa 6: `bun run typecheck` → zero erros confirmado
-
-## Post-Mortem
-- N/A
-
----
-
-# Tarefa: [DOCS] Documentação — Face Recognition (contratos, fluxos, LGPD)
-
-> GitHub Issue: #10
-## Specs
-- Escopo: atualizar docs para refletir o estado real da implementação
-- Critérios de aceite: `docs/face/README.md` com contratos reais; ADR-006 registrado se necessário
-
-## Plano
-- [ ] Etapa 1: Reescrever `docs/face/README.md` — contratos finais TypeBox, respostas, erros, thresholds, pipeline Redis+CB, seção "Segurança e Conformidade LGPD"
-- [ ] Etapa 2: Registrar ADR-006 sobre decisão de reutilização de `biometric_profiles` e estratégia de Rate Limiting
-- [ ] Etapa 3: Atualizar `docs/database/arquitetura/schema.md` com colunas da migration 0015
-- [ ] Etapa 4: Atualizar tabela de ADRs em `docs/backend/README.md` (ADR-006)
-- [ ] Etapa 5: Verificar e atualizar index `docs/README.md` se necessário
-
-## Post-Mortem
-- N/A

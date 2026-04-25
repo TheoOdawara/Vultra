@@ -14,7 +14,7 @@ import { createId } from "@paralleldrive/cuid2";
 import Elysia, { t } from "elysia";
 import { authPlugin } from "./auth.plugin";
 import { deviceAuthPlugin } from "./device-auth.plugin";
-import { AIJobQueue } from "../queue/ai-job.queue.ts";
+import type { AIJobQueue } from "../queue/ai-job.queue.ts";
 import { AttendanceRepository } from "../repositories/attendance.repo.ts";
 import { BiometricsRepository } from "../repositories/biometrics.repo.ts";
 import {
@@ -72,7 +72,7 @@ export const attendanceUserRoutes = new Elysia({ prefix: "/attendance" })
         startedAt: t.Date(),
       }),
       detail: { summary: "Open attendance session", tags: ["attendance"] },
-    },
+    }
   )
 
   // PATCH /v1/attendance/sessions/:id/close
@@ -89,7 +89,7 @@ export const attendanceUserRoutes = new Elysia({ prefix: "/attendance" })
       params: t.Object({ id: t.String({ format: "uuid" }) }),
       response: t.Object({ success: t.Boolean() }),
       detail: { summary: "Close attendance session", tags: ["attendance"] },
-    },
+    }
   )
 
   // POST /v1/attendance/sessions/:id/records/manual
@@ -126,7 +126,7 @@ export const attendanceUserRoutes = new Elysia({ prefix: "/attendance" })
         recordedAt: t.Date(),
       }),
       detail: { summary: "Manual attendance override", tags: ["attendance"] },
-    },
+    }
   );
 
 // ── Device-authenticated routes ───────────────────────────────────────────────
@@ -180,5 +180,5 @@ export const attendanceDeviceRoutes = new Elysia({ prefix: "/attendance" })
           "Accepts a JPEG frame from an ESP32-CAM, runs face recognition via AI Service, " +
           "and persists the attendance record. Frame is NEVER stored (LGPD Art. 11).",
       },
-    },
+    }
   );
