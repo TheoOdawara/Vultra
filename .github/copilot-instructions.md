@@ -35,21 +35,23 @@ Valide sempre em `skills-lock.json` antes de invocar. Se uma skill local existir
 > **Limite de ativos locais do projeto:** os únicos ativos versionados de instrução/governança do Vultra são `.github/copilot-instructions.md`, `.agents/skills/` e `.github/tasks/`.
 > **Proibições estruturais:** não criar `.github/instructions/`, não criar agentes locais de projeto e não espalhar regras de governança em outros caminhos.
 
-| Skill | Quando usar |
-| ----- | ----------- |
-| `vultra-context` | Contexto mestre do Vultra; carregar antes de implementação, revisão ou auditoria substantiva |
-| `hexagonal-arch` | Use cases, ports/adapters, DI e organização do `api-core` |
-| `elysia-typebox` | Rotas Elysia, schemas TypeBox, `derive`, validação `/v1` |
-| `better-auth` | Sessões, RBAC, `organizationId` da sessão, autenticação humana e de dispositivos |
-| `better-auth-best-practices` | Configuração e integração geral do Better Auth |
-| `drizzle-orm` | Schema, queries, migrations SQL manuais, pgvector e RLS |
-| `lgpd-biometrics` | Fluxos biométricos, consentimento, exclusão, audit log e dados sensíveis |
-| `redis-ai-queue` | Integração API Core ↔ AI Service, Redis, Circuit Breaker e timeouts |
-| `error-handler` | Domain errors, mapeamento HTTP e tratamento global de erros |
-| `security-best-practices` | Hardening, rate limiting, headers, revisão OWASP e compliance |
-| `ui-ux-pro-max` | Portais web, design system, UX e consistência visual |
-| `elysiajs` | Referência complementar do framework quando a skill local não cobrir o caso |
-| `skill-creator` / `criador-skills` | Criar ou evoluir skills sem introduzir agentes locais |
+| Skill | Quando usar | Agente |
+| ----- | ----------- | ------ |
+| `vultra-context` | Contexto mestre do Vultra; carregar antes de implementação, revisão ou auditoria substantiva | — |
+| `hexagonal-arch` | Use cases, ports/adapters, DI e organização do `api-core` | `@engine` |
+| `elysia-typebox` | Rotas Elysia, schemas TypeBox, `derive`, validação `/v1` | `@engine` |
+| `better-auth` | Sessões, RBAC, `organizationId` da sessão, autenticação humana e de dispositivos | `@engine` |
+| `better-auth-best-practices` | Configuração e integração geral do Better Auth | `@engine` |
+| `drizzle-orm` | Schema, queries, migrations SQL manuais, pgvector e RLS | `@engine` |
+| `lgpd-biometrics` | Fluxos biométricos, consentimento, exclusão, audit log e dados sensíveis | `@engine` |
+| `redis-ai-queue` | Integração API Core ↔ AI Service, Redis, Circuit Breaker e timeouts | `@engine` |
+| `error-handler` | Domain errors, mapeamento HTTP e tratamento global de erros | `@engine` |
+| `security-best-practices` | Hardening, rate limiting, headers, revisão OWASP e compliance | `@engine` |
+| `ui-ux-pro-max` | Portais web, design system, UX e consistência visual | `@creative` |
+| `elysiajs` | Referência complementar do framework quando a skill local não cobrir o caso | `@engine` |
+| `skill-creator` / `criador-skills` | Criar ou evoluir skills sem introduzir agentes locais | `@engine` |
+
+> **Nota sobre `vultra-context`:** O agente `—` indica que esta skill deve ser invocada por **qualquer** agente antes de implementação substantiva — não é exclusiva de um único agente.
 
 ---
 
@@ -132,3 +134,77 @@ Quando o usuário entregar um `AUDIT-REPORT.md`:
 - Findings que violem RAM-only, isolamento por tenant, autenticação, RLS ou vazamento de biometria são prioridade máxima mesmo quando o relatório usar outra nomenclatura.
 - Findings `MEDIUM` e `LOW` entram em `lessons.md` ou no backlog técnico com severidade/contexto explícitos.
 - **Nenhum finding pode ser ignorado** sem justificativa explícita registrada em `docs/` ou no ADR correspondente.
+
+---
+
+## 7. Routing Matrix — Vultra
+
+> Esta tabela estende a Routing Matrix global com os domínios e skills específicos do Vultra. Para domínios sem entrada aqui, aplicar o roteamento global diretamente.
+
+| Domínio Vultra | Agente | Skills obrigatórias (invocar antes de implementar) |
+| -------------- | ------ | -------------------------------------------------- |
+| Backend: ElysiaJS, Drizzle, Better Auth | `@engine` | `hexagonal-arch`, `elysia-typebox`, `drizzle-orm`, `better-auth` |
+| Biometria, LGPD, AI Queue | `@engine` | `lgpd-biometrics`, `redis-ai-queue`, `security-best-practices` |
+| Portais Web, UX, Design System | `@creative` | `ui-ux-pro-max` |
+| Arquitetura, ADRs, Specs | `@principal` | *(spec-writing via global)* |
+| Security Audit | `@engine` | `security-best-practices` |
+| Skills (criar/evoluir) | `@engine` | `criador-skills` |
+
+**Tasks cross-domain:** para features full-stack com backend + frontend, despachar `@engine` e `@creative` em paralelo com escopos separados e explícitos. Nunca mesclar responsabilidades num único agente.
+
+---
+
+## 8. Comandos do Projeto
+
+> Estes comandos são a extensão project-specific do Task Completion Protocol global. A ordem de execução é obrigatória: **lint → typecheck → format → build → test**.
+
+| Comando | Script |
+| ------- | ------ |
+| Lint | `bun run lint` |
+| Typecheck | `bun run typecheck` |
+| Format | `bun run format` |
+| Build | `bun run build` |
+| Test | `bun run test` |
+
+- Prefixo de execução obrigatório: `bun run <script>`. Nunca invocar `npm run`, `npx`, `yarn` ou `pnpm` no escopo JS/TS do monorepo.
+- Todos os comandos devem ser executados a partir da raiz do monorepo, salvo instrução explícita em `docs/`.
+- O loop de falha do protocolo global se aplica: iterar até que todos os comandos retornem `exit 0`.
+
+---
+
+## 9. Superfícies de Teste — Vultra
+
+> Esta seção estende o Test Contract global com as superfícies e budgets específicos do Vultra. Os três eixos globais (Behavior, Security, Performance) se aplicam integralmente; aqui registram-se apenas os casos e métricas que o global não pode antecipar.
+
+### Eixo 2 — Security (superfícies Vultra-específicas)
+
+| Superfície | Caso obrigatório | Arquivo de cobertura |
+| ---------- | ---------------- | -------------------- |
+| RBAC matrix | `{admin, professor, rh, student, anônimo} × {GET, POST, PUT, DELETE}` em todo endpoint protegido | `test/integration/authz/{resource}.test.ts` |
+| Biometria RAM-only | Frame não persiste após request; embedding não aparece em response body; `consent_flag` validado antes de enroll | skill `lgpd-biometrics` define os cenários |
+| IoT auth | `X-Device-Token` forjado → 401; device de outro tenant → 403 | `test/integration/device-auth.test.ts` |
+| Face endpoints | IDOR entre organizações → 404; rate limit: user 5 RPS burst 10 / org 20 RPS; threshold mínimo de qualidade 0.40 rejeitado no use case, não no banco | `test/integration/face/*.test.ts` |
+
+### Eixo 3 — Performance (budgets Vultra)
+
+| Operação | Budget | Observação |
+| -------- | ------ | ---------- |
+| Enroll / Verify (p95) | ≤ 3 000 ms | Alinhado ao timeout Redis configurado no `redis-ai-queue` |
+| Queries pgvector | N+1 ausente | Operador `<=>`, busca vetorial direta; nunca via ORM loop |
+| Rejeição de qualidade | < 0.40 rejeitado no use case | Nunca persistir frame de baixa qualidade para rejeitar no banco |
+
+---
+
+## 10. Paths do Closeout — Vultra
+
+> Esta tabela mapeia cada item do Closeout Protocol global para o caminho canônico do repositório Vultra. Usar estes paths ao executar o checklist de fechamento de task.
+
+| Item do Closeout Global | Caminho Canônico Vultra |
+| ----------------------- | ----------------------- |
+| Repo docs (API, schema, env vars) | `README.md` ou `docs/` |
+| ADRs | `docs/decisions/` |
+| CHANGELOG | `CHANGELOG.md` (raiz do monorepo) |
+| Setup / run (guias de onboarding) | `README.md` seção *Quick Start* ou `CONTRIBUTING.md` |
+| Migrations | `docs/migrations/` |
+| Vault — padrões cross-project | `knowledge/patterns/` no vault Obsidian |
+| Vault — decisões arquiteturais | `knowledge/decisions/` no vault Obsidian |
