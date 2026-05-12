@@ -12,13 +12,24 @@ import type {
 } from "../../infrastructure/database/schema";
 import type { Db } from "../../infrastructure/database/client";
 import { attendanceRecords, attendanceSessions } from "../../infrastructure/database/schema";
+import type {
+  IAttendanceRepository,
+  SessionSnapshot,
+  AttendanceRecordSnapshot,
+  NewSessionData,
+  NewRecordData,
+  ManualRecordParams,
+} from "../../core/ports/IAttendanceRepository";
 
-export class AttendanceRepository {
+export class AttendanceRepository implements IAttendanceRepository {
   constructor(private readonly db: Db) {}
 
   // ── Sessions ──────────────────────────────────────────────────────────────
 
-  async findSessionById(sessionId: string, organizationId: string) {
+  async findSessionById(
+    sessionId: string,
+    organizationId: string
+  ): Promise<SessionSnapshot | null> {
     const [session] = await this.db
       .select()
       .from(attendanceSessions)
@@ -32,8 +43,11 @@ export class AttendanceRepository {
     return session ?? null;
   }
 
-  async createSession(data: NewAttendanceSession) {
-    const [session] = await this.db.insert(attendanceSessions).values(data).returning();
+  async createSession(data: NewSessionData): Promise<SessionSnapshot | undefined> {
+    const [session] = await this.db
+      .insert(attendanceSessions)
+      .values(data as NewAttendanceSession)
+      .returning();
     return session;
   }
 
@@ -66,17 +80,17 @@ export class AttendanceRepository {
     return !!row;
   }
 
-  async createRecord(data: NewAttendanceRecord) {
-    const [record] = await this.db.insert(attendanceRecords).values(data).returning();
+  async createRecord(data: NewRecordData): Promise<AttendanceRecordSnapshot | undefined> {
+    const [record] = await this.db
+      .insert(attendanceRecords)
+      .values(data as NewAttendanceRecord)
+      .returning();
     return record;
   }
 
-  async createManualRecord(params: {
-    sessionId: string;
-    memberId: string;
-    organizationId: string;
-    notes?: string;
-  }) {
+  async createManualRecord(
+    params: ManualRecordParams
+  ): Promise<AttendanceRecordSnapshot | undefined> {
     return this.createRecord({
       sessionId: params.sessionId,
       memberId: params.memberId,

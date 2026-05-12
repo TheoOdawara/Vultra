@@ -4,7 +4,7 @@ import { globalErrorHandler } from "../../infrastructure/error-handler.ts";
 import type {
   BiometricProfileLookup,
   SimilarityMatch,
-} from "../../adapters/repositories/biometrics.repo.ts";
+} from "../../core/ports/IBiometricRepository.ts";
 import {
   AIServiceUnavailableError,
   BiometricProfileNotFoundError,
@@ -12,12 +12,12 @@ import {
   UnauthorizedError,
 } from "../../core/domain/errors/DomainError.ts";
 
-const authPluginPath = "/mnt/storage/dev/Vultra/apps/api-core/src/adapters/http/auth.plugin.ts";
-const biometricsRepoPath =
-  "/mnt/storage/dev/Vultra/apps/api-core/src/adapters/repositories/biometrics.repo.ts";
-const auditLogRepoPath =
-  "/mnt/storage/dev/Vultra/apps/api-core/src/adapters/repositories/audit-log.repository.ts";
-const dbClientPath = "/mnt/storage/dev/Vultra/apps/api-core/src/infrastructure/database/client.ts";
+const authPluginPath = import.meta.resolve("../../adapters/http/middleware/auth.plugin.ts");
+const biometricsRepoPath = import.meta.resolve(
+  "../../adapters/repositories/biometric.repository.ts"
+);
+const auditLogRepoPath = import.meta.resolve("../../adapters/repositories/audit-log.repository.ts");
+const dbClientPath = import.meta.resolve("../../infrastructure/database/client.ts");
 
 type ListFaceResponseItem = {
   profileId: string;
@@ -302,7 +302,7 @@ mock.module(dbClientPath, () => ({
 }));
 
 async function createApp() {
-  const { faceRoutes, initFaceRoutes } = await import("../../adapters/http/face.routes.ts");
+  const { faceRoutes, initFaceRoutes } = await import("../../adapters/http/routes/face.routes.ts");
 
   initFaceRoutes({
     async enqueueAndAwait(params: {
@@ -845,7 +845,7 @@ describe("cutover legado /v1/biometric", () => {
       });
 
       expect(response.status).toBe(404);
-      expect(body).toEqual({ error: "NOT_FOUND" });
+      expect(body).toEqual("NOT_FOUND");
       expect(routeState.aiCalls).toHaveLength(0);
       expect(routeState.repoCalls.enroll).toHaveLength(0);
       expect(routeState.repoCalls.findBySimilarity).toHaveLength(0);

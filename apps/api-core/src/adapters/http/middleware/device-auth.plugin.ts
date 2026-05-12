@@ -21,10 +21,10 @@
 
 import { and, eq } from "drizzle-orm";
 import { Elysia } from "elysia";
-import { InvalidDeviceTokenError } from "../../core/domain/errors/DomainError";
-import { db } from "../../infrastructure/database/client";
-import type { Device } from "../../infrastructure/database/schema/devices";
-import { devices } from "../../infrastructure/database/schema/index";
+import { InvalidDeviceTokenError } from "../../../core/domain/errors/DomainError";
+import { db } from "../../../infrastructure/database/client";
+import type { Device } from "../../../infrastructure/database/schema/devices";
+import { devices } from "../../../infrastructure/database/schema/index";
 
 export const deviceAuthPlugin = new Elysia({ name: "device-auth-plugin" }).derive(
   { as: "scoped" },

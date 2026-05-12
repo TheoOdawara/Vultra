@@ -1,27 +1,11 @@
 import type { Db } from "../../infrastructure/database/client.ts";
 import { auditLogs } from "../../infrastructure/database/schema/audit-logs.ts";
+import type {
+  IAuditLogRepository,
+  InsertAuditLogParams,
+} from "../../core/ports/IAuditLogRepository";
 
-export type AuditActorType = "user" | "device" | "system";
-
-export type AuditLogAction =
-  | "BIOMETRIC_PROFILE_ENROLLED"
-  | "BIOMETRIC_PROFILE_VERIFIED"
-  | "BIOMETRIC_PROFILE_REVOKED";
-
-type AuditLogPayload = Record<string, unknown>;
-
-export interface InsertAuditLogParams {
-  organizationId: string;
-  actorId: string | null;
-  actorType: AuditActorType;
-  action: AuditLogAction;
-  resourceType: string;
-  resourceId: string | null;
-  payload: AuditLogPayload;
-  ipAddress?: string;
-}
-
-export class AuditLogRepository {
+export class AuditLogRepository implements IAuditLogRepository {
   constructor(private readonly db: Db) {}
 
   async insert(params: InsertAuditLogParams): Promise<void> {

@@ -9,38 +9,13 @@
 import { and, desc, eq, sql } from "drizzle-orm";
 import type { Db } from "../../infrastructure/database/client";
 import { biometricProfiles } from "../../infrastructure/database/schema";
-
-const CURRENT_MODEL_VERSION = "ArcFace-v1";
-
-export interface SimilarityMatch {
-  profileId: string;
-  memberId: string;
-  similarity: number;
-  modelVersion: string;
-}
-
-export interface BiometricProfileLookup {
-  profileId: string;
-  organizationId: string;
-  memberId: string;
-  modelVersion: string;
-  qualityScore: number;
-  isActive: boolean;
-  deviceId: string | null;
-  createdBy: string | null;
-  enrolledAt: Date;
-  lastMatchedAt: Date | null;
-  deletedAt: Date | null;
-  deletedBy: string | null;
-}
-
-export interface EnrollParams {
-  organizationId: string;
-  memberId: string;
-  faceEmbedding: number[];
-  qualityScore: number;
-  modelVersion?: string;
-}
+import type {
+  IBiometricRepository,
+  SimilarityMatch,
+  BiometricProfileLookup,
+  EnrollParams,
+} from "../../core/ports/IBiometricRepository";
+import { CURRENT_MODEL_VERSION } from "../../core/domain/constants";
 
 interface FindBySimilarityRow {
   id: string;
@@ -53,7 +28,7 @@ interface ReturningIdRow {
   id: string;
 }
 
-export class BiometricsRepository {
+export class BiometricsRepository implements IBiometricRepository {
   constructor(private readonly db: Db) {}
 
   private readonly lookupSelection = {

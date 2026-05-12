@@ -13,10 +13,10 @@
 
 import { Elysia } from "elysia";
 import { and, eq } from "drizzle-orm";
-import { UnauthorizedError } from "../../core/domain/errors/DomainError";
-import { auth } from "../../infrastructure/auth";
-import { db } from "../../infrastructure/database/client";
-import { authMembers } from "../../infrastructure/database/schema";
+import { UnauthorizedError } from "../../../core/domain/errors/DomainError";
+import { auth } from "../../../infrastructure/auth";
+import { db } from "../../../infrastructure/database/client";
+import { authMembers } from "../../../infrastructure/database/schema";
 
 export const authPlugin = new Elysia({ name: "auth-plugin" }).derive(
   { as: "scoped" },

@@ -12,31 +12,33 @@
 
 import { createId } from "@paralleldrive/cuid2";
 import Elysia, { t } from "elysia";
-import { authPlugin } from "./auth.plugin";
-import { deviceAuthPlugin } from "./device-auth.plugin";
-import type { AIJobQueue } from "../queue/ai-job.queue.ts";
-import { AttendanceRepository } from "../repositories/attendance.repo.ts";
-import { BiometricsRepository } from "../repositories/biometrics.repo.ts";
-import {
-  CloseSessionUseCase,
-  ManualRecordUseCase,
-  OpenSessionUseCase,
-  RecordAttendanceUseCase,
-} from "../../core/use-cases/attendance.use-cases";
-import { db } from "../../infrastructure/database/client";
-import { OrganizationNotFoundError } from "../../core/domain/errors/DomainError";
+import { authPlugin } from "../middleware/auth.plugin";
+import { deviceAuthPlugin } from "../middleware/device-auth.plugin";
+import type { AIJobQueue } from "../../queue/ai-job.queue.ts";
+import { AttendanceRepository } from "../../repositories/attendance.repository";
+import { BiometricsRepository } from "../../repositories/biometric.repository";
+import { CloseSessionUseCase } from "../../../core/use-cases/attendance/CloseSessionUseCase";
+import { ManualRecordUseCase } from "../../../core/use-cases/attendance/ManualRecordUseCase";
+import { OpenSessionUseCase } from "../../../core/use-cases/attendance/OpenSessionUseCase";
+import { RecordAttendanceUseCase } from "../../../core/use-cases/attendance/RecordAttendanceUseCase";
+import { db } from "../../../infrastructure/database/client";
+import { OrganizationNotFoundError } from "../../../core/domain/errors/DomainError";
 
-let _aiQueue: AIJobQueue | null = null;
+// ── Singletons (built once when initAttendanceRoutes is called) ───────────────
 
-export function initAttendanceRoutes(aiQueue: AIJobQueue) {
-  _aiQueue = aiQueue;
-}
+let _openSession: OpenSessionUseCase | null = null;
+let _closeSession: CloseSessionUseCase | null = null;
+let _manualRecord: ManualRecordUseCase | null = null;
+let _recordAttendance: RecordAttendanceUseCase | null = null;
 
-function getRepos() {
-  return {
-    attendance: new AttendanceRepository(db),
-    biometrics: new BiometricsRepository(db),
-  };
+export function initAttendanceRoutes(aiQueue: AIJobQueue): void {
+  const attendanceRepo = new AttendanceRepository(db);
+  const biometricsRepo = new BiometricsRepository(db);
+
+  _openSession = new OpenSessionUseCase(attendanceRepo);
+  _closeSession = new CloseSessionUseCase(attendanceRepo);
+  _manualRecord = new ManualRecordUseCase(attendanceRepo);
+  _recordAttendance = new RecordAttendanceUseCase(aiQueue, biometricsRepo, attendanceRepo);
 }
 
 // ── User-authenticated routes ─────────────────────────────────────────────────
@@ -49,14 +51,15 @@ export const attendanceUserRoutes = new Elysia({ prefix: "/attendance" })
     "/sessions",
     async ({ body, currentOrg }) => {
       if (!currentOrg) throw new OrganizationNotFoundError();
-      const { attendance } = getRepos();
-      const uc = new OpenSessionUseCase(attendance);
-      const session = await uc.execute({
+      if (!_openSession) throw new Error("AttendanceRoutes not initialized");
+
+      const session = await _openSession.execute({
         organizationId: currentOrg,
         deviceId: body.deviceId,
         ...(body.classId && { classId: body.classId }),
         ...(body.professorId && { professorId: body.professorId }),
       });
+
       if (!session) throw new Error("Failed to create session");
       return { sessionId: session.id, status: session.status, startedAt: session.startedAt };
     },
@@ -80,9 +83,9 @@ export const attendanceUserRoutes = new Elysia({ prefix: "/attendance" })
     "/sessions/:id/close",
     async ({ params, currentOrg }) => {
       if (!currentOrg) throw new OrganizationNotFoundError();
-      const { attendance } = getRepos();
-      const uc = new CloseSessionUseCase(attendance);
-      await uc.execute({ sessionId: params.id, organizationId: currentOrg });
+      if (!_closeSession) throw new Error("AttendanceRoutes not initialized");
+
+      await _closeSession.execute({ sessionId: params.id, organizationId: currentOrg });
       return { success: true };
     },
     {
@@ -97,14 +100,15 @@ export const attendanceUserRoutes = new Elysia({ prefix: "/attendance" })
     "/sessions/:id/records/manual",
     async ({ params, body, currentOrg }) => {
       if (!currentOrg) throw new OrganizationNotFoundError();
-      const { attendance } = getRepos();
-      const uc = new ManualRecordUseCase(attendance);
-      const record = await uc.execute({
+      if (!_manualRecord) throw new Error("AttendanceRoutes not initialized");
+
+      const record = await _manualRecord.execute({
         sessionId: params.id,
         memberId: body.memberId,
         organizationId: currentOrg,
         ...(body.notes && { notes: body.notes }),
       });
+
       if (!record) throw new Error("Failed to create attendance record");
       return {
         recordId: record.id,
@@ -138,12 +142,9 @@ export const attendanceDeviceRoutes = new Elysia({ prefix: "/attendance" })
   .post(
     "/record",
     async ({ body, authenticatedDevice }) => {
-      if (!_aiQueue) throw new Error("AIJobQueue not initialized");
+      if (!_recordAttendance) throw new Error("AttendanceRoutes not initialized");
 
-      const { attendance, biometrics } = getRepos();
-      const uc = new RecordAttendanceUseCase(_aiQueue, biometrics, attendance);
-
-      const result = await uc.execute({
+      const result = await _recordAttendance.execute({
         jobId: createId(),
         frameBase64: body.frameBase64,
         sessionId: body.sessionId,

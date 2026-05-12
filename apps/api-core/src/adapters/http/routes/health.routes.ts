@@ -7,11 +7,11 @@
  */
 
 import Elysia, { t } from "elysia";
-import type { AIJobQueue } from "../queue/ai-job.queue.ts";
+import type { AIJobQueue } from "../../queue/ai-job.queue.ts";
 
 let _aiQueue: AIJobQueue | null = null;
 
-export function initHealthRoutes(aiQueue: AIJobQueue) {
+export function initHealthRoutes(aiQueue: AIJobQueue): void {
   _aiQueue = aiQueue;
 }
 

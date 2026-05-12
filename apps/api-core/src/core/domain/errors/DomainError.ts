@@ -130,3 +130,15 @@ export class AIJobTimeoutError extends DomainError {
     super("AI_SERVICE_UNAVAILABLE", 503, "AI job timed out — service may be degraded");
   }
 }
+
+// ── Frame quality ─────────────────────────────────────────────────────────────
+
+export class LowQualityFrameError extends DomainError {
+  constructor(public readonly qualityScore: number) {
+    super(
+      "LOW_QUALITY",
+      422,
+      `Frame quality score ${qualityScore.toFixed(3)} is below the minimum enroll threshold`
+    );
+  }
+}

@@ -7,43 +7,29 @@
  *   3. mount(auth.handler) → Better Auth at /api/auth/*
  *   4. .group('/v1', ...)  → all domain routes with version prefix
  *
- * Redis and AIJobQueue are initialized here and injected into route modules.
+ * Redis and AIJobQueue singletons live in infrastructure/redis.ts and
+ * infrastructure/container.ts respectively. They are injected here.
  */
 
 import cors from "@elysiajs/cors";
 import Elysia from "elysia";
-import { Redis } from "ioredis";
 import { auth } from "./auth";
 import { globalErrorHandler } from "./error-handler";
-import { AIJobQueue } from "../adapters/queue/ai-job.queue.ts";
+import { aiQueue } from "./container";
 import {
   attendanceDeviceRoutes,
   attendanceUserRoutes,
   initAttendanceRoutes,
-} from "../adapters/http/attendance.routes";
-import { faceRoutes, initFaceRoutes } from "../adapters/http/face.routes";
-import { healthRoutes, initHealthRoutes } from "../adapters/http/health.routes";
+} from "../adapters/http/routes/attendance.routes";
+import { biometricRoutes, initBiometricRoutes } from "../adapters/http/routes/biometric.routes";
+import { faceRoutes, initFaceRoutes } from "../adapters/http/routes/face.routes";
+import { healthRoutes, initHealthRoutes } from "../adapters/http/routes/health.routes";
 
-if (!process.env.REDIS_URL) {
-  throw new Error("REDIS_URL environment variable is required");
-}
+// ── Inject AIJobQueue into route modules ──────────────────────────────────────
 
-// ── Infrastructure singletons ─────────────────────────────────────────────────
-
-const redis = new Redis(process.env.REDIS_URL);
-
-redis.on("error", () => undefined);
-redis.on("connect", () => undefined);
-
-const aiQueue = new AIJobQueue(
-  redis,
-  process.env.AI_QUEUE_NAME ?? "ai:recognition:queue",
-  process.env.AI_RESULT_PREFIX ?? "ai:recognition:result:"
-);
-
-// Inject AIJobQueue into route modules
 initFaceRoutes(aiQueue);
 initAttendanceRoutes(aiQueue);
+initBiometricRoutes(aiQueue);
 initHealthRoutes(aiQueue);
 
 // ── App composition ───────────────────────────────────────────────────────────
@@ -68,5 +54,10 @@ export const app = new Elysia()
 
   // 4. Domain routes under /v1
   .group("/v1", (v1) =>
-    v1.use(attendanceUserRoutes).use(attendanceDeviceRoutes).use(faceRoutes).use(healthRoutes)
+    v1
+      .use(attendanceUserRoutes)
+      .use(attendanceDeviceRoutes)
+      .use(faceRoutes)
+      .use(biometricRoutes)
+      .use(healthRoutes)
   );

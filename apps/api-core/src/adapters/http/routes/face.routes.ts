@@ -1,24 +1,36 @@
+/**
+ * VULTRA — Face Routes
+ *
+ * POST   /v1/face/enroll      → EnrollBiometricUseCase
+ * POST   /v1/face/verify      → VerifyFaceUseCase
+ * GET    /v1/face/list        → ListFacesUseCase
+ * DELETE /v1/face/:profileId  → RevokeBiometricUseCase
+ *
+ * Auth: authPlugin (user session + org)
+ * RBAC:  checkPermission(role, { biometrics: [action] })
+ *
+ * LGPD: frameBase64 is NEVER logged or stored.
+ */
+
 import { createId } from "@paralleldrive/cuid2";
 import Elysia, { t } from "elysia";
-import { authPlugin } from "./auth.plugin.ts";
-import type { AIJobQueue } from "../queue/ai-job.queue.ts";
-import { AuditLogRepository } from "../repositories/audit-log.repository.ts";
-import { BiometricsRepository } from "../repositories/biometrics.repo.ts";
-import {
-  EnrollBiometricUseCase,
-  ListFacesUseCase,
-  RevokeBiometricUseCase,
-  VerifyFaceUseCase,
-} from "../../core/use-cases/biometrics.use-cases.ts";
-import { db } from "../../infrastructure/database/client.ts";
-import { checkPermission } from "../../infrastructure/auth";
+import { authPlugin } from "../middleware/auth.plugin";
+import type { AIJobQueue } from "../../queue/ai-job.queue.ts";
+import { AuditLogRepository } from "../../repositories/audit-log.repository";
+import { BiometricsRepository } from "../../repositories/biometric.repository";
+import { EnrollBiometricUseCase } from "../../../core/use-cases/biometrics/EnrollBiometricUseCase";
+import { VerifyFaceUseCase } from "../../../core/use-cases/biometrics/VerifyFaceUseCase";
+import { ListFacesUseCase } from "../../../core/use-cases/biometrics/ListFacesUseCase";
+import { RevokeBiometricUseCase } from "../../../core/use-cases/biometrics/RevokeBiometricUseCase";
+import { db } from "../../../infrastructure/database/client";
+import { checkPermission } from "../../../infrastructure/auth";
 import {
   ForbiddenError,
   OrganizationNotFoundError,
   PayloadTooLargeError,
   RateLimitExceededError,
-} from "../../core/domain/errors/DomainError";
-import { handleHttpError } from "../../infrastructure/error-handler.ts";
+} from "../../../core/domain/errors/DomainError";
+import { handleHttpError } from "../../../infrastructure/error-handler";
 
 const MAX_FRAME_BASE64_BYTES = 1024 * 1024;
 const USER_RATE_LIMIT_MAX_HITS = 10;
@@ -35,29 +47,29 @@ type RateLimitBucket = {
 
 type BiometricAction = "enroll" | "verify" | "list" | "delete";
 
-let _aiQueue: AIJobQueue | null = null;
+// ── Singletons (built once when initFaceRoutes is called) ─────────────────────
+
+let _enroll: EnrollBiometricUseCase | null = null;
+let _verify: VerifyFaceUseCase | null = null;
+let _list: ListFacesUseCase | null = null;
+let _revoke: RevokeBiometricUseCase | null = null;
 const userRateLimitBuckets = new Map<string, RateLimitBucket>();
 const orgRateLimitBuckets = new Map<string, RateLimitBucket>();
 
-export function initFaceRoutes(aiQueue: AIJobQueue) {
-  _aiQueue = aiQueue;
+export function initFaceRoutes(aiQueue: AIJobQueue): void {
+  const biometricsRepo = new BiometricsRepository(db);
+  const auditLogRepo = new AuditLogRepository(db);
+
+  _enroll = new EnrollBiometricUseCase(aiQueue, biometricsRepo, auditLogRepo);
+  _verify = new VerifyFaceUseCase(aiQueue, biometricsRepo, auditLogRepo);
+  _list = new ListFacesUseCase(biometricsRepo);
+  _revoke = new RevokeBiometricUseCase(biometricsRepo, auditLogRepo);
+
   userRateLimitBuckets.clear();
   orgRateLimitBuckets.clear();
 }
 
-function getUseCases() {
-  if (!_aiQueue) throw new Error("AIJobQueue not initialized");
-
-  const biometricsRepo = new BiometricsRepository(db);
-  const auditLogRepo = new AuditLogRepository(db);
-
-  return {
-    enroll: new EnrollBiometricUseCase(_aiQueue, biometricsRepo, auditLogRepo),
-    verify: new VerifyFaceUseCase(_aiQueue, biometricsRepo, auditLogRepo),
-    list: new ListFacesUseCase(biometricsRepo),
-    revoke: new RevokeBiometricUseCase(biometricsRepo, auditLogRepo),
-  };
-}
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function resolveCurrentRole(
   currentUser: ({ role?: string } & Record<string, unknown>) | null | undefined,
@@ -74,15 +86,9 @@ function ensureBiometricPermission(role: string | null, action: BiometricAction)
 
 function getOrCreateBucket(store: Map<string, RateLimitBucket>, key: string): RateLimitBucket {
   const current = store.get(key);
-  if (current) {
-    return current;
-  }
+  if (current) return current;
 
-  const bucket: RateLimitBucket = {
-    hits: [],
-    blockedUntil: 0,
-  };
-
+  const bucket: RateLimitBucket = { hits: [], blockedUntil: 0 };
   store.set(key, bucket);
   return bucket;
 }
@@ -123,10 +129,7 @@ function ensureFrameSize(frameBase64: string) {
 }
 
 function serializeDate(value: Date | string | null): string | null {
-  if (!value) {
-    return null;
-  }
-
+  if (!value) return null;
   return value instanceof Date ? value.toISOString() : value;
 }
 
@@ -139,29 +142,23 @@ function resolveIpAddress(request: Request): string | undefined {
   if (forwardedFor) {
     const [firstIp] = forwardedFor.split(",");
     const ipAddress = firstIp?.trim();
-
-    if (ipAddress) {
-      return ipAddress;
-    }
+    if (ipAddress) return ipAddress;
   }
-
   return request.headers.get("x-real-ip") ?? undefined;
 }
+
+// ── Route tree ────────────────────────────────────────────────────────────────
 
 export const faceRoutes = new Elysia()
   .onError(({ code, error, set }) => handleHttpError({ code, error, set }))
   .use(authPlugin)
   .derive({ as: "scoped" }, ({ currentOrg, currentRole, currentUser }) => {
-    if (!currentOrg) {
-      throw new OrganizationNotFoundError();
-    }
+    if (!currentOrg) throw new OrganizationNotFoundError();
 
     const role = resolveCurrentRole(currentUser, currentRole);
     const currentUserId = currentUser?.id;
 
-    if (!currentUserId) {
-      throw new ForbiddenError();
-    }
+    if (!currentUserId) throw new ForbiddenError();
 
     return {
       currentOrg,
@@ -178,10 +175,10 @@ export const faceRoutes = new Elysia()
     async ({ body, currentOrg, currentUserId, request, requireBiometricAccess, set }) => {
       requireBiometricAccess("enroll");
       ensureFrameSize(body.frameBase64);
+      if (!_enroll) throw new Error("FaceRoutes not initialized");
 
-      const { enroll } = getUseCases();
       const ipAddress = resolveIpAddress(request);
-      const result = await enroll.execute({
+      const result = await _enroll.execute({
         jobId: createId(),
         frameBase64: body.frameBase64,
         memberId: body.memberId,
@@ -217,10 +214,10 @@ export const faceRoutes = new Elysia()
     async ({ body, currentOrg, currentUserId, request, requireBiometricAccess }) => {
       requireBiometricAccess("verify");
       ensureFrameSize(body.frameBase64);
+      if (!_verify) throw new Error("FaceRoutes not initialized");
 
-      const { verify } = getUseCases();
       const ipAddress = resolveIpAddress(request);
-      return verify.execute({
+      return _verify.execute({
         jobId: createId(),
         frameBase64: body.frameBase64,
         organizationId: currentOrg,
@@ -250,9 +247,9 @@ export const faceRoutes = new Elysia()
     "/face/list",
     async ({ query, currentOrg, requireBiometricAccess }) => {
       requireBiometricAccess("list");
+      if (!_list) throw new Error("FaceRoutes not initialized");
 
-      const { list } = getUseCases();
-      const profiles = await list.execute({
+      const profiles = await _list.execute({
         organizationId: currentOrg,
         ...(query.memberId ? { memberId: query.memberId } : {}),
       });
@@ -266,9 +263,7 @@ export const faceRoutes = new Elysia()
     },
     {
       query: t.Object(
-        {
-          memberId: t.Optional(t.String({ format: "uuid" })),
-        },
+        { memberId: t.Optional(t.String({ format: "uuid" })) },
         { additionalProperties: false }
       ),
       response: t.Array(
@@ -293,10 +288,10 @@ export const faceRoutes = new Elysia()
     "/face/:profileId",
     async ({ params, currentOrg, currentUserId, request, requireBiometricAccess }) => {
       requireBiometricAccess("delete");
+      if (!_revoke) throw new Error("FaceRoutes not initialized");
 
-      const { revoke } = getUseCases();
       const ipAddress = resolveIpAddress(request);
-      await revoke.execute({
+      await _revoke.execute({
         profileId: params.profileId,
         organizationId: currentOrg,
         deletedBy: currentUserId,
@@ -313,20 +308,4 @@ export const faceRoutes = new Elysia()
       }),
       response: t.Object({ success: t.Boolean() }),
     }
-  )
-  .post("/biometric/enroll", ({ set }) => {
-    set.status = 404;
-    return { error: "NOT_FOUND" };
-  })
-  .post("/biometric/verify", ({ set }) => {
-    set.status = 404;
-    return { error: "NOT_FOUND" };
-  })
-  .get("/biometric/list", ({ set }) => {
-    set.status = 404;
-    return { error: "NOT_FOUND" };
-  })
-  .delete("/biometric/:profileId", ({ set }) => {
-    set.status = 404;
-    return { error: "NOT_FOUND" };
-  });
+  );

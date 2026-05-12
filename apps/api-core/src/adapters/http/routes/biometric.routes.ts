@@ -5,7 +5,6 @@
  * DELETE /v1/biometric/:memberId       → RevokeBiometricUseCase
  *
  * Auth: authPlugin (currentUser + currentOrg)
- * Required permission: biometrics:* (admin only)
  *
  * LGPD: frameBase64 is NEVER logged or stored. Only the embedding vector
  * produced by the AI Service reaches the database.
@@ -13,32 +12,26 @@
 
 import { createId } from "@paralleldrive/cuid2";
 import Elysia, { t } from "elysia";
-import { authPlugin } from "./auth.plugin";
-import type { AIJobQueue } from "../queue/ai-job.queue.ts";
-import { AuditLogRepository } from "../repositories/audit-log.repository.ts";
-import { BiometricsRepository } from "../repositories/biometrics.repo.ts";
-import {
-  EnrollBiometricUseCase,
-  RevokeBiometricUseCase,
-} from "../../core/use-cases/biometrics.use-cases";
-import { db } from "../../infrastructure/database/client";
-import { OrganizationNotFoundError } from "../../core/domain/errors/DomainError";
+import { authPlugin } from "../middleware/auth.plugin";
+import type { AIJobQueue } from "../../queue/ai-job.queue.ts";
+import { AuditLogRepository } from "../../repositories/audit-log.repository";
+import { BiometricsRepository } from "../../repositories/biometric.repository";
+import { EnrollBiometricUseCase } from "../../../core/use-cases/biometrics/EnrollBiometricUseCase";
+import { RevokeBiometricUseCase } from "../../../core/use-cases/biometrics/RevokeBiometricUseCase";
+import { db } from "../../../infrastructure/database/client";
+import { OrganizationNotFoundError } from "../../../core/domain/errors/DomainError";
 
-// Lazy-initialized singletons (Redis injected at server startup)
-let _aiQueue: AIJobQueue | null = null;
+// ── Singletons (built once when initBiometricRoutes is called) ────────────────
 
-export function initBiometricRoutes(aiQueue: AIJobQueue) {
-  _aiQueue = aiQueue;
-}
+let _enroll: EnrollBiometricUseCase | null = null;
+let _revoke: RevokeBiometricUseCase | null = null;
 
-function getUseCases() {
-  if (!_aiQueue) throw new Error("AIJobQueue not initialized");
+export function initBiometricRoutes(aiQueue: AIJobQueue): void {
   const biometricsRepo = new BiometricsRepository(db);
   const auditLogRepo = new AuditLogRepository(db);
-  return {
-    enroll: new EnrollBiometricUseCase(_aiQueue, biometricsRepo, auditLogRepo),
-    revoke: new RevokeBiometricUseCase(biometricsRepo, auditLogRepo),
-  };
+
+  _enroll = new EnrollBiometricUseCase(aiQueue, biometricsRepo, auditLogRepo);
+  _revoke = new RevokeBiometricUseCase(biometricsRepo, auditLogRepo);
 }
 
 export const biometricRoutes = new Elysia({ prefix: "/biometric" })
@@ -49,13 +42,11 @@ export const biometricRoutes = new Elysia({ prefix: "/biometric" })
     "/enroll",
     async ({ body, currentOrg, currentUser }) => {
       if (!currentOrg) throw new OrganizationNotFoundError();
+      if (!_enroll) throw new Error("BiometricRoutes not initialized");
+
       const actorId = currentUser?.id ?? body.memberId;
 
-      // Only admins can enroll biometrics
-      // (role check delegated to RBAC middleware in production; simple guard here)
-      const { enroll } = getUseCases();
-
-      const result = await enroll.execute({
+      const result = await _enroll.execute({
         jobId: createId(),
         frameBase64: body.frameBase64,
         memberId: body.memberId,
@@ -97,10 +88,11 @@ export const biometricRoutes = new Elysia({ prefix: "/biometric" })
     "/:memberId",
     async ({ params, currentOrg, currentUser }) => {
       if (!currentOrg) throw new OrganizationNotFoundError();
+      if (!_revoke) throw new Error("BiometricRoutes not initialized");
+
       const actorId = currentUser?.id ?? params.memberId;
 
-      const { revoke } = getUseCases();
-      await revoke.execute({
+      await _revoke.execute({
         memberId: params.memberId,
         organizationId: currentOrg,
         deletedBy: actorId,
