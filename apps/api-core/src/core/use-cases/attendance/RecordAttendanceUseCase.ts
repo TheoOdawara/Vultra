@@ -5,9 +5,11 @@
  * Coordinates: AI queue → vector search → duplicate check → persist
  */
 
-import type { IAIQueueAdapter } from "../../ports/IAIQueueAdapter";
-import type { IBiometricRepository } from "../../ports/IBiometricRepository";
-import type { IAttendanceRepository } from "../../ports/IAttendanceRepository";
+import {
+  CURRENT_MODEL_VERSION,
+  FACE_MATCH_THRESHOLD,
+  LOW_CONFIDENCE_THRESHOLD,
+} from "../../domain/constants";
 import {
   AttendanceConflictError,
   FaceNotRecognizedError,
@@ -15,11 +17,9 @@ import {
   SessionAlreadyClosedError,
   SessionNotFoundError,
 } from "../../domain/errors/DomainError";
-import {
-  CURRENT_MODEL_VERSION,
-  FACE_MATCH_THRESHOLD,
-  LOW_CONFIDENCE_THRESHOLD,
-} from "../../domain/constants";
+import type { IAIQueueAdapter } from "../../ports/IAIQueueAdapter";
+import type { IAttendanceRepository } from "../../ports/IAttendanceRepository";
+import type { IBiometricRepository } from "../../ports/IBiometricRepository";
 
 export interface RecordAttendanceInput {
   jobId: string;

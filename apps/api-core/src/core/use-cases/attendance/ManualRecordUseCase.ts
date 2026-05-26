@@ -4,15 +4,15 @@
  * POST /v1/attendance/sessions/:id/records/manual
  */
 
-import type {
-  IAttendanceRepository,
-  AttendanceRecordSnapshot,
-} from "../../ports/IAttendanceRepository";
 import {
   AttendanceConflictError,
   SessionAlreadyClosedError,
   SessionNotFoundError,
 } from "../../domain/errors/DomainError";
+import type {
+  AttendanceRecordSnapshot,
+  IAttendanceRepository,
+} from "../../ports/IAttendanceRepository";
 
 export interface ManualRecordInput {
   sessionId: string;

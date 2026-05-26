@@ -5,11 +5,11 @@
  * Verifies a face against stored biometric profiles and returns a match result.
  */
 
-import type { IAIQueueAdapter } from "../../ports/IAIQueueAdapter";
-import type { IBiometricRepository } from "../../ports/IBiometricRepository";
-import type { IAuditLogRepository, AuditActorType } from "../../ports/IAuditLogRepository";
-import { DomainError } from "../../domain/errors/DomainError";
 import { CURRENT_MODEL_VERSION, FACE_MATCH_THRESHOLD } from "../../domain/constants";
+import { DomainError } from "../../domain/errors/DomainError";
+import type { IAIQueueAdapter } from "../../ports/IAIQueueAdapter";
+import type { AuditActorType, IAuditLogRepository } from "../../ports/IAuditLogRepository";
+import type { IBiometricRepository } from "../../ports/IBiometricRepository";
 
 const POSSIBLE_MATCH_THRESHOLD = 0.75;
 

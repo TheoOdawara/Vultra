@@ -1,16 +1,16 @@
 import { afterAll, beforeEach, describe, expect, it, mock } from "bun:test";
 import Elysia from "elysia";
-import { globalErrorHandler } from "../../infrastructure/error-handler.ts";
-import type {
-  BiometricProfileLookup,
-  SimilarityMatch,
-} from "../../core/ports/IBiometricRepository.ts";
 import {
   AIServiceUnavailableError,
   BiometricProfileNotFoundError,
   DomainError,
   UnauthorizedError,
 } from "../../core/domain/errors/DomainError.ts";
+import type {
+  BiometricProfileLookup,
+  SimilarityMatch,
+} from "../../core/ports/IBiometricRepository.ts";
+import { globalErrorHandler } from "../../infrastructure/error-handler.ts";
 
 const authPluginPath = import.meta.resolve("../../adapters/http/middleware/auth.plugin.ts");
 const biometricsRepoPath = import.meta.resolve(

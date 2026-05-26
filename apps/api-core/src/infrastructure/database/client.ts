@@ -6,9 +6,9 @@
  * must be called at the start of every authenticated request.
  */
 
+import { sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
-import { sql } from "drizzle-orm";
 import * as schema from "./schema";
 
 if (!process.env.DATABASE_URL) {

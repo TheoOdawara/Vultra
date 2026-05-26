@@ -4,8 +4,8 @@
  * PATCH /v1/attendance/sessions/:id/close
  */
 
-import type { IAttendanceRepository } from "../../ports/IAttendanceRepository";
 import { SessionAlreadyClosedError, SessionNotFoundError } from "../../domain/errors/DomainError";
+import type { IAttendanceRepository } from "../../ports/IAttendanceRepository";
 
 export interface CloseSessionInput {
   sessionId: string;

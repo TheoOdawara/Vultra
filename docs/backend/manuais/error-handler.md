@@ -25,15 +25,26 @@ Todos os erros são capturados pelo plugin `globalErrorHandler` via hook `.onErr
 
 | Situação | HTTP Status | Código de Erro |
 |----------|-------------|----------------|
+| Autenticação ausente ou inválida | `401 Unauthorized` | `UNAUTHORIZED` |
+| Permissão insuficiente | `403 Forbidden` | `INSUFFICIENT_PERMISSIONS` |
+| Token inválido (ESP32) | `401 Unauthorized` | `INVALID_DEVICE_TOKEN` |
+| Validação TypeBox falhou | `422 Unprocessable` | `VALIDATION_ERROR` |
+| Tenant/organização não encontrado | `404 Not Found` | `ORGANIZATION_NOT_FOUND` |
+| Sessão de chamada não encontrada | `404 Not Found` | `SESSION_NOT_FOUND` |
+| Sessão de chamada encerrada | `409 Conflict` | `SESSION_ALREADY_CLOSED` |
 | Presença já registrada na sessão | `409 Conflict` | `ATTENDANCE_CONFLICT` |
 | Face não reconhecida acima do threshold | `404 Not Found` | `FACE_NOT_RECOGNIZED` |
-| Token inválido (ESP32) | `401 Unauthorized` | `INVALID_DEVICE_TOKEN` |
 | Score de confiança abaixo do threshold | `422 Unprocessable` | `LOW_CONFIDENCE_MATCH` |
-| Validação TypeBox falhou | `400 Bad Request` | `VALIDATION_ERROR` |
-| Tenant/organização não encontrado | `404 Not Found` | `ORGANIZATION_NOT_FOUND` |
+| Qualidade do frame abaixo do mínimo | `422 Unprocessable` | `LOW_QUALITY` |
+| Perfil biométrico não encontrado | `404 Not Found` | `BIOMETRIC_PROFILE_NOT_FOUND` |
+| Perfil biométrico já existe para o membro | `409 Conflict` | `BIOMETRIC_ENROLL_CONFLICT` |
+| Payload acima do limite permitido | `413 Payload Too Large` | `PAYLOAD_TOO_LARGE` |
+| Muitas requisições biométricas | `429 Too Many Requests` | `RATE_LIMIT_EXCEEDED` |
 | AI Service indisponível (Circuit Breaker aberto) | `503 Service Unavailable` | `AI_SERVICE_UNAVAILABLE` |
-| Sessão de chamada encerrada | `409 Conflict` | `SESSION_ALREADY_CLOSED` |
-| Permissão insuficiente | `403 Forbidden` | `INSUFFICIENT_PERMISSIONS` |
+| Membro não encontrado | `404 Not Found` | `MEMBER_NOT_FOUND` |
+| Código externo já existe no tenant | `409 Conflict` | `MEMBER_EXTERNAL_CODE_CONFLICT` |
+| Dispositivo não encontrado ou inativo | `404 Not Found` | `DEVICE_NOT_FOUND` |
+| Intervalo de datas do relatório inválido | `422 Unprocessable` | `INVALID_REPORT_RANGE` |
 
 ---
 

@@ -11,8 +11,8 @@
  * Referência: docs/backend/manuais/autenticacao.md
  */
 
-import { Elysia } from "elysia";
 import { and, eq } from "drizzle-orm";
+import { Elysia } from "elysia";
 import { UnauthorizedError } from "../../../core/domain/errors/DomainError";
 import { auth } from "../../../infrastructure/auth";
 import { db } from "../../../infrastructure/database/client";

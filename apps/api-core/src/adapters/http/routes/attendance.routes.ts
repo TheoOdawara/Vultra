@@ -12,17 +12,17 @@
 
 import { createId } from "@paralleldrive/cuid2";
 import Elysia, { t } from "elysia";
-import { authPlugin } from "../middleware/auth.plugin";
-import { deviceAuthPlugin } from "../middleware/device-auth.plugin";
-import type { AIJobQueue } from "../../queue/ai-job.queue.ts";
-import { AttendanceRepository } from "../../repositories/attendance.repository";
-import { BiometricsRepository } from "../../repositories/biometric.repository";
+import { OrganizationNotFoundError } from "../../../core/domain/errors/DomainError";
 import { CloseSessionUseCase } from "../../../core/use-cases/attendance/CloseSessionUseCase";
 import { ManualRecordUseCase } from "../../../core/use-cases/attendance/ManualRecordUseCase";
 import { OpenSessionUseCase } from "../../../core/use-cases/attendance/OpenSessionUseCase";
 import { RecordAttendanceUseCase } from "../../../core/use-cases/attendance/RecordAttendanceUseCase";
 import { db } from "../../../infrastructure/database/client";
-import { OrganizationNotFoundError } from "../../../core/domain/errors/DomainError";
+import type { AIJobQueue } from "../../queue/ai-job.queue.ts";
+import { AttendanceRepository } from "../../repositories/attendance.repository";
+import { BiometricsRepository } from "../../repositories/biometric.repository";
+import { authPlugin } from "../middleware/auth.plugin";
+import { deviceAuthPlugin } from "../middleware/device-auth.plugin";
 
 // ── Singletons (built once when initAttendanceRoutes is called) ───────────────
 

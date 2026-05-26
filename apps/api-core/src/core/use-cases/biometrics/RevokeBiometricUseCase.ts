@@ -6,12 +6,12 @@
  * Sets is_active = FALSE, nullifies the embedding vector.
  */
 
-import type {
-  IBiometricRepository,
-  BiometricProfileLookup,
-} from "../../ports/IBiometricRepository";
-import type { IAuditLogRepository, AuditActorType } from "../../ports/IAuditLogRepository";
 import { BiometricProfileNotFoundError } from "../../domain/errors/DomainError";
+import type { AuditActorType, IAuditLogRepository } from "../../ports/IAuditLogRepository";
+import type {
+  BiometricProfileLookup,
+  IBiometricRepository,
+} from "../../ports/IBiometricRepository";
 
 export interface RevokeBiometricInput {
   organizationId: string;

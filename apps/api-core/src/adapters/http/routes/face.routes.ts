@@ -14,23 +14,23 @@
 
 import { createId } from "@paralleldrive/cuid2";
 import Elysia, { t } from "elysia";
-import { authPlugin } from "../middleware/auth.plugin";
-import type { AIJobQueue } from "../../queue/ai-job.queue.ts";
-import { AuditLogRepository } from "../../repositories/audit-log.repository";
-import { BiometricsRepository } from "../../repositories/biometric.repository";
-import { EnrollBiometricUseCase } from "../../../core/use-cases/biometrics/EnrollBiometricUseCase";
-import { VerifyFaceUseCase } from "../../../core/use-cases/biometrics/VerifyFaceUseCase";
-import { ListFacesUseCase } from "../../../core/use-cases/biometrics/ListFacesUseCase";
-import { RevokeBiometricUseCase } from "../../../core/use-cases/biometrics/RevokeBiometricUseCase";
-import { db } from "../../../infrastructure/database/client";
-import { checkPermission } from "../../../infrastructure/auth";
 import {
   ForbiddenError,
   OrganizationNotFoundError,
   PayloadTooLargeError,
   RateLimitExceededError,
 } from "../../../core/domain/errors/DomainError";
+import { EnrollBiometricUseCase } from "../../../core/use-cases/biometrics/EnrollBiometricUseCase";
+import { ListFacesUseCase } from "../../../core/use-cases/biometrics/ListFacesUseCase";
+import { RevokeBiometricUseCase } from "../../../core/use-cases/biometrics/RevokeBiometricUseCase";
+import { VerifyFaceUseCase } from "../../../core/use-cases/biometrics/VerifyFaceUseCase";
+import { checkPermission } from "../../../infrastructure/auth";
+import { db } from "../../../infrastructure/database/client";
 import { handleHttpError } from "../../../infrastructure/error-handler";
+import type { AIJobQueue } from "../../queue/ai-job.queue.ts";
+import { AuditLogRepository } from "../../repositories/audit-log.repository";
+import { BiometricsRepository } from "../../repositories/biometric.repository";
+import { authPlugin } from "../middleware/auth.plugin";
 
 const MAX_FRAME_BASE64_BYTES = 1024 * 1024;
 const USER_RATE_LIMIT_MAX_HITS = 10;

@@ -7,15 +7,15 @@
  */
 
 import { and, desc, eq, sql } from "drizzle-orm";
-import type { Db } from "../../infrastructure/database/client";
-import { biometricProfiles } from "../../infrastructure/database/schema";
+import { CURRENT_MODEL_VERSION } from "../../core/domain/constants";
 import type {
-  IBiometricRepository,
-  SimilarityMatch,
   BiometricProfileLookup,
   EnrollParams,
+  IBiometricRepository,
+  SimilarityMatch,
 } from "../../core/ports/IBiometricRepository";
-import { CURRENT_MODEL_VERSION } from "../../core/domain/constants";
+import type { Db } from "../../infrastructure/database/client";
+import { biometricProfiles } from "../../infrastructure/database/schema";
 
 interface FindBySimilarityRow {
   id: string;

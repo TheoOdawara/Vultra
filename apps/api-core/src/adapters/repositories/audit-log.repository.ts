@@ -1,9 +1,9 @@
-import type { Db } from "../../infrastructure/database/client.ts";
-import { auditLogs } from "../../infrastructure/database/schema/audit-logs.ts";
 import type {
   IAuditLogRepository,
   InsertAuditLogParams,
 } from "../../core/ports/IAuditLogRepository";
+import type { Db } from "../../infrastructure/database/client.ts";
+import { auditLogs } from "../../infrastructure/database/schema/audit-logs.ts";
 
 export class AuditLogRepository implements IAuditLogRepository {
   constructor(private readonly db: Db) {}

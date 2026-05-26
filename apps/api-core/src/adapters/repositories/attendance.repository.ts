@@ -7,19 +7,19 @@
 
 import { and, eq } from "drizzle-orm";
 import type {
+  AttendanceRecordSnapshot,
+  IAttendanceRepository,
+  ManualRecordParams,
+  NewRecordData,
+  NewSessionData,
+  SessionSnapshot,
+} from "../../core/ports/IAttendanceRepository";
+import type { Db } from "../../infrastructure/database/client";
+import type {
   NewAttendanceRecord,
   NewAttendanceSession,
 } from "../../infrastructure/database/schema";
-import type { Db } from "../../infrastructure/database/client";
 import { attendanceRecords, attendanceSessions } from "../../infrastructure/database/schema";
-import type {
-  IAttendanceRepository,
-  SessionSnapshot,
-  AttendanceRecordSnapshot,
-  NewSessionData,
-  NewRecordData,
-  ManualRecordParams,
-} from "../../core/ports/IAttendanceRepository";
 
 export class AttendanceRepository implements IAttendanceRepository {
   constructor(private readonly db: Db) {}

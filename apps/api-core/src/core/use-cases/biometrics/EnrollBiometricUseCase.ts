@@ -6,11 +6,11 @@
  * Frame is NEVER persisted (LGPD Art. 11).
  */
 
-import type { IAIQueueAdapter } from "../../ports/IAIQueueAdapter";
-import type { IBiometricRepository } from "../../ports/IBiometricRepository";
-import type { IAuditLogRepository, AuditActorType } from "../../ports/IAuditLogRepository";
-import { LowQualityFrameError } from "../../domain/errors/DomainError";
 import { CURRENT_MODEL_VERSION, MIN_ENROLL_QUALITY } from "../../domain/constants";
+import { LowQualityFrameError } from "../../domain/errors/DomainError";
+import type { IAIQueueAdapter } from "../../ports/IAIQueueAdapter";
+import type { AuditActorType, IAuditLogRepository } from "../../ports/IAuditLogRepository";
+import type { IBiometricRepository } from "../../ports/IBiometricRepository";
 
 export interface EnrollBiometricInput {
   jobId: string;

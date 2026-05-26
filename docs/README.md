@@ -203,4 +203,4 @@ Antes de implementar qualquer feature, confirme:
 ## 👥 Equipe e Contato
 
 > Documentação mantida pelo **Arquitetos Principais do VULTRA**.
-> Última revisão: **Abril de 2026**
+> Última revisão: **Maio de 2026**

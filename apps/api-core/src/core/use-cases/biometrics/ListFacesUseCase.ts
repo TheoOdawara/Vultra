@@ -6,8 +6,8 @@
  */
 
 import type {
-  IBiometricRepository,
   BiometricProfileLookup,
+  IBiometricRepository,
 } from "../../ports/IBiometricRepository";
 
 export interface ListFacesInput {

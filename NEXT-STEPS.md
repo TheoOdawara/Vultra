@@ -90,12 +90,20 @@ Após configurar o auth, criar a estrutura base da API:
 
 Com a estrutura base pronta, implementar os módulos seguindo a arquitetura hexagonal:
 
-- [ ] `members/` — CRUD de membros por tenant
-- [ ] `devices/` — cadastro e rotação de `api_key` dos ESP32
-- [ ] `biometric-profiles/` — enroll e revogação LGPD
-- [ ] `attendance-sessions/` — abertura/encerramento de sessões
-- [ ] `attendance-records/` — registro de presenças (consumer da fila Redis)
-- [ ] `reports/` — relatórios de presença e bem-estar (RH)
+- [x] `members/` — CRUD de membros por tenant (port + repo + 5 use cases + rotas + 15 testes)
+- [x] `devices/` — cadastro e rotação de `api_key` dos ESP32 (port + repo + 5 use cases + rotas + 13 testes)
+- [x] `biometric-profiles/` — enroll e revogação LGPD (port + repo + 4 use cases + rotas + 17 testes)
+- [x] `attendance-sessions/` — abertura/encerramento de sessões (port + repo + use cases + rotas + 21 testes)
+- [x] `attendance-records/` — registro de presenças (consumer da fila Redis) — integrado em `attendance/`
+- [x] `reports/` — relatórios de presença e bem-estar (port + repo SQL raw + 2 use cases + rotas)
+
+## 4. Próximas etapas pendentes
+
+- [ ] **Docker Compose** — setup de ambiente de desenvolvimento local (PostgreSQL, Redis, AI Service)
+- [ ] **Testes de integração** — contra banco real (migrations + seed)
+- [ ] **Worker do AI Service (Python)** — integração com fila Redis e publicação de resultados
+- [ ] **Firmware (ESP32-CAM)** — implementação C++/Arduino com autenticação X-Device-Token
+- [ ] **Frontend** — portais Admin, Professor e RH (React/Next.js — não iniciados)
 
 ---
 
