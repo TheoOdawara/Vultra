@@ -15,7 +15,7 @@ import type {
 
 export class InvalidReportRangeError extends DomainError {
   constructor() {
-    super("INVALID_REPORT_RANGE", 422, "Report 'from' date must be before 'to' date");
+    super("INVALID_REPORT_RANGE", 400, "Report 'from' date must be before 'to' date");
   }
 }
 

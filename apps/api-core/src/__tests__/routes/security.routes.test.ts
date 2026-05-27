@@ -552,7 +552,7 @@ describe("baseline security routes", () => {
   it("GET /v1/members/:id bloqueia estudante acessando outro membro", async () => {
     const app = await createApp();
 
-    const { response } = await requestJson(app, `/v1/members/${OTHER_MEMBER_ID}`, {
+    const { response, body } = await requestJson(app, `/v1/members/${OTHER_MEMBER_ID}`, {
       headers: authenticatedHeaders({
         "x-test-role": "student",
         "x-test-user-id": STUDENT_USER_ID,

@@ -25,6 +25,21 @@ export class AuditLogRepository implements IAuditLogRepository {
   }
 }
 
+const SENSITIVE_AUDIT_KEYS = new Set([
+  "apikey",
+  "apikeyplaintext",
+  "embedding",
+  "faceembedding",
+  "faceembeddingvector",
+  "frame",
+  "framebase64",
+  "key",
+  "rawframe",
+  "token",
+  "xapikey",
+  "xdevicetoken",
+]);
+
 function sanitizeAuditPayload(value: unknown): unknown {
   if (Array.isArray(value)) {
     return value.map(sanitizeAuditPayload);
@@ -32,11 +47,15 @@ function sanitizeAuditPayload(value: unknown): unknown {
 
   if (value && typeof value === "object") {
     const entries = Object.entries(value).filter(
-      ([key]) => !["frameBase64", "embedding", "faceEmbedding"].includes(key)
+      ([key]) => !SENSITIVE_AUDIT_KEYS.has(normalizeAuditPayloadKey(key))
     );
 
     return Object.fromEntries(entries.map(([key, item]) => [key, sanitizeAuditPayload(item)]));
   }
 
   return value;
+}
+
+function normalizeAuditPayloadKey(key: string): string {
+  return key.replace(/[-_]/g, "").toLowerCase();
 }

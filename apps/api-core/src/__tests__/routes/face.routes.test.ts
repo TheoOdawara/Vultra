@@ -845,7 +845,7 @@ describe("cutover legado /v1/biometric", () => {
       });
 
       expect(response.status).toBe(404);
-      expect(body).toEqual("NOT_FOUND");
+      expect(body).toEqual({ error: "NOT_FOUND" });
       expect(routeState.aiCalls).toHaveLength(0);
       expect(routeState.repoCalls.enroll).toHaveLength(0);
       expect(routeState.repoCalls.findBySimilarity).toHaveLength(0);

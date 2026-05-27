@@ -18,7 +18,6 @@ import {
   attendanceUserRoutes,
   initAttendanceRoutes,
 } from "../adapters/http/routes/attendance.routes";
-import { biometricRoutes, initBiometricRoutes } from "../adapters/http/routes/biometric.routes";
 import { deviceRoutes, initDeviceRoutes } from "../adapters/http/routes/devices.routes";
 import { faceRoutes, initFaceRoutes } from "../adapters/http/routes/face.routes";
 import { healthRoutes, initHealthRoutes } from "../adapters/http/routes/health.routes";
@@ -32,7 +31,6 @@ import { globalErrorHandler } from "./error-handler";
 
 initFaceRoutes(aiQueue);
 initAttendanceRoutes(aiQueue);
-initBiometricRoutes(aiQueue);
 initHealthRoutes(aiQueue);
 
 // ── Init modules that don't need AIJobQueue ───────────────────────────────────
@@ -67,7 +65,6 @@ export const app = new Elysia()
       .use(attendanceUserRoutes)
       .use(attendanceDeviceRoutes)
       .use(faceRoutes)
-      .use(biometricRoutes)
       .use(memberRoutes)
       .use(deviceRoutes)
       .use(reportRoutes)

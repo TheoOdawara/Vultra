@@ -30,13 +30,57 @@ export class RevokeBiometricUseCase {
   ) {}
 
   async execute(input: RevokeBiometricInput): Promise<void> {
-    const profile = await this.resolveProfile(input);
-
     const deletedBy = input.deletedBy ?? input.actorId ?? input.memberId;
     if (!deletedBy) {
       throw new BiometricProfileNotFoundError();
     }
 
+    if (input.profileId) {
+      const profile = await this.resolveProfileById(input.profileId, input.organizationId, input);
+      await this.revokeProfile(profile, input, deletedBy);
+      return;
+    }
+
+    if (!input.memberId) {
+      await this.insertNotFoundAuditLog(input);
+      throw new BiometricProfileNotFoundError();
+    }
+
+    const profiles = await this.biometricsRepo.findByOrgAndMember(
+      input.organizationId,
+      input.memberId
+    );
+
+    if (profiles.length === 0) {
+      await this.insertNotFoundAuditLog(input);
+      throw new BiometricProfileNotFoundError();
+    }
+
+    for (const profile of profiles) {
+      await this.revokeProfile(profile, input, deletedBy);
+    }
+  }
+
+  private async resolveProfileById(
+    profileId: string,
+    organizationId: string,
+    input: RevokeBiometricInput
+  ): Promise<BiometricProfileLookup> {
+    const profile = await this.biometricsRepo.findActiveProfileById(profileId, organizationId);
+
+    if (!profile) {
+      await this.insertNotFoundAuditLog(input);
+      throw new BiometricProfileNotFoundError();
+    }
+
+    return profile;
+  }
+
+  private async revokeProfile(
+    profile: BiometricProfileLookup,
+    input: RevokeBiometricInput,
+    deletedBy: string
+  ): Promise<void> {
     const revoked = await this.biometricsRepo.revoke(
       profile.profileId,
       input.organizationId,
@@ -62,40 +106,6 @@ export class RevokeBiometricUseCase {
       },
       ...(input.ipAddress ? { ipAddress: input.ipAddress } : {}),
     });
-  }
-
-  private async resolveProfile(input: RevokeBiometricInput): Promise<BiometricProfileLookup> {
-    if (input.profileId) {
-      const profile = await this.biometricsRepo.findActiveProfileById(
-        input.profileId,
-        input.organizationId
-      );
-
-      if (!profile) {
-        await this.insertNotFoundAuditLog(input);
-        throw new BiometricProfileNotFoundError();
-      }
-
-      return profile;
-    }
-
-    if (!input.memberId) {
-      await this.insertNotFoundAuditLog(input);
-      throw new BiometricProfileNotFoundError();
-    }
-
-    const profiles = await this.biometricsRepo.findByOrgAndMember(
-      input.organizationId,
-      input.memberId
-    );
-
-    const activeProfile = profiles[0];
-    if (!activeProfile) {
-      await this.insertNotFoundAuditLog(input);
-      throw new BiometricProfileNotFoundError();
-    }
-
-    return activeProfile;
   }
 
   private async insertNotFoundAuditLog(input: RevokeBiometricInput): Promise<void> {

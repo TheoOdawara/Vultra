@@ -30,6 +30,7 @@ import { db } from "../../../infrastructure/database/client";
 import type { AIJobQueue } from "../../queue/ai-job.queue.ts";
 import { AttendanceRepository } from "../../repositories/attendance.repository";
 import { BiometricsRepository } from "../../repositories/biometric.repository";
+import { MemberRepository } from "../../repositories/member.repository";
 import { authPlugin } from "../middleware/auth.plugin";
 import { deviceAuthPlugin } from "../middleware/device-auth.plugin";
 
@@ -39,10 +40,12 @@ let _openSession: OpenSessionUseCase | null = null;
 let _closeSession: CloseSessionUseCase | null = null;
 let _manualRecord: ManualRecordUseCase | null = null;
 let _recordAttendance: RecordAttendanceUseCase | null = null;
+let _memberRepo: MemberRepository | null = null;
 
 export function initAttendanceRoutes(aiQueue: AIJobQueue): void {
   const attendanceRepo = new AttendanceRepository(db);
   const biometricsRepo = new BiometricsRepository(db);
+  _memberRepo = new MemberRepository(db);
 
   _openSession = new OpenSessionUseCase(attendanceRepo);
   _closeSession = new CloseSessionUseCase(attendanceRepo);
@@ -58,24 +61,36 @@ export const attendanceUserRoutes = new Elysia({ prefix: "/attendance" })
   // POST /v1/attendance/sessions
   .post(
     "/sessions",
-    async ({ body, currentOrg, currentRole }) => {
+    async ({ body, currentOrg, currentRole, currentUser }) => {
       if (!currentOrg) throw new OrganizationNotFoundError();
       if (!_openSession) throw new Error("AttendanceRoutes not initialized");
+      if (!_memberRepo) throw new Error("AttendanceRoutes not initialized");
 
       // Only roles with attendance:write can open sessions (professors, admins — not students)
       if (!checkPermission(currentRole, { attendance: ["write"] })) throw new ForbiddenError();
 
-      // Only admins (members:manage) may attribute an arbitrary professorId.
-      // Professors and RH cannot set it to prevent false attribution.
-      if (body.professorId && !checkPermission(currentRole, { members: ["manage"] })) {
-        throw new ForbiddenError();
+      let professorId = body.professorId;
+      const canManageMembers = checkPermission(currentRole, { members: ["manage"] });
+
+      if (!canManageMembers) {
+        const professorMember = await _memberRepo.findByUserId(currentUser.id, currentOrg);
+
+        if (!professorMember || professorMember.role !== "professor") {
+          throw new ForbiddenError();
+        }
+
+        if (professorId && professorId !== professorMember.id) {
+          throw new ForbiddenError();
+        }
+
+        professorId = professorMember.id;
       }
 
       const session = await _openSession.execute({
         organizationId: currentOrg,
         deviceId: body.deviceId,
         ...(body.classId && { classId: body.classId }),
-        ...(body.professorId && { professorId: body.professorId }),
+        ...(professorId && { professorId }),
       });
 
       if (!session) throw new Error("Failed to create session");
@@ -95,7 +110,7 @@ export const attendanceUserRoutes = new Elysia({ prefix: "/attendance" })
       detail: {
         summary: "Open attendance session",
         description:
-          "Requires attendance:write. Only admin (members:manage) may set professorId freely.",
+          "Requires attendance:write. Admin may set professorId freely; professors are bound to their own member id.",
         tags: ["attendance"],
       },
     }

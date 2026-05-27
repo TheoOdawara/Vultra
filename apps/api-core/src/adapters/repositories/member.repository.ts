@@ -34,6 +34,24 @@ export class MemberRepository implements IMemberRepository {
     });
   }
 
+  async findByUserId(userId: string, organizationId: string): Promise<MemberSnapshot | null> {
+    return withTenantContext(this.db, organizationId, async (tx: Tx) => {
+      const [row] = await tx
+        .select()
+        .from(members)
+        .where(
+          and(
+            eq(members.userId, userId),
+            eq(members.organizationId, organizationId),
+            eq(members.isActive, true)
+          )
+        )
+        .limit(1);
+
+      return row ?? null;
+    });
+  }
+
   async findByExternalCode(
     externalCode: string,
     organizationId: string

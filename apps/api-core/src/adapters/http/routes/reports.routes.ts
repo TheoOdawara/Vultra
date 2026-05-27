@@ -15,11 +15,16 @@
  */
 
 import Elysia, { t } from "elysia";
-import { ForbiddenError, InvalidReportRangeError, OrganizationNotFoundError } from "../../../core/domain/errors/DomainError";
+import {
+  ForbiddenError,
+  InvalidReportRangeError,
+  OrganizationNotFoundError,
+} from "../../../core/domain/errors/DomainError";
 import { GetAttendanceReportUseCase } from "../../../core/use-cases/reports/GetAttendanceReportUseCase";
 import { GetWellbeingReportUseCase } from "../../../core/use-cases/reports/GetWellbeingReportUseCase";
 import { checkPermission } from "../../../infrastructure/auth";
 import { db } from "../../../infrastructure/database/client";
+import { MemberRepository } from "../../repositories/member.repository";
 import { ReportsRepository } from "../../repositories/reports.repository";
 import { authPlugin } from "../middleware/auth.plugin";
 
@@ -27,9 +32,11 @@ import { authPlugin } from "../middleware/auth.plugin";
 
 let _attendanceReport: GetAttendanceReportUseCase | null = null;
 let _wellbeingReport: GetWellbeingReportUseCase | null = null;
+let _memberRepo: MemberRepository | null = null;
 
 export function initReportRoutes(): void {
   const reportsRepo = new ReportsRepository(db);
+  _memberRepo = new MemberRepository(db);
   _attendanceReport = new GetAttendanceReportUseCase(reportsRepo);
   _wellbeingReport = new GetWellbeingReportUseCase(reportsRepo);
 }
@@ -74,6 +81,7 @@ export const reportRoutes = new Elysia({ prefix: "/reports" })
     async ({ query, currentOrg, currentRole, currentUser }) => {
       if (!currentOrg) throw new OrganizationNotFoundError();
       if (!_attendanceReport) throw new Error("ReportRoutes not initialized");
+      if (!_memberRepo) throw new Error("ReportRoutes not initialized");
 
       const canRead = checkPermission(currentRole, { reports: ["read"] });
       const isProfessor = currentRole === "professor";
@@ -85,9 +93,16 @@ export const reportRoutes = new Elysia({ prefix: "/reports" })
 
       if (from >= to) throw new InvalidReportRangeError();
 
-      // Professors are limited to sessions they ran
-      const professorId =
-        isProfessor && !canRead ? (currentUser?.id ?? undefined) : (query.professorId ?? undefined);
+      // Professors are limited to sessions linked to their members.id, not auth user id.
+      let professorId = query.professorId;
+      if (isProfessor && !canRead) {
+        const professorMember = await _memberRepo.findByUserId(currentUser.id, currentOrg);
+        if (!professorMember || professorMember.role !== "professor") {
+          throw new ForbiddenError();
+        }
+
+        professorId = professorMember.id;
+      }
 
       const result = await _attendanceReport.execute({
         organizationId: currentOrg,

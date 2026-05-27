@@ -74,5 +74,6 @@ export function handleHttpError({
 }
 
 export const globalErrorHandler = new Elysia({ name: "global-error-handler" }).onError(
+  { as: "global" },
   ({ code, error, set }) => handleHttpError({ code, error, set }) as never
 );

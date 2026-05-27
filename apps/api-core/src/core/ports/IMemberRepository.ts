@@ -57,6 +57,7 @@ export interface ListMembersFilter {
 
 export interface IMemberRepository {
   findById(memberId: string, organizationId: string): Promise<MemberSnapshot | null>;
+  findByUserId(userId: string, organizationId: string): Promise<MemberSnapshot | null>;
   findByExternalCode(externalCode: string, organizationId: string): Promise<MemberSnapshot | null>;
   list(filter: ListMembersFilter): Promise<MemberSnapshot[]>;
   count(filter: Omit<ListMembersFilter, "limit" | "offset">): Promise<number>;

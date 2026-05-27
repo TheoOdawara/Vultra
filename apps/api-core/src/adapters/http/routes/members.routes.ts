@@ -16,7 +16,12 @@
  */
 
 import Elysia, { t } from "elysia";
-import { ForbiddenError, OrganizationNotFoundError } from "../../../core/domain/errors/DomainError";
+import {
+  BiometricProfileNotFoundError,
+  ForbiddenError,
+  OrganizationNotFoundError,
+} from "../../../core/domain/errors/DomainError";
+import { RevokeBiometricUseCase } from "../../../core/use-cases/biometrics/RevokeBiometricUseCase";
 import { CreateMemberUseCase } from "../../../core/use-cases/members/CreateMemberUseCase";
 import { DeactivateMemberUseCase } from "../../../core/use-cases/members/DeactivateMemberUseCase";
 import { GetMemberUseCase } from "../../../core/use-cases/members/GetMemberUseCase";
@@ -24,6 +29,8 @@ import { ListMembersUseCase } from "../../../core/use-cases/members/ListMembersU
 import { UpdateMemberUseCase } from "../../../core/use-cases/members/UpdateMemberUseCase";
 import { checkPermission } from "../../../infrastructure/auth";
 import { db } from "../../../infrastructure/database/client";
+import { AuditLogRepository } from "../../repositories/audit-log.repository";
+import { BiometricsRepository } from "../../repositories/biometric.repository";
 import { MemberRepository } from "../../repositories/member.repository";
 import { authPlugin } from "../middleware/auth.plugin";
 
@@ -57,14 +64,19 @@ let _list: ListMembersUseCase | null = null;
 let _get: GetMemberUseCase | null = null;
 let _update: UpdateMemberUseCase | null = null;
 let _deactivate: DeactivateMemberUseCase | null = null;
+let _revokeBiometrics: RevokeBiometricUseCase | null = null;
 
 export function initMemberRoutes(): void {
   const memberRepo = new MemberRepository(db);
-  _create = new CreateMemberUseCase(memberRepo);
+  const auditLogRepo = new AuditLogRepository(db);
+  const biometricsRepo = new BiometricsRepository(db);
+
+  _create = new CreateMemberUseCase(memberRepo, auditLogRepo);
   _list = new ListMembersUseCase(memberRepo);
   _get = new GetMemberUseCase(memberRepo);
-  _update = new UpdateMemberUseCase(memberRepo);
-  _deactivate = new DeactivateMemberUseCase(memberRepo);
+  _update = new UpdateMemberUseCase(memberRepo, auditLogRepo);
+  _deactivate = new DeactivateMemberUseCase(memberRepo, auditLogRepo);
+  _revokeBiometrics = new RevokeBiometricUseCase(biometricsRepo, auditLogRepo);
 }
 
 // ── Helper ────────────────────────────────────────────────────────────────────
@@ -123,8 +135,8 @@ export const memberRoutes = new Elysia({ prefix: "/members" })
       if (!currentOrg) throw new OrganizationNotFoundError();
       if (!_list) throw new Error("MemberRoutes not initialized");
 
-      // Only admin, professor, rh can list all members
-      const canListAll = checkPermission(currentRole, { attendance: ["read"] });
+      // Only roles with members:read can list all members.
+      const canListAll = checkPermission(currentRole, { members: ["read"] });
       if (!canListAll) throw new ForbiddenError();
 
       const isActive =
@@ -177,12 +189,12 @@ export const memberRoutes = new Elysia({ prefix: "/members" })
   // POST /v1/members
   .post(
     "/",
-    async ({ body, currentOrg, currentRole, set }) => {
+    async ({ body, currentOrg, currentRole, currentUser, set }) => {
       if (!currentOrg) throw new OrganizationNotFoundError();
       if (!_create) throw new Error("MemberRoutes not initialized");
 
       // Only admin can create members
-      if (!checkPermission(currentRole, { attendance: ["write"] })) throw new ForbiddenError();
+      if (!checkPermission(currentRole, { members: ["manage"] })) throw new ForbiddenError();
 
       const member = await _create.execute({
         organizationId: currentOrg,
@@ -191,6 +203,8 @@ export const memberRoutes = new Elysia({ prefix: "/members" })
         role: body.role,
         externalCode: body.externalCode ?? null,
         userId: body.userId ?? null,
+        actorId: currentUser.id,
+        actorType: "user",
       });
 
       set.status = 201;
@@ -224,15 +238,15 @@ export const memberRoutes = new Elysia({ prefix: "/members" })
       if (!currentOrg) throw new OrganizationNotFoundError();
       if (!_get) throw new Error("MemberRoutes not initialized");
 
-      // Students can only access their own record
-      const isSelf = currentUser?.id !== undefined;
-      const canReadAll = checkPermission(currentRole, { attendance: ["read"] });
-      if (!canReadAll && !isSelf) throw new ForbiddenError();
-
       const member = await _get.execute({
         memberId: params.id,
         organizationId: currentOrg,
       });
+
+      // Students/non-readers can only access their own member record.
+      const canReadAll = checkPermission(currentRole, { members: ["read"] });
+      const isSelf = member.userId === currentUser.id;
+      if (!canReadAll && !isSelf) throw new ForbiddenError();
 
       return serializeMember(member);
     },
@@ -249,12 +263,12 @@ export const memberRoutes = new Elysia({ prefix: "/members" })
   // PATCH /v1/members/:id
   .patch(
     "/:id",
-    async ({ params, body, currentOrg, currentRole }) => {
+    async ({ params, body, currentOrg, currentRole, currentUser }) => {
       if (!currentOrg) throw new OrganizationNotFoundError();
       if (!_update) throw new Error("MemberRoutes not initialized");
 
       // Only admin can update members
-      if (!checkPermission(currentRole, { attendance: ["write"] })) throw new ForbiddenError();
+      if (!checkPermission(currentRole, { members: ["manage"] })) throw new ForbiddenError();
 
       const member = await _update.execute({
         memberId: params.id,
@@ -264,6 +278,8 @@ export const memberRoutes = new Elysia({ prefix: "/members" })
         ...(body.role !== undefined && { role: body.role }),
         ...(body.externalCode !== undefined && { externalCode: body.externalCode }),
         ...(body.userId !== undefined && { userId: body.userId }),
+        actorId: currentUser.id,
+        actorType: "user",
       });
 
       return serializeMember(member);
@@ -291,17 +307,34 @@ export const memberRoutes = new Elysia({ prefix: "/members" })
   // DELETE /v1/members/:id
   .delete(
     "/:id",
-    async ({ params, currentOrg, currentRole }) => {
+    async ({ params, currentOrg, currentRole, currentUser }) => {
       if (!currentOrg) throw new OrganizationNotFoundError();
       if (!_deactivate) throw new Error("MemberRoutes not initialized");
+      if (!_revokeBiometrics) throw new Error("MemberRoutes not initialized");
 
       // Only admin can deactivate members
-      if (!checkPermission(currentRole, { attendance: ["write"] })) throw new ForbiddenError();
+      if (!checkPermission(currentRole, { members: ["manage"] })) throw new ForbiddenError();
 
       await _deactivate.execute({
         memberId: params.id,
         organizationId: currentOrg,
+        actorId: currentUser.id,
+        actorType: "user",
       });
+
+      try {
+        await _revokeBiometrics.execute({
+          memberId: params.id,
+          organizationId: currentOrg,
+          deletedBy: currentUser.id,
+          actorId: currentUser.id,
+          actorType: "user",
+        });
+      } catch (error) {
+        if (!(error instanceof BiometricProfileNotFoundError)) {
+          throw error;
+        }
+      }
 
       return { success: true };
     },

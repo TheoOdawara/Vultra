@@ -10,6 +10,10 @@ import type {
   MemberSnapshot,
   UpdateMemberData,
 } from "../../core/ports/IMemberRepository.ts";
+import type {
+  IAuditLogRepository,
+  InsertAuditLogParams,
+} from "../../core/ports/IAuditLogRepository.ts";
 import {
   CreateMemberUseCase,
   MemberExternalCodeConflictError,
@@ -44,6 +48,7 @@ function createMemberRepoStub() {
 
   const calls = {
     findById: [] as Array<{ memberId: string; organizationId: string }>,
+    findByUserId: [] as Array<{ userId: string; organizationId: string }>,
     findByExternalCode: [] as Array<{ externalCode: string; organizationId: string }>,
     list: [] as ListMembersFilter[],
     count: [] as Array<Omit<ListMembersFilter, "limit" | "offset">>,
@@ -59,6 +64,15 @@ function createMemberRepoStub() {
     async findById(memberId, organizationId) {
       calls.findById.push({ memberId, organizationId });
       return store.get(`${organizationId}:${memberId}`) ?? null;
+    },
+
+    async findByUserId(userId, organizationId) {
+      calls.findByUserId.push({ userId, organizationId });
+      return (
+        [...store.values()].find(
+          (member) => member.organizationId === organizationId && member.userId === userId
+        ) ?? null
+      );
     },
 
     async findByExternalCode(externalCode, organizationId) {
@@ -119,24 +133,53 @@ function createMemberRepoStub() {
   return stub;
 }
 
+function createAuditLogRepoStub() {
+  const calls = {
+    insert: [] as InsertAuditLogParams[],
+  };
+
+  const stub: IAuditLogRepository & { calls: typeof calls } = {
+    calls,
+    async insert(params) {
+      calls.insert.push(params);
+    },
+  };
+
+  return stub;
+}
+
 // ── CreateMemberUseCase ───────────────────────────────────────────────────────
 
 describe("CreateMemberUseCase", () => {
   it("deve criar um membro com sucesso", async () => {
     const repo = createMemberRepoStub();
-    const useCase = new CreateMemberUseCase(repo);
+    const auditLogRepo = createAuditLogRepoStub();
+    const useCase = new CreateMemberUseCase(repo, auditLogRepo);
 
     const result = await useCase.execute({
       organizationId: "org-1",
       fullName: "João Costa",
       role: "student",
       externalCode: "MAT-100",
+      actorId: "user-admin",
+      actorType: "user",
     });
 
     expect(result.fullName).toBe("João Costa");
     expect(result.role).toBe("student");
     expect(repo.calls.create).toHaveLength(1);
     expect(repo.calls.create[0]).toMatchObject({ organizationId: "org-1", role: "student" });
+    expect(auditLogRepo.calls.insert[0]).toMatchObject({
+      action: "MEMBER_CREATED",
+      actorId: "user-admin",
+      resourceType: "members",
+      resourceId: result.id,
+      payload: {
+        full_name: "João Costa",
+        role: "student",
+        external_code: "MAT-100",
+      },
+    });
   });
 
   it("deve rejeitar externalCode duplicado dentro do tenant", async () => {
@@ -144,7 +187,8 @@ describe("CreateMemberUseCase", () => {
     const existing = makeMember({ externalCode: "MAT-DUP", organizationId: "org-1" });
     repo.store.set("org-1:member-1", existing);
 
-    const useCase = new CreateMemberUseCase(repo);
+    const auditLogRepo = createAuditLogRepoStub();
+    const useCase = new CreateMemberUseCase(repo, auditLogRepo);
 
     await expect(
       useCase.execute({
@@ -152,10 +196,13 @@ describe("CreateMemberUseCase", () => {
         fullName: "Novo Membro",
         role: "student",
         externalCode: "MAT-DUP",
+        actorId: "user-admin",
+        actorType: "user",
       })
     ).rejects.toBeInstanceOf(MemberExternalCodeConflictError);
 
     expect(repo.calls.create).toHaveLength(0);
+    expect(auditLogRepo.calls.insert).toHaveLength(0);
   });
 
   it("não deve verificar código de membros de outro tenant", async () => {
@@ -164,7 +211,8 @@ describe("CreateMemberUseCase", () => {
     const member = makeMember({ externalCode: "MAT-CROSS", organizationId: "org-b" });
     repo.store.set("org-b:member-cross", member);
 
-    const useCase = new CreateMemberUseCase(repo);
+    const auditLogRepo = createAuditLogRepoStub();
+    const useCase = new CreateMemberUseCase(repo, auditLogRepo);
 
     await expect(
       useCase.execute({
@@ -172,18 +220,23 @@ describe("CreateMemberUseCase", () => {
         fullName: "Membro Org A",
         role: "student",
         externalCode: "MAT-CROSS",
+        actorId: "user-admin",
+        actorType: "user",
       })
     ).resolves.toBeTruthy();
   });
 
   it("deve criar sem externalCode se não fornecido", async () => {
     const repo = createMemberRepoStub();
-    const useCase = new CreateMemberUseCase(repo);
+    const auditLogRepo = createAuditLogRepoStub();
+    const useCase = new CreateMemberUseCase(repo, auditLogRepo);
 
     const result = await useCase.execute({
       organizationId: "org-1",
       fullName: "Prof. Lima",
       role: "professor",
+      actorId: "user-admin",
+      actorType: "user",
     });
 
     expect(result.role).toBe("professor");
@@ -271,26 +324,46 @@ describe("UpdateMemberUseCase", () => {
   it("deve atualizar nome e role com sucesso", async () => {
     const repo = createMemberRepoStub();
     repo.store.set("org-1:m-1", makeMember({ id: "m-1", organizationId: "org-1" }));
+    const auditLogRepo = createAuditLogRepoStub();
 
-    const useCase = new UpdateMemberUseCase(repo);
+    const useCase = new UpdateMemberUseCase(repo, auditLogRepo);
 
     const updated = await useCase.execute({
       memberId: "m-1",
       organizationId: "org-1",
       fullName: "Ana Silva Renovada",
       role: "rh",
+      actorId: "user-admin",
+      actorType: "user",
     });
 
     expect(updated.fullName).toBe("Ana Silva Renovada");
     expect(updated.role).toBe("rh");
+    expect(auditLogRepo.calls.insert[0]).toMatchObject({
+      action: "MEMBER_UPDATED",
+      actorId: "user-admin",
+      resourceType: "members",
+      resourceId: "m-1",
+      payload: {
+        full_name: "Ana Silva Renovada",
+        role: "rh",
+      },
+    });
   });
 
   it("deve lançar MemberNotFoundError quando membro não existir", async () => {
     const repo = createMemberRepoStub();
-    const useCase = new UpdateMemberUseCase(repo);
+    const auditLogRepo = createAuditLogRepoStub();
+    const useCase = new UpdateMemberUseCase(repo, auditLogRepo);
 
     await expect(
-      useCase.execute({ memberId: "no-member", organizationId: "org-1", fullName: "X" })
+      useCase.execute({
+        memberId: "no-member",
+        organizationId: "org-1",
+        fullName: "X",
+        actorId: "user-admin",
+        actorType: "user",
+      })
     ).rejects.toBeInstanceOf(MemberNotFoundError);
   });
 
@@ -305,10 +378,17 @@ describe("UpdateMemberUseCase", () => {
       makeMember({ id: "m-2", organizationId: "org-1", externalCode: "B" })
     );
 
-    const useCase = new UpdateMemberUseCase(repo);
+    const auditLogRepo = createAuditLogRepoStub();
+    const useCase = new UpdateMemberUseCase(repo, auditLogRepo);
 
     await expect(
-      useCase.execute({ memberId: "m-1", organizationId: "org-1", externalCode: "B" })
+      useCase.execute({
+        memberId: "m-1",
+        organizationId: "org-1",
+        externalCode: "B",
+        actorId: "user-admin",
+        actorType: "user",
+      })
     ).rejects.toBeInstanceOf(MemberExternalCodeConflictError);
   });
 });
@@ -319,22 +399,41 @@ describe("DeactivateMemberUseCase", () => {
   it("deve desativar membro ativo", async () => {
     const repo = createMemberRepoStub();
     repo.store.set("org-1:m-1", makeMember({ id: "m-1", organizationId: "org-1" }));
+    const auditLogRepo = createAuditLogRepoStub();
 
-    const useCase = new DeactivateMemberUseCase(repo);
+    const useCase = new DeactivateMemberUseCase(repo, auditLogRepo);
 
     await expect(
-      useCase.execute({ memberId: "m-1", organizationId: "org-1" })
+      useCase.execute({
+        memberId: "m-1",
+        organizationId: "org-1",
+        actorId: "user-admin",
+        actorType: "user",
+      })
     ).resolves.toBeUndefined();
 
     expect(repo.store.get("org-1:m-1")?.isActive).toBe(false);
+    expect(auditLogRepo.calls.insert[0]).toMatchObject({
+      action: "MEMBER_DEACTIVATED",
+      actorId: "user-admin",
+      resourceType: "members",
+      resourceId: "m-1",
+      payload: { member_id: "m-1" },
+    });
   });
 
   it("deve lançar MemberNotFoundError para membro já inativo ou inexistente", async () => {
     const repo = createMemberRepoStub();
-    const useCase = new DeactivateMemberUseCase(repo);
+    const auditLogRepo = createAuditLogRepoStub();
+    const useCase = new DeactivateMemberUseCase(repo, auditLogRepo);
 
     await expect(
-      useCase.execute({ memberId: "ghost", organizationId: "org-1" })
+      useCase.execute({
+        memberId: "ghost",
+        organizationId: "org-1",
+        actorId: "user-admin",
+        actorType: "user",
+      })
     ).rejects.toBeInstanceOf(MemberNotFoundError);
   });
 });
