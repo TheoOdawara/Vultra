@@ -82,6 +82,6 @@ O retorno do `derive` é automaticamente tipado pelo ElysiaJS. Nunca use `as` pa
 | Registros de presença | `/v1/attendance/records` | `GET /v1/attendance/records?sessionId=` |
 | Membros | `/v1/members` | `GET /v1/members` |
 | Dispositivos IoT | `/v1/devices` | `POST /v1/devices` |
-| Perfis biométricos | `/v1/biometric` | `POST /v1/biometric/enroll` |
+| Perfis biométricos | `/v1/face` | `POST /v1/face/enroll` (legado `/v1/biometric/*` → 404) |
 | Relatórios | `/v1/reports` | `GET /v1/reports/attendance` |
 | Health checks | `/v1/health` | `GET /v1/health/ai-service` |

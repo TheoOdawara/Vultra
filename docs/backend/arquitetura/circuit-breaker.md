@@ -72,7 +72,7 @@ O frontend do professor deve exibir mensagem clara: *"Reconhecimento facial temp
 | Campo | Tipo | Descrição |
 |-------|------|-----------|
 | `status` | `'ok'` \| `'degraded'` \| `'unavailable'` | Estado legível |
-| `circuitState` | `'CLOSED'` \| `'OPEN'` \| `'HALF-OPEN'` | Estado técnico |
+| `circuitState` | `'CLOSED'` \| `'OPEN'` \| `'HALF_OPEN'` | Estado técnico (underscore, não hyphen) |
 | `failureCount` | `number` | Falhas acumuladas desde o último reset |
 | `lastFailureAt` | ISO timestamp \| `null` | Timestamp da última falha |
 
