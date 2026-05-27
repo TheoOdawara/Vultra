@@ -21,13 +21,16 @@ WORKDIR /app
 
 # ── Dependencies ──────────────────────────────────────────────────────────────
 
-COPY pyproject.toml ./
-RUN uv pip install --system --no-cache -e .
+COPY requirements.txt ./
+RUN uv pip install --system --no-cache -r requirements.txt
+
+ENV INSIGHTFACE_HOME=/opt/insightface
 
 # ── Pre-download InsightFace model (buffalo_l) ────────────────────────────────
 # This runs at build time so the container starts instantly in production.
-# Model is cached at ~/.insightface/models/buffalo_l/
-RUN python - <<'EOF'
+# Model is cached at /opt/insightface/models/buffalo_l/
+RUN mkdir -p /opt/insightface && \
+    python - <<'EOF'
 from insightface.app import FaceAnalysis
 app = FaceAnalysis(name="buffalo_l", providers=["CPUExecutionProvider"])
 app.prepare(ctx_id=0, det_size=(640, 640))
@@ -37,7 +40,8 @@ EOF
 # ── Application code ──────────────────────────────────────────────────────────
 
 # Non-root user for security
-RUN useradd -m -u 1001 -s /bin/bash appuser
+RUN useradd -m -u 1001 -s /bin/bash appuser && \
+    chown -R appuser:appuser /opt/insightface
 
 COPY --chown=appuser:appuser . .
 

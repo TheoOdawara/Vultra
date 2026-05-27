@@ -12,10 +12,10 @@ cp infra/.env.example infra/.env
 # Edite infra/.env e defina os valores reais (POSTGRES_PASSWORD, REDIS_PASSWORD, BETTER_AUTH_SECRET)
 
 # 2. Subir o stack completo
-docker compose -f infra/docker-compose.yml up -d
+docker compose -f infra/docker-compose.yml --env-file infra/.env up -d
 
 # 3. Executar as migrations do banco (apenas na primeira vez ou após novas migrations)
-docker compose -f infra/docker-compose.yml exec api-core bun run db:migrate
+docker compose -f infra/docker-compose.yml --env-file infra/.env exec api-core bun run db:migrate
 ```
 
 ---
@@ -94,7 +94,7 @@ redis     ──┤
 
 ```bash
 # Referência ao compose (abreviar com alias ou rodar da raiz)
-COMPOSE="docker compose -f infra/docker-compose.yml"
+COMPOSE="docker compose -f infra/docker-compose.yml --env-file infra/.env"
 
 # Subir todo o stack
 $COMPOSE up -d
