@@ -18,6 +18,7 @@
  * Reference: docs/backend/manuais/autenticacao.md
  */
 
+import { apiKey } from "@better-auth/api-key";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { createAccessControl, multiSession, organization } from "better-auth/plugins";
@@ -89,6 +90,7 @@ export const auth = betterAuth({
       session: authSchema.authSessions,
       account: authSchema.authAccounts,
       verification: authSchema.authVerifications,
+      apikey: authSchema.authApiKeys,
     },
   }),
 
@@ -111,6 +113,14 @@ export const auth = betterAuth({
     }),
     multiSession({
       maximumSessions: 3,
+    }),
+    apiKey({
+      // Device keys são org-owned — ESP32 não representa um usuário
+      references: "organization",
+      // Metadados necessários para armazenar { deviceId }
+      enableMetadata: true,
+      // Header padrão que o ESP32 enviará
+      apiKeyHeaders: "x-api-key",
     }),
   ],
 

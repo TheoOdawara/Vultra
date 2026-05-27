@@ -2,14 +2,16 @@
  * VULTRA — Devices Routes
  *
  * GET    /v1/devices               → ListDevicesUseCase
- * POST   /v1/devices               → RegisterDeviceUseCase  (returns API key ONCE)
+ * POST   /v1/devices               → RegisterDeviceUseCase + Better Auth createApiKey
  * PATCH  /v1/devices/:id           → UpdateDeviceUseCase
- * POST   /v1/devices/:id/rotate-key → RotateDeviceKeyUseCase (returns new key ONCE)
+ * POST   /v1/devices/:id/rotate-key → RotateDeviceKeyUseCase + Better Auth list/delete/create
  * DELETE /v1/devices/:id           → DeactivateDeviceUseCase
  *
  * Auth: authPlugin — admin role required for all write operations.
- * Security: API key is returned in the response body of POST and rotate-key
- *           ONCE — it is NOT stored in plaintext anywhere.
+ *
+ * API keys são geridas pelo @better-auth/api-key plugin (tabela auth_apikeys).
+ * A plaintext key é retornada ONCE — nunca é armazenada nas tabelas de domínio.
+ * O ESP32 deve enviar a key no header X-API-Key.
  */
 
 import Elysia, { t } from "elysia";
@@ -19,7 +21,7 @@ import { ListDevicesUseCase } from "../../../core/use-cases/devices/ListDevicesU
 import { RegisterDeviceUseCase } from "../../../core/use-cases/devices/RegisterDeviceUseCase";
 import { RotateDeviceKeyUseCase } from "../../../core/use-cases/devices/RotateDeviceKeyUseCase";
 import { UpdateDeviceUseCase } from "../../../core/use-cases/devices/UpdateDeviceUseCase";
-import { checkPermission } from "../../../infrastructure/auth";
+import { auth, checkPermission } from "../../../infrastructure/auth";
 import { db } from "../../../infrastructure/database/client";
 import { DeviceRepository } from "../../repositories/device.repository";
 import { authPlugin } from "../middleware/auth.plugin";
@@ -127,22 +129,33 @@ export const deviceRoutes = new Elysia({ prefix: "/devices" })
   // POST /v1/devices
   .post(
     "/",
-    async ({ body, currentOrg, currentRole, set }) => {
+    async ({ body, currentOrg, currentRole, set, headers }) => {
       if (!currentOrg) throw new OrganizationNotFoundError();
       if (!_register) throw new Error("DeviceRoutes not initialized");
 
       requireAdmin(currentRole);
 
-      const result = await _register.execute({
+      // 1. Criar device record (sem credencial na tabela de domínio)
+      const device = await _register.execute({
         organizationId: currentOrg,
         label: body.label,
         location: body.location ?? null,
       });
 
+      // 2. Gerar API key via Better Auth (armazenada em auth_apikeys, sem RLS)
+      const keyResult = await auth.api.createApiKey({
+        body: {
+          name: `device-${device.id}`,
+          organizationId: currentOrg,
+          metadata: { deviceId: device.id },
+        },
+        headers: new Headers(headers as Record<string, string>),
+      });
+
       set.status = 201;
       return {
-        device: serializeDevice(result.device),
-        apiKey: result.apiKey,
+        device: serializeDevice(device),
+        apiKey: keyResult.key,
       };
     },
     {
@@ -158,7 +171,7 @@ export const deviceRoutes = new Elysia({ prefix: "/devices" })
           device: DeviceResponse,
           apiKey: t.String({
             description:
-              "Plaintext API key — returned ONCE. Store it securely and provision into device firmware.",
+              "Plaintext API key — retornada UMA VEZ. Provisionar no firmware ESP32 como header X-API-Key.",
           }),
         }),
       },
@@ -166,7 +179,7 @@ export const deviceRoutes = new Elysia({ prefix: "/devices" })
         summary: "Register a new ESP32-CAM device",
         description:
           "Creates a device and returns its API key ONCE. " +
-          "The key is stored as a bcrypt hash — there is no way to retrieve it again. " +
+          "The key is managed by Better Auth and never stored in domain tables. " +
           "If lost, use POST /v1/devices/:id/rotate-key.",
         tags: ["devices"],
       },
@@ -213,31 +226,64 @@ export const deviceRoutes = new Elysia({ prefix: "/devices" })
   // POST /v1/devices/:id/rotate-key
   .post(
     "/:id/rotate-key",
-    async ({ params, currentOrg, currentRole }) => {
+    async ({ params, currentOrg, currentRole, headers }) => {
       if (!currentOrg) throw new OrganizationNotFoundError();
       if (!_rotate) throw new Error("DeviceRoutes not initialized");
 
       requireAdmin(currentRole);
 
-      const result = await _rotate.execute({
+      // 1. Validar que o device existe e está ativo
+      await _rotate.execute({
         deviceId: params.id,
         organizationId: currentOrg,
       });
 
-      return { apiKey: result.apiKey };
+      const reqHeaders = new Headers(headers as Record<string, string>);
+
+      // 2. Buscar as keys existentes para este device (por organizationId + metadata.deviceId)
+      const listResult = await auth.api.listApiKeys({
+        query: { organizationId: currentOrg },
+        headers: reqHeaders,
+      });
+
+      // 3. Revogar a(s) key(s) existente(s) deste device
+      const existingKeys = listResult.apiKeys.filter(
+        (k) => (k.metadata as { deviceId?: string } | null)?.deviceId === params.id
+      );
+
+      await Promise.all(
+        existingKeys.map((k) =>
+          auth.api.deleteApiKey({
+            body: { keyId: k.id },
+            headers: reqHeaders,
+          })
+        )
+      );
+
+      // 4. Criar nova key
+      const keyResult = await auth.api.createApiKey({
+        body: {
+          name: `device-${params.id}`,
+          organizationId: currentOrg,
+          metadata: { deviceId: params.id },
+        },
+        headers: reqHeaders,
+      });
+
+      return { apiKey: keyResult.key };
     },
     {
       params: t.Object({ id: t.String({ format: "uuid" }) }),
       response: t.Object({
         apiKey: t.String({
           description:
-            "New plaintext API key — returned ONCE. The old key is immediately invalidated.",
+            "Nova API key — retornada UMA VEZ. A key anterior foi revogada. Atualizar firmware imediatamente.",
         }),
       }),
       detail: {
         summary: "Rotate device API key",
         description:
-          "Invalidates the current key and generates a new one. " +
+          "Revokes the current key and generates a new one via Better Auth. " +
           "The new key is returned ONCE — update device firmware immediately.",
         tags: ["devices"],
       },
@@ -266,8 +312,8 @@ export const deviceRoutes = new Elysia({ prefix: "/devices" })
       detail: {
         summary: "Deactivate device",
         description:
-          "Sets is_active = FALSE. The device token will be rejected by the auth middleware " +
-          "immediately after deactivation.",
+          "Sets is_active = FALSE. The device API key will be rejected by the auth middleware " +
+          "immediately after deactivation (device lookup returns null).",
         tags: ["devices"],
       },
     }

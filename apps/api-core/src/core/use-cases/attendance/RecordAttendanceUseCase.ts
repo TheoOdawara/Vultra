@@ -81,7 +81,11 @@ export class RecordAttendanceUseCase {
     }
 
     // 5. Duplicate check — same member cannot be registered twice in same session
-    const isDuplicate = await this.attendanceRepo.existsRecord(input.sessionId, match.memberId);
+    const isDuplicate = await this.attendanceRepo.existsRecord(
+      input.sessionId,
+      match.memberId,
+      input.organizationId
+    );
     if (isDuplicate) throw new AttendanceConflictError();
 
     // 6. Persist attendance record (no image — only metadata and scores)

@@ -2,17 +2,13 @@
  * VULTRA — RotateDeviceKeyUseCase
  *
  * POST /v1/devices/:id/rotate-key
- * Rotates the API key for an ESP32-CAM device.
+ * Validates that the device exists and is active before key rotation.
  *
- * Security contract:
- * - Old key is immediately invalidated upon rotation
- * - New plaintext key is returned ONCE in the response
- * - Hash is stored with bcrypt (cost 10) — plaintext NEVER persisted
- *
- * After rotation, the device firmware must be updated with the new key.
+ * Actual key revocation and generation are handled at the route layer
+ * via Better Auth (@better-auth/api-key plugin).
  */
 
-import type { IDeviceRepository } from "../../ports/IDeviceRepository";
+import type { DeviceSnapshot, IDeviceRepository } from "../../ports/IDeviceRepository";
 import { DeviceNotFoundError } from "./errors";
 
 export interface RotateDeviceKeyInput {
@@ -20,33 +16,16 @@ export interface RotateDeviceKeyInput {
   organizationId: string;
 }
 
-export interface RotateDeviceKeyOutput {
-  /** New plaintext API key — returned ONCE. Update firmware immediately. */
-  apiKey: string;
-}
-
 export class RotateDeviceKeyUseCase {
   constructor(private readonly deviceRepo: IDeviceRepository) {}
 
-  async execute(input: RotateDeviceKeyInput): Promise<RotateDeviceKeyOutput> {
-    // 1. Generate new secure random key
-    const rawBytes = crypto.getRandomValues(new Uint8Array(32));
-    const apiKey = Array.from(rawBytes)
-      .map((b) => b.toString(16).padStart(2, "0"))
-      .join("");
+  async execute(input: RotateDeviceKeyInput): Promise<DeviceSnapshot> {
+    const device = await this.deviceRepo.findById(input.deviceId, input.organizationId);
 
-    // 2. Hash
-    const newApiKeyHash = await Bun.password.hash(apiKey, { algorithm: "bcrypt", cost: 10 });
+    if (!device || !device.isActive) {
+      throw new DeviceNotFoundError();
+    }
 
-    // 3. Atomically replace hash in DB
-    const rotated = await this.deviceRepo.rotateApiKey(
-      input.deviceId,
-      input.organizationId,
-      newApiKeyHash
-    );
-
-    if (!rotated) throw new DeviceNotFoundError();
-
-    return { apiKey };
+    return device;
   }
 }

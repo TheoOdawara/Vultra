@@ -1,5 +1,9 @@
 /**
  * VULTRA — Devices Use Cases Tests
+ *
+ * RegisterDeviceUseCase: creates the device record (API key handled by Better Auth at route layer)
+ * RotateDeviceKeyUseCase: validates device exists and is active before key rotation
+ * ListDevicesUseCase, UpdateDeviceUseCase, DeactivateDeviceUseCase: business logic tests
  */
 
 import { describe, expect, it } from "bun:test";
@@ -34,27 +38,25 @@ function makeDevice(overrides: Partial<DeviceSnapshot> = {}): DeviceSnapshot {
   };
 }
 
+let _deviceIdCounter = 0;
+
 function createDeviceRepoStub() {
   const store: Map<string, DeviceSnapshot> = new Map();
-  const hashStore: Map<string, string> = new Map(); // deviceId → apiKeyHash
 
   const calls = {
     findById: [] as Array<{ deviceId: string; organizationId: string }>,
     list: [] as ListDevicesFilter[],
     create: [] as CreateDeviceData[],
     update: [] as Array<{ deviceId: string; organizationId: string; data: UpdateDeviceData }>,
-    rotateApiKey: [] as Array<{ deviceId: string; organizationId: string; newApiKeyHash: string }>,
     deactivate: [] as Array<{ deviceId: string; organizationId: string }>,
   };
 
   const stub: IDeviceRepository & {
     calls: typeof calls;
     store: typeof store;
-    hashStore: typeof hashStore;
   } = {
     calls,
     store,
-    hashStore,
 
     async findById(deviceId, organizationId) {
       calls.findById.push({ deviceId, organizationId });
@@ -69,13 +71,12 @@ function createDeviceRepoStub() {
     async create(data) {
       calls.create.push(data);
       const device = makeDevice({
-        id: `device-new-${Date.now()}`,
+        id: `device-new-${++_deviceIdCounter}`,
         organizationId: data.organizationId,
         label: data.label,
         location: data.location ?? null,
       });
       store.set(`${data.organizationId}:${device.id}`, device);
-      hashStore.set(device.id, data.apiKeyHash);
       return device;
     },
 
@@ -88,16 +89,6 @@ function createDeviceRepoStub() {
       const updated = { ...existing, ...data, updatedAt: new Date() };
       store.set(key, updated);
       return updated;
-    },
-
-    async rotateApiKey(deviceId, organizationId, newApiKeyHash) {
-      calls.rotateApiKey.push({ deviceId, organizationId, newApiKeyHash });
-      const key = `${organizationId}:${deviceId}`;
-      const existing = store.get(key);
-      // biome-ignore lint/complexity/useOptionalChain: test stub — explicit null check is clearer
-      if (!existing || !existing.isActive) return false;
-      hashStore.set(deviceId, newApiKeyHash);
-      return true;
     },
 
     async deactivate(deviceId, organizationId) {
@@ -117,56 +108,41 @@ function createDeviceRepoStub() {
 // ── RegisterDeviceUseCase ─────────────────────────────────────────────────────
 
 describe("RegisterDeviceUseCase", () => {
-  it("deve registrar dispositivo e retornar chave em texto plano", async () => {
+  it("deve registrar dispositivo e retornar snapshot", async () => {
     const repo = createDeviceRepoStub();
     const useCase = new RegisterDeviceUseCase(repo);
 
-    const result = await useCase.execute({
+    const device = await useCase.execute({
       organizationId: "org-1",
       label: "CAM-ENTRADA",
       location: "Portaria",
     });
 
-    expect(result.device.label).toBe("CAM-ENTRADA");
-    expect(result.device.location).toBe("Portaria");
-    expect(result.apiKey).toBeTruthy();
-    expect(typeof result.apiKey).toBe("string");
-    expect(result.apiKey.length).toBe(64); // 32 bytes → 64 hex chars
-  });
-
-  it("deve armazenar hash diferente do texto plano", async () => {
-    const repo = createDeviceRepoStub();
-    const useCase = new RegisterDeviceUseCase(repo);
-
-    const result = await useCase.execute({
-      organizationId: "org-1",
-      label: "CAM-TEST",
-    });
-
-    const storedHash = repo.hashStore.get(result.device.id);
-    expect(storedHash).not.toBe(result.apiKey);
-    expect(storedHash).toBeTruthy();
+    expect(device.label).toBe("CAM-ENTRADA");
+    expect(device.location).toBe("Portaria");
+    expect(device.id).toBeTruthy();
+    expect(repo.calls.create).toHaveLength(1);
   });
 
   it("deve gerar chaves únicas a cada registro", async () => {
     const repo = createDeviceRepoStub();
     const useCase = new RegisterDeviceUseCase(repo);
 
-    const [r1, r2] = await Promise.all([
+    const [d1, d2] = await Promise.all([
       useCase.execute({ organizationId: "org-1", label: "CAM-A" }),
       useCase.execute({ organizationId: "org-1", label: "CAM-B" }),
     ]);
 
-    expect(r1.apiKey).not.toBe(r2.apiKey);
+    expect(d1.id).not.toBe(d2.id);
   });
 
   it("deve associar o dispositivo ao tenant correto", async () => {
     const repo = createDeviceRepoStub();
     const useCase = new RegisterDeviceUseCase(repo);
 
-    const result = await useCase.execute({ organizationId: "org-tenant-x", label: "CAM-X" });
+    const device = await useCase.execute({ organizationId: "org-tenant-x", label: "CAM-X" });
 
-    expect(result.device.organizationId).toBe("org-tenant-x");
+    expect(device.organizationId).toBe("org-tenant-x");
   });
 });
 
@@ -202,19 +178,17 @@ describe("ListDevicesUseCase", () => {
 // ── RotateDeviceKeyUseCase ────────────────────────────────────────────────────
 
 describe("RotateDeviceKeyUseCase", () => {
-  it("deve rotacionar chave com sucesso e retornar nova chave em texto plano", async () => {
+  it("deve retornar snapshot do dispositivo ativo para rotação de chave", async () => {
     const repo = createDeviceRepoStub();
     repo.store.set("org-1:device-1", makeDevice({ id: "device-1", organizationId: "org-1" }));
-    repo.hashStore.set("device-1", "old-hash");
 
     const useCase = new RotateDeviceKeyUseCase(repo);
 
-    const result = await useCase.execute({ deviceId: "device-1", organizationId: "org-1" });
+    const device = await useCase.execute({ deviceId: "device-1", organizationId: "org-1" });
 
-    expect(result.apiKey).toBeTruthy();
-    expect(result.apiKey.length).toBe(64);
-    // Old hash should be replaced
-    expect(repo.hashStore.get("device-1")).not.toBe("old-hash");
+    expect(device.id).toBe("device-1");
+    expect(device.isActive).toBe(true);
+    expect(repo.calls.findById).toHaveLength(1);
   });
 
   it("deve lançar DeviceNotFoundError para dispositivo inativo ou inexistente", async () => {
@@ -226,17 +200,18 @@ describe("RotateDeviceKeyUseCase", () => {
     ).rejects.toBeInstanceOf(DeviceNotFoundError);
   });
 
-  it("deve gerar nova chave diferente da anterior", async () => {
+  it("deve lançar DeviceNotFoundError para dispositivo inativo", async () => {
     const repo = createDeviceRepoStub();
-    repo.store.set("org-1:d-1", makeDevice({ id: "d-1", organizationId: "org-1" }));
-    repo.hashStore.set("d-1", "initial-hash");
+    repo.store.set(
+      "org-1:d-inactive",
+      makeDevice({ id: "d-inactive", organizationId: "org-1", isActive: false })
+    );
 
     const useCase = new RotateDeviceKeyUseCase(repo);
 
-    const r1 = await useCase.execute({ deviceId: "d-1", organizationId: "org-1" });
-    const r2 = await useCase.execute({ deviceId: "d-1", organizationId: "org-1" });
-
-    expect(r1.apiKey).not.toBe(r2.apiKey);
+    await expect(
+      useCase.execute({ deviceId: "d-inactive", organizationId: "org-1" })
+    ).rejects.toBeInstanceOf(DeviceNotFoundError);
   });
 });
 

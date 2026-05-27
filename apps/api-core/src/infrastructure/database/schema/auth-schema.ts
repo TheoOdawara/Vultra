@@ -1,5 +1,6 @@
 import { boolean, integer, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 
+
 /**
  * VULTRA — Schema Better Auth
  *
@@ -147,6 +148,44 @@ export const authPasskeys = pgTable("auth_passkeys", {
 });
 
 // ─────────────────────────────────────────────
+// PLUGIN: API Key (@better-auth/api-key)
+// Armazena credenciais de API keys para devices ESP32.
+// SEM RLS — tabela auth_*, acesso gerido pelo Better Auth.
+// Sem FK para tabelas de domínio (devices) para permitir revogação
+// independente do ciclo de vida do device.
+// ─────────────────────────────────────────────
+
+export const authApiKeys = pgTable("auth_apikeys", {
+  id: text("id").primaryKey(),
+  /** Config ID do plugin (default: "default") */
+  configId: text("config_id").notNull().default("default"),
+  name: text("name"),
+  /** Primeiros N chars da key (para display, não para auth) */
+  start: text("start"),
+  /** ID do owner: userId ou organizationId (org-owned keys) */
+  referenceId: text("reference_id").notNull(),
+  prefix: text("prefix"),
+  /** Chave SHA-256 hashed (base64url). NUNCA armazenar plaintext. */
+  key: text("key").notNull().unique(),
+  refillInterval: integer("refill_interval"),
+  refillAmount: integer("refill_amount"),
+  lastRefillAt: timestamp("last_refill_at", { withTimezone: true }),
+  enabled: boolean("enabled").notNull().default(true),
+  rateLimitEnabled: boolean("rate_limit_enabled").notNull().default(true),
+  rateLimitTimeWindow: integer("rate_limit_time_window"),
+  rateLimitMax: integer("rate_limit_max"),
+  requestCount: integer("request_count").notNull().default(0),
+  remaining: integer("remaining"),
+  lastRequest: timestamp("last_request", { withTimezone: true }),
+  expiresAt: timestamp("expires_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  permissions: text("permissions"),
+  /** JSON serializado — contém { deviceId } para device keys. */
+  metadata: text("metadata"),
+});
+
+// ─────────────────────────────────────────────
 // Tipos inferidos
 // ─────────────────────────────────────────────
 
@@ -170,3 +209,6 @@ export type NewAuthInvitation = typeof authInvitations.$inferInsert;
 
 export type AuthPasskey = typeof authPasskeys.$inferSelect;
 export type NewAuthPasskey = typeof authPasskeys.$inferInsert;
+
+export type AuthApiKey = typeof authApiKeys.$inferSelect;
+export type NewAuthApiKey = typeof authApiKeys.$inferInsert;

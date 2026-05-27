@@ -56,7 +56,7 @@ export interface IAttendanceRepository {
   findSessionById(sessionId: string, organizationId: string): Promise<SessionSnapshot | null>;
   createSession(data: NewSessionData): Promise<SessionSnapshot | undefined>;
   closeSession(sessionId: string, organizationId: string): Promise<void>;
-  existsRecord(sessionId: string, memberId: string): Promise<boolean>;
+  existsRecord(sessionId: string, memberId: string, organizationId: string): Promise<boolean>;
   createRecord(data: NewRecordData): Promise<AttendanceRecordSnapshot | undefined>;
   createManualRecord(params: ManualRecordParams): Promise<AttendanceRecordSnapshot | undefined>;
 }

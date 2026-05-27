@@ -32,7 +32,11 @@ export class ManualRecordUseCase {
     if (!session) throw new SessionNotFoundError();
     if (session.status !== "open") throw new SessionAlreadyClosedError();
 
-    const isDuplicate = await this.attendanceRepo.existsRecord(input.sessionId, input.memberId);
+    const isDuplicate = await this.attendanceRepo.existsRecord(
+      input.sessionId,
+      input.memberId,
+      input.organizationId
+    );
     if (isDuplicate) throw new AttendanceConflictError();
 
     return this.attendanceRepo.createManualRecord({

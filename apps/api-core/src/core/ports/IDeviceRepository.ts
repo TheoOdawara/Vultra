@@ -4,6 +4,9 @@
  * Contract consumed by Device Use Cases.
  * Implementations live in adapters/repositories/.
  * Use Cases NEVER import concrete classes.
+ *
+ * API key management is delegated to Better Auth (@better-auth/api-key plugin).
+ * The devices table stores only business data — no credential hashes.
  */
 
 // ── Domain snapshots ──────────────────────────────────────────────────────────
@@ -26,7 +29,6 @@ export interface CreateDeviceData {
   organizationId: string;
   label: string;
   location?: string | null;
-  apiKeyHash: string;
 }
 
 export interface UpdateDeviceData {
@@ -51,6 +53,5 @@ export interface IDeviceRepository {
     organizationId: string,
     data: UpdateDeviceData
   ): Promise<DeviceSnapshot | null>;
-  rotateApiKey(deviceId: string, organizationId: string, newApiKeyHash: string): Promise<boolean>;
   deactivate(deviceId: string, organizationId: string): Promise<boolean>;
 }

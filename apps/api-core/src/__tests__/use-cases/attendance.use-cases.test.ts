@@ -71,7 +71,7 @@ function createAttendanceRepoStub() {
     findSessionById: [] as Array<{ sessionId: string; organizationId: string }>,
     createSession: [] as NewSessionData[],
     closeSession: [] as Array<{ sessionId: string; organizationId: string }>,
-    existsRecord: [] as Array<{ sessionId: string; memberId: string }>,
+    existsRecord: [] as Array<{ sessionId: string; memberId: string; organizationId: string }>,
     createRecord: [] as NewRecordData[],
     createManualRecord: [] as ManualRecordParams[],
   };
@@ -104,8 +104,8 @@ function createAttendanceRepoStub() {
       }
     },
 
-    async existsRecord(sessionId, memberId) {
-      calls.existsRecord.push({ sessionId, memberId });
+    async existsRecord(sessionId, memberId, organizationId) {
+      calls.existsRecord.push({ sessionId, memberId, organizationId });
       return store.records.has(`${sessionId}:${memberId}`);
     },
 
