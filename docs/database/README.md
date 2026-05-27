@@ -1,7 +1,7 @@
 # 🗄️ VULTRA — Database Layer
 
 > **← [Voltar ao Hub Principal](../README.md)**
-> **Stack:** PostgreSQL 16 + pgvector 0.7 | **Prioridade:** CRÍTICA | **Última revisão:** Fevereiro 2026
+> **Stack:** PostgreSQL 16 + pgvector 0.7 | **Prioridade:** CRÍTICA | **Última revisão:** Maio 2026
 
 ---
 
