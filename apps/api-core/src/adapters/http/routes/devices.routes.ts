@@ -7,10 +7,11 @@
  * POST   /v1/devices/:id/rotate-key → RotateDeviceKeyUseCase + Better Auth list/delete/create
  * DELETE /v1/devices/:id           → DeactivateDeviceUseCase
  *
- * Auth: authPlugin — admin role required for all write operations.
+ * Auth: authPlugin — devices:manage required for ALL routes.
  *
  * API keys são geridas pelo @better-auth/api-key plugin (tabela auth_apikeys).
- * A plaintext key é retornada ONCE — nunca é armazenada nas tabelas de domínio.
+ * A plaintext key é retornada ONCE — nunca é armazenada nas tabelas de domínio,
+ * nem em audit logs (LGPD).
  * O ESP32 deve enviar a key no header X-API-Key.
  */
 
@@ -23,6 +24,7 @@ import { RotateDeviceKeyUseCase } from "../../../core/use-cases/devices/RotateDe
 import { UpdateDeviceUseCase } from "../../../core/use-cases/devices/UpdateDeviceUseCase";
 import { auth, checkPermission } from "../../../infrastructure/auth";
 import { db } from "../../../infrastructure/database/client";
+import { AuditLogRepository } from "../../repositories/audit-log.repository";
 import { DeviceRepository } from "../../repositories/device.repository";
 import { authPlugin } from "../middleware/auth.plugin";
 
@@ -36,11 +38,12 @@ let _deactivate: DeactivateDeviceUseCase | null = null;
 
 export function initDeviceRoutes(): void {
   const deviceRepo = new DeviceRepository(db);
-  _register = new RegisterDeviceUseCase(deviceRepo);
+  const auditLogRepo = new AuditLogRepository(db);
+  _register = new RegisterDeviceUseCase(deviceRepo, auditLogRepo);
   _list = new ListDevicesUseCase(deviceRepo);
   _update = new UpdateDeviceUseCase(deviceRepo);
-  _rotate = new RotateDeviceKeyUseCase(deviceRepo);
-  _deactivate = new DeactivateDeviceUseCase(deviceRepo);
+  _rotate = new RotateDeviceKeyUseCase(deviceRepo, auditLogRepo);
+  _deactivate = new DeactivateDeviceUseCase(deviceRepo, auditLogRepo);
 }
 
 // ── TypeBox schemas ───────────────────────────────────────────────────────────
@@ -83,7 +86,7 @@ function serializeDevice(d: {
   };
 }
 
-function requireAdmin(currentRole: string | null | undefined) {
+function requireDevicesManage(currentRole: string | null | undefined) {
   if (!checkPermission(currentRole, { devices: ["manage"] })) {
     throw new ForbiddenError();
   }
@@ -94,14 +97,14 @@ function requireAdmin(currentRole: string | null | undefined) {
 export const deviceRoutes = new Elysia({ prefix: "/devices" })
   .use(authPlugin)
 
-  // GET /v1/devices
+  // GET /v1/devices — requires devices:manage (admin only)
   .get(
     "/",
     async ({ query, currentOrg, currentRole }) => {
       if (!currentOrg) throw new OrganizationNotFoundError();
       if (!_list) throw new Error("DeviceRoutes not initialized");
 
-      if (!checkPermission(currentRole, { attendance: ["read"] })) throw new ForbiddenError();
+      requireDevicesManage(currentRole);
 
       const isActive =
         query.isActive === "false" ? false : query.isActive === "all" ? undefined : true;
@@ -120,7 +123,7 @@ export const deviceRoutes = new Elysia({ prefix: "/devices" })
       }),
       response: t.Array(DeviceResponse),
       detail: {
-        summary: "List tenant devices",
+        summary: "List tenant devices (admin only)",
         tags: ["devices"],
       },
     }
@@ -129,20 +132,23 @@ export const deviceRoutes = new Elysia({ prefix: "/devices" })
   // POST /v1/devices
   .post(
     "/",
-    async ({ body, currentOrg, currentRole, set, headers }) => {
+    async ({ body, currentOrg, currentRole, currentUser, set, headers }) => {
       if (!currentOrg) throw new OrganizationNotFoundError();
       if (!_register) throw new Error("DeviceRoutes not initialized");
 
-      requireAdmin(currentRole);
+      requireDevicesManage(currentRole);
 
       // 1. Criar device record (sem credencial na tabela de domínio)
       const device = await _register.execute({
         organizationId: currentOrg,
         label: body.label,
         location: body.location ?? null,
+        actorId: currentUser.id,
+        actorType: "user",
       });
 
       // 2. Gerar API key via Better Auth (armazenada em auth_apikeys, sem RLS)
+      //    API key plaintext nunca é persistida nem logada (LGPD)
       const keyResult = await auth.api.createApiKey({
         body: {
           name: `device-${device.id}`,
@@ -179,7 +185,7 @@ export const deviceRoutes = new Elysia({ prefix: "/devices" })
         summary: "Register a new ESP32-CAM device",
         description:
           "Creates a device and returns its API key ONCE. " +
-          "The key is managed by Better Auth and never stored in domain tables. " +
+          "The key is managed by Better Auth and never stored in domain tables or audit logs. " +
           "If lost, use POST /v1/devices/:id/rotate-key.",
         tags: ["devices"],
       },
@@ -193,7 +199,7 @@ export const deviceRoutes = new Elysia({ prefix: "/devices" })
       if (!currentOrg) throw new OrganizationNotFoundError();
       if (!_update) throw new Error("DeviceRoutes not initialized");
 
-      requireAdmin(currentRole);
+      requireDevicesManage(currentRole);
 
       const device = await _update.execute({
         deviceId: params.id,
@@ -226,16 +232,18 @@ export const deviceRoutes = new Elysia({ prefix: "/devices" })
   // POST /v1/devices/:id/rotate-key
   .post(
     "/:id/rotate-key",
-    async ({ params, currentOrg, currentRole, headers }) => {
+    async ({ params, currentOrg, currentRole, currentUser, headers }) => {
       if (!currentOrg) throw new OrganizationNotFoundError();
       if (!_rotate) throw new Error("DeviceRoutes not initialized");
 
-      requireAdmin(currentRole);
+      requireDevicesManage(currentRole);
 
-      // 1. Validar que o device existe e está ativo
+      // 1. Validar que o device existe e está ativo + gerar audit log
       await _rotate.execute({
         deviceId: params.id,
         organizationId: currentOrg,
+        actorId: currentUser.id,
+        actorType: "user",
       });
 
       const reqHeaders = new Headers(headers as Record<string, string>);
@@ -260,7 +268,7 @@ export const deviceRoutes = new Elysia({ prefix: "/devices" })
         )
       );
 
-      // 4. Criar nova key
+      // 4. Criar nova key — plaintext retornado UMA VEZ, nunca persistido nem logado
       const keyResult = await auth.api.createApiKey({
         body: {
           name: `device-${params.id}`,
@@ -284,7 +292,8 @@ export const deviceRoutes = new Elysia({ prefix: "/devices" })
         summary: "Rotate device API key",
         description:
           "Revokes the current key and generates a new one via Better Auth. " +
-          "The new key is returned ONCE — update device firmware immediately.",
+          "The new key is returned ONCE — update device firmware immediately. " +
+          "Key plaintext is never stored in domain tables or audit logs.",
         tags: ["devices"],
       },
     }
@@ -293,15 +302,17 @@ export const deviceRoutes = new Elysia({ prefix: "/devices" })
   // DELETE /v1/devices/:id
   .delete(
     "/:id",
-    async ({ params, currentOrg, currentRole }) => {
+    async ({ params, currentOrg, currentRole, currentUser }) => {
       if (!currentOrg) throw new OrganizationNotFoundError();
       if (!_deactivate) throw new Error("DeviceRoutes not initialized");
 
-      requireAdmin(currentRole);
+      requireDevicesManage(currentRole);
 
       await _deactivate.execute({
         deviceId: params.id,
         organizationId: currentOrg,
+        actorId: currentUser.id,
+        actorType: "user",
       });
 
       return { success: true };

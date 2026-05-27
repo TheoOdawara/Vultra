@@ -10,9 +10,10 @@
  * Enable when upstream releases the plugin.
  *
  * RBAC AccessControl matrix:
- *   admin      → attendance:write, attendance:read, reports:read, users:*, devices:*, biometrics:*
- *   professor  → attendance:write, attendance:read
- *   rh         → attendance:read, reports:read
+ *   admin      → members:read, members:manage, attendance:write, attendance:read,
+ *                reports:read, devices:manage, biometrics:*
+ *   professor  → members:read, attendance:write, attendance:read, biometrics:*
+ *   rh         → members:read, attendance:read, reports:read, biometrics:verify+list
  *   student    → attendance:read (own records only — enforced in application layer)
  *
  * Reference: docs/backend/manuais/autenticacao.md
@@ -26,6 +27,7 @@ import { db } from "./database/client";
 import * as authSchema from "./database/schema/auth-schema";
 
 export const accessControl = createAccessControl({
+  members: ["read", "manage"],
   attendance: ["write", "read"],
   reports: ["read"],
   biometrics: ["enroll", "verify", "list", "delete"],
@@ -34,16 +36,19 @@ export const accessControl = createAccessControl({
 
 export const organizationRoles = {
   admin: accessControl.newRole({
+    members: ["read", "manage"],
     attendance: ["write", "read"],
     reports: ["read"],
     biometrics: ["enroll", "verify", "list", "delete"],
     devices: ["manage"],
   }),
   professor: accessControl.newRole({
+    members: ["read"],
     attendance: ["write", "read"],
     biometrics: ["enroll", "verify", "list", "delete"],
   }),
   rh: accessControl.newRole({
+    members: ["read"],
     attendance: ["read"],
     reports: ["read"],
     biometrics: ["verify", "list"],

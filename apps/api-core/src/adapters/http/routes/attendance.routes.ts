@@ -8,15 +8,24 @@
  *
  * /record uses deviceAuthPlugin (ESP32 auth via X-Device-Token).
  * All other routes use authPlugin (user session).
+ *
+ * RBAC:
+ *   attendance:write → required for POST /sessions, PATCH .../close, POST .../manual
+ *   Only admin (members:manage) may set an arbitrary professorId; other roles
+ *   must omit it to prevent privilege escalation through false attribution.
  */
 
 import { createId } from "@paralleldrive/cuid2";
 import Elysia, { t } from "elysia";
-import { OrganizationNotFoundError } from "../../../core/domain/errors/DomainError";
+import {
+  ForbiddenError,
+  OrganizationNotFoundError,
+} from "../../../core/domain/errors/DomainError";
 import { CloseSessionUseCase } from "../../../core/use-cases/attendance/CloseSessionUseCase";
 import { ManualRecordUseCase } from "../../../core/use-cases/attendance/ManualRecordUseCase";
 import { OpenSessionUseCase } from "../../../core/use-cases/attendance/OpenSessionUseCase";
 import { RecordAttendanceUseCase } from "../../../core/use-cases/attendance/RecordAttendanceUseCase";
+import { checkPermission } from "../../../infrastructure/auth";
 import { db } from "../../../infrastructure/database/client";
 import type { AIJobQueue } from "../../queue/ai-job.queue.ts";
 import { AttendanceRepository } from "../../repositories/attendance.repository";
@@ -49,9 +58,18 @@ export const attendanceUserRoutes = new Elysia({ prefix: "/attendance" })
   // POST /v1/attendance/sessions
   .post(
     "/sessions",
-    async ({ body, currentOrg }) => {
+    async ({ body, currentOrg, currentRole }) => {
       if (!currentOrg) throw new OrganizationNotFoundError();
       if (!_openSession) throw new Error("AttendanceRoutes not initialized");
+
+      // Only roles with attendance:write can open sessions (professors, admins — not students)
+      if (!checkPermission(currentRole, { attendance: ["write"] })) throw new ForbiddenError();
+
+      // Only admins (members:manage) may attribute an arbitrary professorId.
+      // Professors and RH cannot set it to prevent false attribution.
+      if (body.professorId && !checkPermission(currentRole, { members: ["manage"] })) {
+        throw new ForbiddenError();
+      }
 
       const session = await _openSession.execute({
         organizationId: currentOrg,
@@ -74,16 +92,23 @@ export const attendanceUserRoutes = new Elysia({ prefix: "/attendance" })
         status: t.String(),
         startedAt: t.Date(),
       }),
-      detail: { summary: "Open attendance session", tags: ["attendance"] },
+      detail: {
+        summary: "Open attendance session",
+        description:
+          "Requires attendance:write. Only admin (members:manage) may set professorId freely.",
+        tags: ["attendance"],
+      },
     }
   )
 
   // PATCH /v1/attendance/sessions/:id/close
   .patch(
     "/sessions/:id/close",
-    async ({ params, currentOrg }) => {
+    async ({ params, currentOrg, currentRole }) => {
       if (!currentOrg) throw new OrganizationNotFoundError();
       if (!_closeSession) throw new Error("AttendanceRoutes not initialized");
+
+      if (!checkPermission(currentRole, { attendance: ["write"] })) throw new ForbiddenError();
 
       await _closeSession.execute({ sessionId: params.id, organizationId: currentOrg });
       return { success: true };
@@ -98,9 +123,11 @@ export const attendanceUserRoutes = new Elysia({ prefix: "/attendance" })
   // POST /v1/attendance/sessions/:id/records/manual
   .post(
     "/sessions/:id/records/manual",
-    async ({ params, body, currentOrg }) => {
+    async ({ params, body, currentOrg, currentRole }) => {
       if (!currentOrg) throw new OrganizationNotFoundError();
       if (!_manualRecord) throw new Error("AttendanceRoutes not initialized");
+
+      if (!checkPermission(currentRole, { attendance: ["write"] })) throw new ForbiddenError();
 
       const record = await _manualRecord.execute({
         sessionId: params.id,
