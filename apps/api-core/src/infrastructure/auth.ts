@@ -28,6 +28,7 @@ export const accessControl = createAccessControl({
   attendance: ["write", "read"],
   reports: ["read"],
   biometrics: ["enroll", "verify", "list", "delete"],
+  devices: ["manage"],
 } as const);
 
 export const organizationRoles = {
@@ -35,6 +36,7 @@ export const organizationRoles = {
     attendance: ["write", "read"],
     reports: ["read"],
     biometrics: ["enroll", "verify", "list", "delete"],
+    devices: ["manage"],
   }),
   professor: accessControl.newRole({
     attendance: ["write", "read"],

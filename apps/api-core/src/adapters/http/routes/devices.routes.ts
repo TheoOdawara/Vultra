@@ -82,7 +82,7 @@ function serializeDevice(d: {
 }
 
 function requireAdmin(currentRole: string | null | undefined) {
-  if (!checkPermission(currentRole, { biometrics: ["enroll"] })) {
+  if (!checkPermission(currentRole, { devices: ["manage"] })) {
     throw new ForbiddenError();
   }
 }

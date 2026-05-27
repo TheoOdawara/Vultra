@@ -69,18 +69,19 @@ export class MemberRepository implements IMemberRepository {
       if (searchCond) conditions.push(searchCond);
     }
 
-    const query = this.db
+    let query = this.db
       .select()
       .from(members)
       .where(and(...conditions))
-      .orderBy(members.fullName);
+      .orderBy(members.fullName)
+      .$dynamic();
 
     if (filter.limit !== undefined) {
-      query.limit(filter.limit);
+      query = query.limit(filter.limit);
     }
 
     if (filter.offset !== undefined) {
-      query.offset(filter.offset);
+      query = query.offset(filter.offset);
     }
 
     return query;

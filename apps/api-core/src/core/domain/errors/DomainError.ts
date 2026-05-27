@@ -131,6 +131,14 @@ export class AIJobTimeoutError extends DomainError {
   }
 }
 
+// ── Reports ───────────────────────────────────────────────────────────────────
+
+export class InvalidReportRangeError extends DomainError {
+  constructor() {
+    super("INVALID_REPORT_RANGE", 400, "Report 'from' must be earlier than 'to'");
+  }
+}
+
 // ── Frame quality ─────────────────────────────────────────────────────────────
 
 export class LowQualityFrameError extends DomainError {

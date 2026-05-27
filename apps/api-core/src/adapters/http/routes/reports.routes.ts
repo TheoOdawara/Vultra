@@ -15,7 +15,7 @@
  */
 
 import Elysia, { t } from "elysia";
-import { ForbiddenError, OrganizationNotFoundError } from "../../../core/domain/errors/DomainError";
+import { ForbiddenError, InvalidReportRangeError, OrganizationNotFoundError } from "../../../core/domain/errors/DomainError";
 import { GetAttendanceReportUseCase } from "../../../core/use-cases/reports/GetAttendanceReportUseCase";
 import { GetWellbeingReportUseCase } from "../../../core/use-cases/reports/GetWellbeingReportUseCase";
 import { checkPermission } from "../../../infrastructure/auth";
@@ -83,6 +83,8 @@ export const reportRoutes = new Elysia({ prefix: "/reports" })
       const from = new Date(query.from);
       const to = new Date(query.to);
 
+      if (from >= to) throw new InvalidReportRangeError();
+
       // Professors are limited to sessions they ran
       const professorId =
         isProfessor && !canRead ? (currentUser?.id ?? undefined) : (query.professorId ?? undefined);
@@ -141,11 +143,16 @@ export const reportRoutes = new Elysia({ prefix: "/reports" })
       // Wellbeing data is restricted to admin and RH roles
       if (!checkPermission(currentRole, { reports: ["read"] })) throw new ForbiddenError();
 
+      const from = new Date(query.from);
+      const to = new Date(query.to);
+
+      if (from >= to) throw new InvalidReportRangeError();
+
       const result = await _wellbeingReport.execute({
         organizationId: currentOrg,
-        from: new Date(query.from),
-        to: new Date(query.to),
-        ...(query.alertThreshold && { alertThreshold: Number(query.alertThreshold) }),
+        from,
+        to,
+        ...(query.alertThreshold !== undefined && { alertThreshold: query.alertThreshold }),
       });
 
       return {
@@ -163,7 +170,8 @@ export const reportRoutes = new Elysia({ prefix: "/reports" })
         from: t.String({ format: "date-time" }),
         to: t.String({ format: "date-time" }),
         alertThreshold: t.Optional(
-          t.String({
+          t.Integer({
+            minimum: 1,
             description: "Minimum negative-sentiment events to surface an alert (default: 3)",
           })
         ),

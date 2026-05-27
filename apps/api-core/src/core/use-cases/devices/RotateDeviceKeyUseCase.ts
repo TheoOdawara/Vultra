@@ -12,14 +12,8 @@
  * After rotation, the device firmware must be updated with the new key.
  */
 
-import { DomainError } from "../../domain/errors/DomainError";
 import type { IDeviceRepository } from "../../ports/IDeviceRepository";
-
-export class DeviceNotFoundError extends DomainError {
-  constructor() {
-    super("DEVICE_NOT_FOUND", 404, "Device not found or inactive");
-  }
-}
+import { DeviceNotFoundError } from "./errors";
 
 export interface RotateDeviceKeyInput {
   deviceId: string;

@@ -5,14 +5,10 @@
  * Retrieves a single member by ID, scoped to the tenant.
  */
 
-import { DomainError } from "../../domain/errors/DomainError";
 import type { IMemberRepository, MemberSnapshot } from "../../ports/IMemberRepository";
+import { MemberNotFoundError } from "./errors";
 
-export class MemberNotFoundError extends DomainError {
-  constructor() {
-    super("MEMBER_NOT_FOUND", 404, "Member not found");
-  }
-}
+export { MemberNotFoundError };
 
 export interface GetMemberInput {
   memberId: string;

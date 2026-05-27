@@ -8,7 +8,7 @@
  */
 
 import type { IDeviceRepository } from "../../ports/IDeviceRepository";
-import { DeviceNotFoundError } from "./RotateDeviceKeyUseCase";
+import { DeviceNotFoundError } from "./errors";
 
 export interface DeactivateDeviceInput {
   deviceId: string;

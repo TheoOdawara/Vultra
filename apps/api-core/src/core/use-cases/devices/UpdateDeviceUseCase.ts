@@ -7,7 +7,7 @@
  */
 
 import type { DeviceSnapshot, IDeviceRepository } from "../../ports/IDeviceRepository";
-import { DeviceNotFoundError } from "./RotateDeviceKeyUseCase";
+import { DeviceNotFoundError } from "./errors";
 
 export interface UpdateDeviceInput {
   deviceId: string;

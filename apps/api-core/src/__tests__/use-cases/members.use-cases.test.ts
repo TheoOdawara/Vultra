@@ -15,10 +15,8 @@ import {
   MemberExternalCodeConflictError,
 } from "../../core/use-cases/members/CreateMemberUseCase.ts";
 import { DeactivateMemberUseCase } from "../../core/use-cases/members/DeactivateMemberUseCase.ts";
-import {
-  GetMemberUseCase,
-  MemberNotFoundError,
-} from "../../core/use-cases/members/GetMemberUseCase.ts";
+import { MemberNotFoundError } from "../../core/use-cases/members/errors.ts";
+import { GetMemberUseCase } from "../../core/use-cases/members/GetMemberUseCase.ts";
 import { ListMembersUseCase } from "../../core/use-cases/members/ListMembersUseCase.ts";
 import { UpdateMemberUseCase } from "../../core/use-cases/members/UpdateMemberUseCase.ts";
 

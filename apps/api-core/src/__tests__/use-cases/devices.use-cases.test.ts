@@ -13,10 +13,8 @@ import type {
 import { DeactivateDeviceUseCase } from "../../core/use-cases/devices/DeactivateDeviceUseCase.ts";
 import { ListDevicesUseCase } from "../../core/use-cases/devices/ListDevicesUseCase.ts";
 import { RegisterDeviceUseCase } from "../../core/use-cases/devices/RegisterDeviceUseCase.ts";
-import {
-  DeviceNotFoundError,
-  RotateDeviceKeyUseCase,
-} from "../../core/use-cases/devices/RotateDeviceKeyUseCase.ts";
+import { DeviceNotFoundError } from "../../core/use-cases/devices/errors.ts";
+import { RotateDeviceKeyUseCase } from "../../core/use-cases/devices/RotateDeviceKeyUseCase.ts";
 import { UpdateDeviceUseCase } from "../../core/use-cases/devices/UpdateDeviceUseCase.ts";
 
 // ── Stub ──────────────────────────────────────────────────────────────────────

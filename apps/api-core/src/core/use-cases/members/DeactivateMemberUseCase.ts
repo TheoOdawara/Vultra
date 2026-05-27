@@ -7,7 +7,7 @@
  */
 
 import type { IMemberRepository } from "../../ports/IMemberRepository";
-import { MemberNotFoundError } from "./GetMemberUseCase";
+import { MemberNotFoundError } from "./errors";
 
 export interface DeactivateMemberInput {
   memberId: string;
