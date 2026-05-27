@@ -97,13 +97,22 @@ Com a estrutura base pronta, implementar os módulos seguindo a arquitetura hexa
 - [x] `attendance-records/` — registro de presenças (consumer da fila Redis) — integrado em `attendance/`
 - [x] `reports/` — relatórios de presença e bem-estar (port + repo SQL raw + 2 use cases + rotas)
 
-## 4. Próximas etapas pendentes
+## 4. Infraestrutura e Frontend (status atual)
 
-- [ ] **Docker Compose** — setup de ambiente de desenvolvimento local (PostgreSQL, Redis, AI Service)
-- [ ] **Testes de integração** — contra banco real (migrations + seed)
-- [ ] **Worker do AI Service (Python)** — integração com fila Redis e publicação de resultados
-- [ ] **Firmware (ESP32-CAM)** — implementação C++/Arduino com autenticação X-Device-Token
-- [ ] **Frontend** — portais Admin, Professor e RH (React/Next.js — não iniciados)
+- [x] **Docker Compose** — PostgreSQL 16, Redis 7, AI Service, API Core (`infra/docker-compose.yml`)
+- [x] **`packages/types`** — contrato TypeScript compartilhado entre API e frontends (`@vultra/types`)
+- [x] **Frontend Admin** — Next.js 15 + TanStack Query: login, membros (CRUD), dispositivos (registro + rotação de chave), relatórios de presença, health monitor (`apps/frontend-admin/`)
+- [x] **Frontend Professores** — chamada em tempo real (WebSocket), registro manual, relatórios por turma (`apps/frontend-professores/`)
+- [x] **Frontend RH** — presença e wellbeing dashboard com alertas LGPD-compliant (`apps/frontend-rh/`)
+
+## 5. Próximas etapas pendentes
+
+- [ ] **Testes de integração** — contra banco real (migrations + seed + stack Docker)
+- [ ] **Firmware (ESP32-CAM)** — implementação C++/Arduino com autenticação X-Device-Token e envio de frames JPEG (`firmware/esp32-cam/`)
+- [ ] **Install npm deps nos frontends** — `cd apps/frontend-admin && npm install` (e idem para professores/rh)
+- [ ] **Shadcn/UI CLI** — `npx shadcn@latest init` em cada portal para instalar os primitivos (`Button`, `Table`, `Dialog`, `Badge`, `AlertDialog`)
+- [ ] **WebSocket no API Core** — implementar endpoint `GET /v1/attendance/sessions/:id/ws` para o LiveAttendancePanel
+- [ ] **Exportação de relatórios (RH)** — PDF/XLSX a partir dos dados do wellbeing e attendance report
 
 ---
 
