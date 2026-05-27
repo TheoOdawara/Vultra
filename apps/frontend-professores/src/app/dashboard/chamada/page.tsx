@@ -3,13 +3,12 @@
 /**
  * VULTRA — Live Attendance (Chamada) Page
  *
- * The core feature of the professor portal.
  * Professor opens a session, the ESP32 sends frames, the AI Service
- * processes them, and attendance records stream in via WebSocket.
+ * processes them, and attendance records are polled every 5 s.
  */
 
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { membersApi } from "@/lib/api";
 import { LiveAttendancePanel } from "@/components/chamada/LiveAttendancePanel";
 import { SessionControls } from "@/components/chamada/SessionControls";
@@ -17,12 +16,18 @@ import { ManualOverride } from "@/components/chamada/ManualOverride";
 
 export default function ChamadaPage() {
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const qc = useQueryClient();
 
   // Fetch active member count so the panel can show X / Y present
   const { data: membersData } = useQuery({
     queryKey: ["members", { isActive: "true", role: "student" }],
     queryFn: () => membersApi.list({ isActive: "true", role: "student", limit: 1 }),
   });
+
+  function handleRecorded() {
+    // Immediately refetch the records list so the manual entry appears at once
+    void qc.invalidateQueries({ queryKey: ["attendance", "records", sessionId] });
+  }
 
   return (
     <div className="space-y-5">
@@ -56,7 +61,7 @@ export default function ChamadaPage() {
           <div>
             <ManualOverride
               sessionId={sessionId}
-              onRecorded={() => { /* events come via WS */ }}
+              onRecorded={handleRecorded}
             />
           </div>
         )}

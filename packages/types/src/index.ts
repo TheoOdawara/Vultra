@@ -76,6 +76,8 @@ export type {
   CloseSessionResponse,
   ManualRecordBody,
   ManualRecordResponse,
+  SessionAttendanceRecord,
+  ListSessionRecordsResponse,
   RecordAttendanceBody,
   RecordAttendanceResponse,
 } from "./api/attendance.js";

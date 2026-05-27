@@ -9,8 +9,6 @@ const NAV_ITEMS = [
   { href: "/dashboard/members", label: "Membros", icon: "👥" },
   { href: "/dashboard/devices", label: "Dispositivos", icon: "📡" },
   { href: "/dashboard/reports", label: "Relatórios", icon: "📊" },
-  { href: "/dashboard/audit", label: "Auditoria", icon: "🔍" },
-  { href: "/dashboard/settings", label: "Configurações", icon: "⚙️" },
 ] as const;
 
 export function Sidebar() {

@@ -45,10 +45,28 @@ export interface ManualRecordResponse {
   recordedAt: string;
 }
 
+// ── List Session Records ───────────────────────────────────────────────────────
+
+export interface SessionAttendanceRecord {
+  recordId: string;
+  memberId: string;
+  memberName: string;
+  recognitionMethod: string;
+  confidenceScore: number;
+  sentimentLabel: string | null;
+  /** ISO 8601 */
+  recordedAt: string;
+}
+
+/** HTTP 200 for `GET /v1/attendance/sessions/:id/records` */
+export interface ListSessionRecordsResponse {
+  records: SessionAttendanceRecord[];
+}
+
 // ── Device Record (Face Recognition) ─────────────────────────────────────────
 
 /**
- * Body for `POST /v1/attendance/sessions/:id/records`
+ * Body for `POST /v1/attendance/record`
  *
  * LGPD: `frameBase64` is processed entirely in RAM by the AI Service.
  * It is NEVER stored anywhere — not in the API Core, not in the AI Service,

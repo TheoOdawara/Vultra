@@ -3,6 +3,8 @@ import { betterFetch } from "@better-fetch/fetch";
 
 type Session = { user: { id: string } };
 
+const PUBLIC_PATHS = ["/login"];
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -16,7 +18,7 @@ export async function middleware(request: NextRequest) {
   });
 
   const isAuthenticated = !!session?.user;
-  const isPublic = pathname === "/login" || pathname === "/";
+  const isPublic = PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 
   if (!isAuthenticated && !isPublic) {
     return NextResponse.redirect(new URL("/login", request.url));

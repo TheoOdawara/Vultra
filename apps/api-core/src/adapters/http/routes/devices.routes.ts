@@ -255,7 +255,8 @@ export const deviceRoutes = new Elysia({ prefix: "/devices" })
       });
 
       // 3. Revogar a(s) key(s) existente(s) deste device
-      const existingKeys = listResult.apiKeys.filter(
+      type ApiKeyEntry = { id: string; metadata?: unknown };
+      const existingKeys = (listResult.apiKeys as ApiKeyEntry[]).filter(
         (k) => (k.metadata as { deviceId?: string } | null)?.deviceId === params.id
       );
 

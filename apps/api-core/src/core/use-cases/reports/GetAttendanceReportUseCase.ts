@@ -6,18 +6,12 @@
  * Used by the HR Portal and Professor Portal.
  */
 
-import { DomainError } from "../../domain/errors/DomainError";
+import { InvalidReportRangeError } from "../../domain/errors/DomainError";
 import type {
   AttendanceReportFilter,
   AttendanceReportRow,
   IReportsRepository,
 } from "../../ports/IReportsRepository";
-
-export class InvalidReportRangeError extends DomainError {
-  constructor() {
-    super("INVALID_REPORT_RANGE", 400, "Report 'from' date must be before 'to' date");
-  }
-}
 
 export interface GetAttendanceReportInput {
   organizationId: string;

@@ -9,13 +9,13 @@
  * derived from anonymised inference at record time.
  */
 
+import { InvalidReportRangeError } from "../../domain/errors/DomainError";
 import type {
   IReportsRepository,
   WellbeingAlert,
   WellbeingReportFilter,
   WellbeingReportRow,
 } from "../../ports/IReportsRepository";
-import { InvalidReportRangeError } from "./GetAttendanceReportUseCase";
 
 export interface GetWellbeingReportInput {
   organizationId: string;

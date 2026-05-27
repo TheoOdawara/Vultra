@@ -9,7 +9,6 @@ import { cn } from "@/lib/utils";
 const NAV = [
   { href: "/dashboard", label: "Início", icon: "🏠" },
   { href: "/dashboard/chamada", label: "Chamada", icon: "📋" },
-  { href: "/dashboard/relatorios", label: "Relatórios", icon: "📊" },
 ] as const;
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {

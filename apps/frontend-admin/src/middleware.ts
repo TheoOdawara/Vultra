@@ -2,7 +2,8 @@
  * VULTRA Admin Portal — Route Protection Middleware
  *
  * - (auth)/* routes: redirect to /dashboard if already logged in
- * - (dashboard)/* routes: redirect to /login if no session
+ * - /dashboard/* routes: redirect to /login if no session
+ * - /: redirect to /dashboard (handled by app/page.tsx server redirect)
  *
  * Better Auth session is validated server-side via betterFetch.
  */
@@ -15,7 +16,7 @@ type Session = {
   session: { id: string };
 };
 
-const PUBLIC_PATHS = ["/login", "/"];
+const PUBLIC_PATHS = ["/login"];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;

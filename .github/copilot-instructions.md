@@ -1,8 +1,9 @@
-# copilot-instructions.md
+# VULTRA — Copilot Instructions
 
-Behavioral guidelines to reduce common LLM coding mistakes. Merge with project-specific instructions as needed.
+Diretrizes comportamentais e regras técnicas obrigatórias para o projeto VULTRA.
+Combina boas práticas gerais de codificação com restrições específicas do projeto.
 
-**Tradeoff:** These guidelines bias toward caution over speed. For trivial tasks, use judgment.
+---
 
 ## 1. Think Before Coding
 
@@ -24,8 +25,6 @@ Before implementing:
 - No error handling for impossible scenarios.
 - If you write 200 lines and it could be 50, rewrite it.
 
-Ask yourself: "Would a senior engineer say this is overcomplicated?" If yes, simplify.
-
 ## 3. Surgical Changes
 
 **Touch only what you must. Clean up only your own mess.**
@@ -36,30 +35,75 @@ When editing existing code:
 - Match existing style, even if you'd do it differently.
 - If you notice unrelated dead code, mention it - don't delete it.
 
-When your changes create orphans:
-- Remove imports/variables/functions that YOUR changes made unused.
-- Don't remove pre-existing dead code unless asked.
-
-The test: Every changed line should trace directly to the user's request.
-
 ## 4. Goal-Driven Execution
 
 **Define success criteria. Loop until verified.**
 
-Transform tasks into verifiable goals:
-- "Add validation" → "Write tests for invalid inputs, then make them pass"
-- "Fix the bug" → "Write a test that reproduces it, then make it pass"
-- "Refactor X" → "Ensure tests pass before and after"
-
-For multi-step tasks, state a brief plan:
-```
-1. [Step] → verify: [check]
-2. [Step] → verify: [check]
-3. [Step] → verify: [check]
-```
-
-Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
+Transform tasks into verifiable goals before implementing.
+State a brief plan for multi-step tasks with verification checkpoints.
 
 ---
 
-**These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
+## 5. VULTRA Mandatory Technical Rules
+
+The rules below are **non-negotiable** and override any general best practice.
+
+### Schema Validation
+
+- **TypeBox is mandatory** for route schemas in API Core (Elysia + TypeBox).
+- **Zod, Joi, and Yup are forbidden** across the entire project (backend and frontends).
+- Frontend form validation must use native HTML5, React Hook Form without Zod, or `@vultra/types`.
+
+### Multi-tenancy & Data Security
+
+- **RLS (Row Level Security) and tenant context are mandatory** in all database queries.
+- Every repository must call `withTenantContext` before any query.
+- Application-level `organizationId` filters are defense-in-depth — they do not replace RLS.
+- TanStack Query keys must include `activeOrganizationId` to prevent cross-tenant cache.
+
+### LGPD & Biometrics
+
+- **No biometric image may be persisted** — JPEG frames are processed entirely in RAM by the AI Service and discarded immediately.
+- Raw biometric data (embeddings) must never appear in logs, API responses, or storage.
+- Operations affecting sensitive personal data must generate an **audit log** entry.
+
+### Audit Logs
+
+Sensitive operations must produce entries in `audit_logs`:
+- Member deactivation
+- Biometric profile revocation
+- Device key rotation
+- Any deletion or deactivation operation
+
+### RBAC & Authentication
+
+- **Better Auth + organization plugin** is the canonical authentication system.
+- RBAC is enforced via `checkPermission(role, { resource: [actions] })`.
+- Routes must never bypass RBAC or RLS.
+- Frontend middlewares must validate both session **and** portal-specific role.
+
+### Migrations & Database
+
+- **SQL migrations are manual** — never use `drizzle-kit push` in production.
+- Migrations live in `apps/api-core/src/infrastructure/database/migrations/`.
+- Never modify schema without a corresponding migration.
+
+### API Endpoints & Contracts
+
+- Canonical routes (per `docs/backend/manuais/api-endpoints.md`):
+  - ESP32: `POST /v1/attendance/record` (with `X-Device-Token`)
+  - Close session: `PATCH /v1/attendance/sessions/:id/close`
+  - Manual attendance: `POST /v1/attendance/sessions/:id/records/manual`
+  - List faces: `GET /v1/face/list`
+- The `/v1/biometric/*` surface is discontinued (returns 404).
+- Never create API contracts that diverge from `@vultra/types`.
+
+### ADRs
+
+- **Accepted ADRs must not be edited directly.**
+- If a decision needs revision, create a new ADR or a versioned errata.
+
+### Line Endings
+
+- All files must use **LF** (Unix). Do not commit files with CRLF.
+- `git diff --check origin/main...HEAD` must pass without errors.

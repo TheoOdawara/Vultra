@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { healthApi, membersApi, devicesApi } from "@/lib/api";
+import { useActiveOrganization } from "@/lib/auth-client";
 import type { AiServiceHealthResponse } from "@vultra/types";
 import { cn, formatDateTime } from "@/lib/utils";
 
@@ -70,6 +71,9 @@ function StatCard({ label, value, icon }: { label: string; value: string | numbe
 // ── Page ───────────────────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
+  const { data: activeOrg } = useActiveOrganization();
+  const orgId = activeOrg?.id;
+
   const { data: health } = useQuery({
     queryKey: ["health", "ai-service"],
     queryFn: () => healthApi.aiService(),
@@ -77,13 +81,15 @@ export default function DashboardPage() {
   });
 
   const { data: membersData } = useQuery({
-    queryKey: ["members", { isActive: "true" }],
+    queryKey: ["members", orgId, { isActive: "true" }],
     queryFn: () => membersApi.list({ isActive: "true", limit: 1 }),
+    enabled: !!orgId,
   });
 
   const { data: devices } = useQuery({
-    queryKey: ["devices", "active"],
+    queryKey: ["devices", orgId, "active"],
     queryFn: () => devicesApi.list("true"),
+    enabled: !!orgId,
   });
 
   return (

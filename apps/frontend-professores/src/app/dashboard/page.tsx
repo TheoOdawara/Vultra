@@ -21,17 +21,6 @@ export default function ProfessoresDashboard() {
             Abra uma sessão de presença com reconhecimento facial em tempo real
           </p>
         </Link>
-
-        <Link
-          href="/dashboard/relatorios"
-          className="rounded-xl border border-gray-200 bg-white p-6 hover:border-blue-300 hover:shadow-sm transition-all"
-        >
-          <div className="text-3xl mb-3">📊</div>
-          <h2 className="font-semibold text-gray-900">Relatórios</h2>
-          <p className="text-sm text-gray-500 mt-1">
-            Frequência por turma no período selecionado
-          </p>
-        </Link>
       </div>
     </div>
   );

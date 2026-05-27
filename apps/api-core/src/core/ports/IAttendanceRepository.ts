@@ -23,6 +23,16 @@ export interface AttendanceRecordSnapshot {
   recordedAt: Date;
 }
 
+export interface SessionRecordRow {
+  recordId: string;
+  memberId: string;
+  memberName: string;
+  recognitionMethod: string;
+  confidenceScore: number;
+  sentimentLabel: string | null;
+  recordedAt: Date;
+}
+
 // ── Input types ───────────────────────────────────────────────────────────────
 
 export interface NewSessionData {
@@ -59,4 +69,5 @@ export interface IAttendanceRepository {
   existsRecord(sessionId: string, memberId: string, organizationId: string): Promise<boolean>;
   createRecord(data: NewRecordData): Promise<AttendanceRecordSnapshot | undefined>;
   createManualRecord(params: ManualRecordParams): Promise<AttendanceRecordSnapshot | undefined>;
+  listRecordsBySession(sessionId: string, organizationId: string): Promise<SessionRecordRow[]>;
 }

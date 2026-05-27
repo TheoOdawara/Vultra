@@ -1,65 +1,108 @@
-# instructions.md
+# VULTRA — Instruções para Agentes de IA
 
-Behavioral guidelines to reduce common LLM coding mistakes. Merge with project-specific instructions as needed.
-
-**Tradeoff:** These guidelines bias toward caution over speed. For trivial tasks, use judgment.
-
-## 1. Think Before Coding
-
-**Don't assume. Don't hide confusion. Surface tradeoffs.**
-
-Before implementing:
-- State your assumptions explicitly. If uncertain, ask.
-- If multiple interpretations exist, present them - don't pick silently.
-- If a simpler approach exists, say so. Push back when warranted.
-- If something is unclear, stop. Name what's confusing. Ask.
-
-## 2. Simplicity First
-
-**Minimum code that solves the problem. Nothing speculative.**
-
-- No features beyond what was asked.
-- No abstractions for single-use code.
-- No "flexibility" or "configurability" that wasn't requested.
-- No error handling for impossible scenarios.
-- If you write 200 lines and it could be 50, rewrite it.
-
-Ask yourself: "Would a senior engineer say this is overcomplicated?" If yes, simplify.
-
-## 3. Surgical Changes
-
-**Touch only what you must. Clean up only your own mess.**
-
-When editing existing code:
-- Don't "improve" adjacent code, comments, or formatting.
-- Don't refactor things that aren't broken.
-- Match existing style, even if you'd do it differently.
-- If you notice unrelated dead code, mention it - don't delete it.
-
-When your changes create orphans:
-- Remove imports/variables/functions that YOUR changes made unused.
-- Don't remove pre-existing dead code unless asked.
-
-The test: Every changed line should trace directly to the user's request.
-
-## 4. Goal-Driven Execution
-
-**Define success criteria. Loop until verified.**
-
-Transform tasks into verifiable goals:
-- "Add validation" → "Write tests for invalid inputs, then make them pass"
-- "Fix the bug" → "Write a test that reproduces it, then make it pass"
-- "Refactor X" → "Ensure tests pass before and after"
-
-For multi-step tasks, state a brief plan:
-```
-1. [Step] → verify: [check]
-2. [Step] → verify: [check]
-3. [Step] → verify: [check]
-```
-
-Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
+Diretrizes comportamentais e regras técnicas obrigatórias para o projeto VULTRA.
+Combina boas práticas gerais de codificação com restrições específicas do projeto.
 
 ---
 
-**These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
+## 1. Pense Antes de Codar
+
+**Não assuma. Não esconda confusão. Explicite trade-offs.**
+
+Antes de implementar:
+- Exponha suas premissas explicitamente. Se incerto, pergunte.
+- Se existirem múltiplas interpretações, apresente-as — não escolha silenciosamente.
+- Se uma abordagem mais simples existir, diga. Questione quando for necessário.
+- Se algo não estiver claro, pare. Nomeie o que confunde. Pergunte.
+
+## 2. Simplicidade Primeiro
+
+**Mínimo de código que resolve o problema. Nada especulativo.**
+
+- Nenhum feature além do solicitado.
+- Nenhuma abstração para código de uso único.
+- Nenhuma "flexibilidade" ou "configurabilidade" não solicitada.
+- Nenhum tratamento de erros para cenários impossíveis.
+- Se você escreveu 200 linhas e poderia ser 50, reescreva.
+
+## 3. Mudanças Cirúrgicas
+
+**Toque apenas o que for necessário. Limpe apenas a sua bagunça.**
+
+- Não "melhore" código, comentários ou formatação adjacentes.
+- Não refatore coisas que não estão quebradas.
+- Combine o estilo existente, mesmo que você faria diferente.
+- Se notar código morto não relacionado, mencione — não delete.
+
+## 4. Execução Orientada a Objetivos
+
+**Defina critérios de sucesso. Repita até verificar.**
+
+Transforme tarefas em objetivos verificáveis antes de implementar.
+Para tarefas multi-passo, declare um plano breve e critérios de verificação.
+
+---
+
+## 5. Regras Técnicas Obrigatórias do VULTRA
+
+As regras abaixo são **não-negociáveis** e se sobrepõem a qualquer padrão geral.
+
+### Validação de Schema
+
+- **TypeBox é obrigatório** para schemas de rotas no API Core (Elysia + TypeBox).
+- **Zod, Joi e Yup são proibidos** em todo o projeto (backend e frontends).
+- Validação de formulários nos frontends deve usar HTML5 nativo, React Hook Form sem Zod, ou types do `@vultra/types`.
+
+### Multi-tenancy e Segurança de Dados
+
+- **RLS (Row Level Security) e tenant context são obrigatórios** em todas as queries do banco.
+- Todo repositório deve usar `withTenantContext` antes de qualquer query.
+- Filtros de `organizationId` em nível de aplicação são defense-in-depth — não substituem RLS.
+- Query keys do TanStack Query devem incluir `activeOrganizationId` para evitar cache cross-tenant.
+
+### LGPD e Biometria
+
+- **Nenhuma imagem biométrica pode ser persistida** — frames JPEG são processados inteiramente em RAM pelo AI Service e descartados imediatamente.
+- Dados biométricos brutos (embeddings) nunca devem aparecer em logs, respostas de API ou armazenamento.
+- Operações que afetam dados pessoais sensíveis devem gerar **audit log** (`audit_logs` table).
+
+### Audit Logs
+
+- Operações sensíveis obrigatoriamente geram entradas em `audit_logs`:
+  - Desativação de membro
+  - Revogação de perfil biométrico
+  - Rotação de chave de dispositivo
+  - Qualquer operação de deleção ou inativação
+
+### RBAC e Autenticação
+
+- **Better Auth + organização plugin** é o sistema de autenticação canônico.
+- RBAC é aplicado via `checkPermission(role, { resource: [actions] })`.
+- Rotas nunca devem fazer bypass de RBAC ou RLS.
+- Middlewares dos frontends devem validar sessão **e** role do portal.
+
+### Migrations e Banco de Dados
+
+- **Migrations SQL são manuais** — jamais use `drizzle-kit push` em produção.
+- Migrations ficam em `apps/api-core/src/infrastructure/database/migrations/`.
+- Nunca altere diretamente a schema sem criar uma migration correspondente.
+
+### Endpoints e Contratos de API
+
+- Rotas canônicas (conforme `docs/backend/manuais/api-endpoints.md`):
+  - ESP32: `POST /v1/attendance/record` (com `X-Device-Token`)
+  - Fechar sessão: `PATCH /v1/attendance/sessions/:id/close`
+  - Presença manual: `POST /v1/attendance/sessions/:id/records/manual`
+  - Listar faces: `GET /v1/face/list`
+- A superfície `/v1/biometric/*` está descontinuada (retorna 404).
+- Nunca crie contratos de API que divergem do `@vultra/types`.
+
+### ADRs
+
+- **ADRs aceitos não devem ser editados diretamente.**
+- Se uma decisão precisar ser revisada, crie um novo ADR ou adicione uma errata versionada.
+
+### Line Endings
+
+- Todos os arquivos devem usar **LF** (Unix). Não commite arquivos com CRLF.
+- `git diff --check origin/main...HEAD` deve passar sem erros.

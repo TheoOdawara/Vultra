@@ -41,16 +41,17 @@ let _closeSession: CloseSessionUseCase | null = null;
 let _manualRecord: ManualRecordUseCase | null = null;
 let _recordAttendance: RecordAttendanceUseCase | null = null;
 let _memberRepo: MemberRepository | null = null;
+let _attendanceRepo: AttendanceRepository | null = null;
 
 export function initAttendanceRoutes(aiQueue: AIJobQueue): void {
-  const attendanceRepo = new AttendanceRepository(db);
+  _attendanceRepo = new AttendanceRepository(db);
   const biometricsRepo = new BiometricsRepository(db);
   _memberRepo = new MemberRepository(db);
 
-  _openSession = new OpenSessionUseCase(attendanceRepo);
-  _closeSession = new CloseSessionUseCase(attendanceRepo);
-  _manualRecord = new ManualRecordUseCase(attendanceRepo);
-  _recordAttendance = new RecordAttendanceUseCase(aiQueue, biometricsRepo, attendanceRepo);
+  _openSession = new OpenSessionUseCase(_attendanceRepo);
+  _closeSession = new CloseSessionUseCase(_attendanceRepo);
+  _manualRecord = new ManualRecordUseCase(_attendanceRepo);
+  _recordAttendance = new RecordAttendanceUseCase(aiQueue, biometricsRepo, _attendanceRepo);
 }
 
 // ── User-authenticated routes ─────────────────────────────────────────────────
@@ -113,6 +114,43 @@ export const attendanceUserRoutes = new Elysia({ prefix: "/attendance" })
           "Requires attendance:write. Admin may set professorId freely; professors are bound to their own member id.",
         tags: ["attendance"],
       },
+    }
+  )
+
+  // GET /v1/attendance/sessions/:id/records
+  .get(
+    "/sessions/:id/records",
+    async ({ params, currentOrg, currentRole }) => {
+      if (!currentOrg) throw new OrganizationNotFoundError();
+      if (!_attendanceRepo) throw new Error("AttendanceRoutes not initialized");
+
+      if (!checkPermission(currentRole, { attendance: ["read"] })) throw new ForbiddenError();
+
+      const rows = await _attendanceRepo.listRecordsBySession(params.id, currentOrg);
+
+      return {
+        records: rows.map((r) => ({
+          ...r,
+          recordedAt: r.recordedAt.toISOString(),
+        })),
+      };
+    },
+    {
+      params: t.Object({ id: t.String({ format: "uuid" }) }),
+      response: t.Object({
+        records: t.Array(
+          t.Object({
+            recordId: t.String(),
+            memberId: t.String(),
+            memberName: t.String(),
+            recognitionMethod: t.String(),
+            confidenceScore: t.Number({ minimum: 0, maximum: 1 }),
+            sentimentLabel: t.Nullable(t.String()),
+            recordedAt: t.String(),
+          })
+        ),
+      }),
+      detail: { summary: "List session attendance records", tags: ["attendance"] },
     }
   )
 

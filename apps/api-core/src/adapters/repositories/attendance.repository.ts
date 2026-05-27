@@ -13,6 +13,7 @@ import type {
   ManualRecordParams,
   NewRecordData,
   NewSessionData,
+  SessionRecordRow,
   SessionSnapshot,
 } from "../../core/ports/IAttendanceRepository";
 import { withTenantContext } from "../../infrastructure/database/client";
@@ -21,7 +22,7 @@ import type {
   NewAttendanceRecord,
   NewAttendanceSession,
 } from "../../infrastructure/database/schema";
-import { attendanceRecords, attendanceSessions } from "../../infrastructure/database/schema";
+import { attendanceRecords, attendanceSessions, members } from "../../infrastructure/database/schema";
 
 export class AttendanceRepository implements IAttendanceRepository {
   constructor(private readonly db: Db) {}
@@ -129,6 +130,34 @@ export class AttendanceRepository implements IAttendanceRepository {
         } as NewAttendanceRecord)
         .returning();
       return record;
+    });
+  }
+
+  async listRecordsBySession(
+    sessionId: string,
+    organizationId: string
+  ): Promise<SessionRecordRow[]> {
+    return withTenantContext(this.db, organizationId, async (tx: Tx) => {
+      const rows = await tx
+        .select({
+          recordId: attendanceRecords.id,
+          memberId: attendanceRecords.memberId,
+          memberName: members.fullName,
+          recognitionMethod: attendanceRecords.recognitionMethod,
+          confidenceScore: attendanceRecords.confidenceScore,
+          sentimentLabel: attendanceRecords.sentimentLabel,
+          recordedAt: attendanceRecords.recordedAt,
+        })
+        .from(attendanceRecords)
+        .innerJoin(members, eq(attendanceRecords.memberId, members.id))
+        .where(
+          and(
+            eq(attendanceRecords.sessionId, sessionId),
+            eq(attendanceRecords.organizationId, organizationId)
+          )
+        )
+        .orderBy(attendanceRecords.recordedAt);
+      return rows;
     });
   }
 }

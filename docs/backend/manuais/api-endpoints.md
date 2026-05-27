@@ -42,13 +42,14 @@ Todos os endpoints estão sob o prefixo `/v1`. Autenticação via Better Auth (J
 |--------|------|-----------|-----------|
 | `POST` | `/v1/attendance/sessions` | `attendance:write` | Abre nova sessão de chamada |
 | `PATCH` | `/v1/attendance/sessions/:id/close` | `attendance:write` | Encerra sessão de chamada |
-| `POST` | `/v1/attendance/sessions/:id/records` | `attendance:write` | Registra presença manual |
+| `GET` | `/v1/attendance/sessions/:id/records` | `attendance:read` | Lista registros de presença da sessão |
+| `POST` | `/v1/attendance/sessions/:id/records/manual` | `attendance:write` | Registra presença manual |
 
 ### Rotas de Dispositivo (ESP32-CAM)
 
 | Método | Rota | Auth | Descrição |
 |--------|------|------|-----------|
-| `POST` | `/v1/attendance/device/record` | `deviceAuthPlugin` | Registra presença via reconhecimento facial (fila Redis) |
+| `POST` | `/v1/attendance/record` | `deviceAuthPlugin` | Registra presença via reconhecimento facial (fila Redis) |
 
 ---
 
@@ -189,7 +190,7 @@ Os relatórios não expõem embeddings, frames ou dados biométricos brutos. Ape
 
 | Código | HTTP | Quando |
 |--------|------|--------|
-| `INVALID_REPORT_RANGE` | 422 | `from >= to` |
+| `INVALID_REPORT_RANGE` | 400 | `from >= to` |
 
 ---
 
@@ -205,14 +206,15 @@ Os relatórios não expõem embeddings, frames ou dados biométricos brutos. Ape
 
 ```json
 {
-  "state": "CLOSED",
+  "status": "ok",
+  "circuitState": "CLOSED",
   "failureCount": 0,
-  "lastFailureAt": null,
-  "openedAt": null
+  "lastFailureAt": null
 }
 ```
 
-Estados possíveis: `CLOSED` (normal), `OPEN` (falha rápida — `503`), `HALF_OPEN` (janela de teste).
+Valores de `status`: `ok`, `degraded`, `unavailable`.
+Valores de `circuitState`: `CLOSED` (normal), `OPEN` (falha rápida — `503`), `HALF_OPEN` (janela de teste).
 
 ---
 

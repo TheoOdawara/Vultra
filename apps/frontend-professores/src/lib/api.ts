@@ -12,6 +12,7 @@ import type {
   CloseSessionResponse,
   ManualRecordBody,
   ManualRecordResponse,
+  ListSessionRecordsResponse,
   AttendanceReportQuery,
   AttendanceReportResponse,
 } from "@vultra/types";
@@ -57,7 +58,7 @@ function buildQuery(params: Record<string, string | number | boolean | undefined
 
 export const membersApi = {
   list(q?: ListMembersQuery): Promise<ListMembersResponse> {
-    return request(`/members${buildQuery((q ?? {}) as Record<string, string | number | boolean | undefined>)}`);
+    return request(`/members${buildQuery((q ?? {}) as unknown as Record<string, string | number | boolean | undefined>)}`);
   },
   get(id: string): Promise<GetMemberResponse> {
     return request(`/members/${id}`);
@@ -69,7 +70,10 @@ export const attendanceApi = {
     return request("/attendance/sessions", { method: "POST", body: JSON.stringify(body) });
   },
   closeSession(sessionId: string): Promise<CloseSessionResponse> {
-    return request(`/attendance/sessions/${sessionId}`, { method: "DELETE" });
+    return request(`/attendance/sessions/${sessionId}/close`, { method: "PATCH" });
+  },
+  listRecords(sessionId: string): Promise<ListSessionRecordsResponse> {
+    return request(`/attendance/sessions/${sessionId}/records`);
   },
   manualRecord(sessionId: string, body: ManualRecordBody): Promise<ManualRecordResponse> {
     return request(`/attendance/sessions/${sessionId}/records/manual`, {
@@ -81,6 +85,6 @@ export const attendanceApi = {
 
 export const reportsApi = {
   attendance(q: AttendanceReportQuery): Promise<AttendanceReportResponse> {
-    return request(`/reports/attendance${buildQuery(q as Record<string, string | number | boolean | undefined>)}`);
+    return request(`/reports/attendance${buildQuery(q as unknown as Record<string, string | number | boolean | undefined>)}`);
   },
 };

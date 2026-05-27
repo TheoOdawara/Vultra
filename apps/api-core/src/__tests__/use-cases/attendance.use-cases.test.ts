@@ -126,6 +126,10 @@ function createAttendanceRepoStub() {
         recognitionMethod: "manual",
       });
     },
+
+    async listRecordsBySession(_sessionId, _organizationId) {
+      return [];
+    },
   };
 
   return stub;

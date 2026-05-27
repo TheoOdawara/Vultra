@@ -53,15 +53,15 @@ function buildQuery(params: Record<string, string | number | boolean | undefined
 
 export const membersApi = {
   list(q?: ListMembersQuery): Promise<ListMembersResponse> {
-    return request(`/members${buildQuery((q ?? {}) as Record<string, string | number | boolean | undefined>)}`);
+    return request(`/members${buildQuery((q ?? {}) as unknown as Record<string, string | number | boolean | undefined>)}`);
   },
 };
 
 export const reportsApi = {
   attendance(q: AttendanceReportQuery): Promise<AttendanceReportResponse> {
-    return request(`/reports/attendance${buildQuery(q as Record<string, string | number | boolean | undefined>)}`);
+    return request(`/reports/attendance${buildQuery(q as unknown as Record<string, string | number | boolean | undefined>)}`);
   },
   wellbeing(q: WellbeingReportQuery): Promise<WellbeingReportResponse> {
-    return request(`/reports/wellbeing${buildQuery(q as Record<string, string | number | boolean | undefined>)}`);
+    return request(`/reports/wellbeing${buildQuery(q as unknown as Record<string, string | number | boolean | undefined>)}`);
   },
 };
