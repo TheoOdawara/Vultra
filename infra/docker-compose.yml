@@ -1,18 +1,32 @@
 # =============================================================================
 # VULTRA — Docker Compose (Desenvolvimento Local)
 # =============================================================================
-# Stack: PostgreSQL 16 + pgvector 0.7 | Redis 7
+# Pré-requisitos:
+#   cp infra/.env.example infra/.env  # preencha os secrets antes de subir
+#
+# Uso:
+#   docker compose -f infra/docker-compose.yml up -d          # subir tudo
+#   docker compose -f infra/docker-compose.yml up api-core    # serviço isolado
+#   docker compose -f infra/docker-compose.yml logs -f        # seguir logs
+#   docker compose -f infra/docker-compose.yml down -v        # destruir + volumes
+#
+# Stack: PostgreSQL 16 + pgvector | Redis 7 | AI Service (FastAPI) | API Core (Bun)
 
 name: vultra-dev
 
 services:
+
+  # ---------------------------------------------------------------------------
+  # PostgreSQL 16 + pgvector 0.7
+  # Referência: docs/database/README.md
+  # ---------------------------------------------------------------------------
   postgres:
     image: pgvector/pgvector:pg16
     container_name: vultra-postgres
     restart: unless-stopped
     environment:
       POSTGRES_USER:     ${POSTGRES_USER:-vultra}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
       POSTGRES_DB:       ${POSTGRES_DB:-vultra_db}
       PGDATA:            /var/lib/postgresql/data/pgdata
     ports:
@@ -38,7 +52,7 @@ services:
     restart: unless-stopped
     command: >
       redis-server
-      --requirepass ${REDIS_PASSWORD}
+      --requirepass ${REDIS_PASSWORD:?REDIS_PASSWORD is required}
       --maxmemory   256mb
       --maxmemory-policy allkeys-lru
     ports:
@@ -46,7 +60,7 @@ services:
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:?REDIS_PASSWORD is required}", "ping"]
       interval: 10s
       timeout:  5s
       retries:  5
@@ -76,7 +90,7 @@ services:
       HOST:              0.0.0.0
       PORT:              8000
     ports:
-      - "8000:8000"
+      - "${AI_SERVICE_PORT:-8000}:8000"
     depends_on:
       redis:
         condition: service_healthy
@@ -85,7 +99,47 @@ services:
       interval: 15s
       timeout:  5s
       retries:  3
-      start_period: 30s
+      start_period: 60s   # InsightFace model load takes ~30-60s on first run
+    networks:
+      - vultra-net
+
+  # ---------------------------------------------------------------------------
+  # API Core — Bun + ElysiaJS + Better Auth + Drizzle ORM
+  # Referência: apps/api-core/
+  #
+  # ⚠️  Migrations: execute manualmente antes do primeiro boot:
+  #   docker compose -f infra/docker-compose.yml exec api-core \
+  #     bun run db:migrate
+  # ---------------------------------------------------------------------------
+  api-core:
+    build:
+      context: ../apps/api-core
+      dockerfile: Dockerfile
+    container_name: vultra-api-core
+    restart: unless-stopped
+    environment:
+      PORT:                        "3000"
+      # Postgres — usa o hostname do container (não localhost)
+      DATABASE_URL:                "postgresql://${POSTGRES_USER:-vultra}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-vultra_db}"
+      # Redis — usa o hostname do container
+      REDIS_URL:                   "redis://:${REDIS_PASSWORD}@redis:6379"
+      # Better Auth
+      BETTER_AUTH_SECRET:          "${BETTER_AUTH_SECRET:?BETTER_AUTH_SECRET is required}"
+      BETTER_AUTH_URL:             "${BETTER_AUTH_URL:-http://localhost:3000}"
+      BETTER_AUTH_TRUSTED_ORIGINS: "${BETTER_AUTH_TRUSTED_ORIGINS:-http://localhost:3001,http://localhost:3002,http://localhost:3003}"
+    ports:
+      - "${API_CORE_PORT:-3000}:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/v1/health/ai-service"]
+      interval: 15s
+      timeout:  5s
+      retries:  3
+      start_period: 15s
     networks:
       - vultra-net
 
@@ -99,7 +153,7 @@ volumes:
     driver: local
 
 # =============================================================================
-# Rede interna
+# Rede interna — isolamento entre serviços
 # =============================================================================
 networks:
   vultra-net:

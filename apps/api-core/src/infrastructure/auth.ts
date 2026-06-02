@@ -10,14 +10,16 @@
  * Enable when upstream releases the plugin.
  *
  * RBAC AccessControl matrix:
- *   admin      → attendance:write, attendance:read, reports:read, users:*, devices:*, biometrics:*
- *   professor  → attendance:write, attendance:read
- *   rh         → attendance:read, reports:read
+ *   admin      → members:read, members:manage, attendance:write, attendance:read,
+ *                reports:read, devices:manage, biometrics:*
+ *   professor  → members:read, attendance:write, attendance:read, biometrics:*
+ *   rh         → members:read, attendance:read, reports:read, biometrics:verify+list
  *   student    → attendance:read (own records only — enforced in application layer)
  *
  * Reference: docs/backend/manuais/autenticacao.md
  */
 
+import { apiKey } from "@better-auth/api-key";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { createAccessControl, multiSession, organization } from "better-auth/plugins";
@@ -25,22 +27,28 @@ import { db } from "./database/client";
 import * as authSchema from "./database/schema/auth-schema";
 
 export const accessControl = createAccessControl({
+  members: ["read", "manage"],
   attendance: ["write", "read"],
   reports: ["read"],
   biometrics: ["enroll", "verify", "list", "delete"],
+  devices: ["manage"],
 } as const);
 
 export const organizationRoles = {
   admin: accessControl.newRole({
+    members: ["read", "manage"],
     attendance: ["write", "read"],
     reports: ["read"],
     biometrics: ["enroll", "verify", "list", "delete"],
+    devices: ["manage"],
   }),
   professor: accessControl.newRole({
+    members: ["read"],
     attendance: ["write", "read"],
     biometrics: ["enroll", "verify", "list", "delete"],
   }),
   rh: accessControl.newRole({
+    members: ["read"],
     attendance: ["read"],
     reports: ["read"],
     biometrics: ["verify", "list"],
@@ -87,6 +95,7 @@ export const auth = betterAuth({
       session: authSchema.authSessions,
       account: authSchema.authAccounts,
       verification: authSchema.authVerifications,
+      apikey: authSchema.authApiKeys,
     },
   }),
 
@@ -109,6 +118,14 @@ export const auth = betterAuth({
     }),
     multiSession({
       maximumSessions: 3,
+    }),
+    apiKey({
+      // Device keys são org-owned — ESP32 não representa um usuário
+      references: "organization",
+      // Metadados necessários para armazenar { deviceId }
+      enableMetadata: true,
+      // Header padrão que o ESP32 enviará
+      apiKeyHeaders: "x-api-key",
     }),
   ],
 

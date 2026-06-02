@@ -2,7 +2,9 @@
 
 > **Status:** Aceito  
 > **Data:** Fevereiro 2026  
-> **Contexto:** AI Service (DeepFace)
+> **Contexto:** AI Service
+>
+> **⚠️ Errata (Maio 2026):** A decisão de usar ArcFace 512d permanece válida. No entanto, a implementação final usa **InsightFace** diretamente (via pack `buffalo_l` + ONNX Runtime), **não DeepFace/TensorFlow**. Referências a "DeepFace" abaixo são históricas — a variável de configuração real é `MODEL_NAME` (não `DEEPFACE_MODEL`). Ver [guias/modelos-ia.md](../guias/modelos-ia.md) e [arquitetura/processamento-ram.md](../arquitetura/processamento-ram.md) para a implementação atual.
 
 ---
 

@@ -5,17 +5,14 @@
  * Import from this barrel when you need multiple use cases or types.
  */
 
-export { EnrollBiometricUseCase } from "./EnrollBiometricUseCase";
 export type {
   EnrollBiometricInput,
   EnrollBiometricOutput,
 } from "./EnrollBiometricUseCase";
-
-export { VerifyFaceUseCase } from "./VerifyFaceUseCase";
-export type { VerifyFaceInput, VerifyFaceOutput } from "./VerifyFaceUseCase";
-
-export { ListFacesUseCase } from "./ListFacesUseCase";
+export { EnrollBiometricUseCase } from "./EnrollBiometricUseCase";
 export type { ListFacesInput } from "./ListFacesUseCase";
-
-export { RevokeBiometricUseCase } from "./RevokeBiometricUseCase";
+export { ListFacesUseCase } from "./ListFacesUseCase";
 export type { RevokeBiometricInput } from "./RevokeBiometricUseCase";
+export { RevokeBiometricUseCase } from "./RevokeBiometricUseCase";
+export type { VerifyFaceInput, VerifyFaceOutput } from "./VerifyFaceUseCase";
+export { VerifyFaceUseCase } from "./VerifyFaceUseCase";

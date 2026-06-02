@@ -10,7 +10,7 @@ Contexto
 Decisão
 - Definir dois modos operacionais:
   1. PoC local: comunicação HTTP síncrona segura entre cliente/backend e AI Service. Uso restrito a ambientes de desenvolvimento e testes com câmeras locais. Deve seguir as regras LGPD (RAM-only, não persistir imagens).
-  2. Produção: comunicação assíncrona via Redis queues (vultra:queue:embedding / vultra:result:{jobId}) com Circuit Breaker e timeouts configuráveis. Integração com ESP32 deve usar este caminho.
+  2. Produção: comunicação assíncrona via Redis queues (`ai:recognition:queue` / `ai:recognition:result:{jobId}`) com Circuit Breaker e timeouts configuráveis. Integração com ESP32 deve usar este caminho.
 - Manter ArcFace (512d) como modelo padrão por enquanto (ADR-002), mas permitir configuração via DEEPFACE_MODEL com controle de versão e avaliação de impacto (re-enrollment) antes de troca.
 - Atualizar documentação para remover afirmações de exclusividade de filas e registrar esta decisão como ADR.
 

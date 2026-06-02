@@ -22,7 +22,7 @@ A violação desta regra é classificada como **Incidente de Segurança P0** e c
 
 ### O que é OBRIGATÓRIO
 
-- Processar o frame em memória: `base64 → numpy array → DeepFace → vector`
+- Processar o frame em memória: `base64 → numpy array → InsightFace/ArcFace → vector(512)`
 - Deletar a referência ao array numpy após gerar o embedding
 - Persistir apenas o `vector(512)` no PostgreSQL
 

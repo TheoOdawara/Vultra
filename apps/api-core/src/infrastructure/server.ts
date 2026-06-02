@@ -13,24 +13,31 @@
 
 import cors from "@elysiajs/cors";
 import Elysia from "elysia";
-import { auth } from "./auth";
-import { globalErrorHandler } from "./error-handler";
-import { aiQueue } from "./container";
 import {
   attendanceDeviceRoutes,
   attendanceUserRoutes,
   initAttendanceRoutes,
 } from "../adapters/http/routes/attendance.routes";
-import { biometricRoutes, initBiometricRoutes } from "../adapters/http/routes/biometric.routes";
+import { deviceRoutes, initDeviceRoutes } from "../adapters/http/routes/devices.routes";
 import { faceRoutes, initFaceRoutes } from "../adapters/http/routes/face.routes";
 import { healthRoutes, initHealthRoutes } from "../adapters/http/routes/health.routes";
+import { initMemberRoutes, memberRoutes } from "../adapters/http/routes/members.routes";
+import { initReportRoutes, reportRoutes } from "../adapters/http/routes/reports.routes";
+import { auth } from "./auth";
+import { aiQueue } from "./container";
+import { globalErrorHandler } from "./error-handler";
 
 // ── Inject AIJobQueue into route modules ──────────────────────────────────────
 
 initFaceRoutes(aiQueue);
 initAttendanceRoutes(aiQueue);
-initBiometricRoutes(aiQueue);
 initHealthRoutes(aiQueue);
+
+// ── Init modules that don't need AIJobQueue ───────────────────────────────────
+
+initMemberRoutes();
+initDeviceRoutes();
+initReportRoutes();
 
 // ── App composition ───────────────────────────────────────────────────────────
 
@@ -58,6 +65,8 @@ export const app = new Elysia()
       .use(attendanceUserRoutes)
       .use(attendanceDeviceRoutes)
       .use(faceRoutes)
-      .use(biometricRoutes)
+      .use(memberRoutes)
+      .use(deviceRoutes)
+      .use(reportRoutes)
       .use(healthRoutes)
   );

@@ -56,7 +56,7 @@ O resultado deve ser comunicado aos admins dos tenants afetados **antes** de ini
 ## Estratégia de Migração
 
 ```
-1. Atualizar DEEPFACE_MODEL no AI Service (novo modelo entra em produção)
+1. Atualizar MODEL_NAME no AI Service (novo modelo entra em produção)
 2. Novos enrollments já usam model_version atualizado automaticamente
 3. Auditar perfis desatualizados por tenant (query acima)
 4. Notificar admins para agendar re-enrollment em massa

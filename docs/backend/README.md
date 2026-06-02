@@ -1,7 +1,7 @@
 # ⚙️ VULTRA — Backend
 
 > **← [Voltar ao Hub Principal](../README.md)**
-> **Área:** Backend (API Core + Microserviço de IA) | **Última revisão:** Abril 2026
+> **Área:** Backend (API Core + Microserviço de IA) | **Última revisão:** Maio 2026
 
 ---
 
@@ -35,8 +35,9 @@ Guias operacionais e de configuração de cada serviço.
 
 | Documento | Conteúdo |
 |-----------|----------|
+| [manuais/api-endpoints.md](./manuais/api-endpoints.md) | Referência completa de todos os endpoints `/v1/*` |
 | [manuais/autenticacao.md](./manuais/autenticacao.md) | Better Auth, RBAC, autenticação de dispositivos IoT |
-| [manuais/error-handler.md](./manuais/error-handler.md) | Handler global de erros e mapa de códigos HTTP |
+| [manuais/error-handler.md](./manuais/error-handler.md) | Handler global de erros e mapa completo de códigos HTTP |
 | [manuais/docker.md](./manuais/docker.md) | Setup Docker para API Core e AI Service |
 | [manuais/configuracao.md](./manuais/configuracao.md) | Variáveis de ambiente de ambos os serviços |
 
@@ -60,6 +61,21 @@ Registro imutável das decisões arquiteturais e suas justificativas.
 | [adrs/ADR-003-circuit-breaker-redis.md](./adrs/ADR-003-circuit-breaker-redis.md) | Circuit Breaker na fila Redis |
 | [adrs/ADR-004-estrutura-pastas-modularizacao.md](./adrs/ADR-004-estrutura-pastas-modularizacao.md) | Estrutura de pastas do monorepo e modularização hexagonal |
 | [adrs/ADR-006-biometric-profiles-e-rate-limiting-biometria.md](./adrs/ADR-006-biometric-profiles-e-rate-limiting-biometria.md) | `biometric_profiles` como recurso biométrico canônico e rate limiting da superfície `/v1/face/*` |
+
+---
+
+## Status de Implementação (Maio 2026)
+
+| Módulo | Rotas | Use Cases | Testes | Status |
+|--------|-------|-----------|--------|--------|
+| Biometria Facial (`/v1/face/*`) | ✅ | ✅ 4 | ✅ 47 | **Completo** |
+| Chamadas (`/v1/attendance/*`) | ✅ | ✅ 4 | ✅ 21 | **Completo** |
+| Membros (`/v1/members/*`) | ✅ | ✅ 5 | ✅ 15 | **Completo** |
+| Dispositivos (`/v1/devices/*`) | ✅ | ✅ 5 | ✅ 13 | **Completo** |
+| Relatórios (`/v1/reports/*`) | ✅ | ✅ 2 | — | **Completo** |
+| Docker Compose | — | — | — | ⏳ Pendente |
+| Firmware ESP32-CAM | — | — | — | ⏳ Pendente |
+| Frontend (Admin/RH/Professor) | — | — | — | ⏳ Não iniciado |
 
 ---
 

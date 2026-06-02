@@ -4,15 +4,15 @@
  * POST /v1/attendance/sessions/:id/records/manual
  */
 
-import type {
-  IAttendanceRepository,
-  AttendanceRecordSnapshot,
-} from "../../ports/IAttendanceRepository";
 import {
   AttendanceConflictError,
   SessionAlreadyClosedError,
   SessionNotFoundError,
 } from "../../domain/errors/DomainError";
+import type {
+  AttendanceRecordSnapshot,
+  IAttendanceRepository,
+} from "../../ports/IAttendanceRepository";
 
 export interface ManualRecordInput {
   sessionId: string;
@@ -32,7 +32,11 @@ export class ManualRecordUseCase {
     if (!session) throw new SessionNotFoundError();
     if (session.status !== "open") throw new SessionAlreadyClosedError();
 
-    const isDuplicate = await this.attendanceRepo.existsRecord(input.sessionId, input.memberId);
+    const isDuplicate = await this.attendanceRepo.existsRecord(
+      input.sessionId,
+      input.memberId,
+      input.organizationId
+    );
     if (isDuplicate) throw new AttendanceConflictError();
 
     return this.attendanceRepo.createManualRecord({

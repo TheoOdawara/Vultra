@@ -2,20 +2,22 @@
  * VULTRA — Biometrics Repository
  *
  * Handles database operations for biometric_profiles.
- * All queries include organization_id filter (multitenancy).
+ * All queries run inside withTenantContext to activate RLS for the tenant.
+ * Application-level organizationId filters are kept as defense-in-depth.
  * Vector similarity search uses pgvector cosine distance (<=>).
  */
 
 import { and, desc, eq, sql } from "drizzle-orm";
-import type { Db } from "../../infrastructure/database/client";
-import { biometricProfiles } from "../../infrastructure/database/schema";
+import { CURRENT_MODEL_VERSION } from "../../core/domain/constants";
 import type {
-  IBiometricRepository,
-  SimilarityMatch,
   BiometricProfileLookup,
   EnrollParams,
+  IBiometricRepository,
+  SimilarityMatch,
 } from "../../core/ports/IBiometricRepository";
-import { CURRENT_MODEL_VERSION } from "../../core/domain/constants";
+import { withTenantContext } from "../../infrastructure/database/client";
+import type { Db, Tx } from "../../infrastructure/database/client";
+import { biometricProfiles } from "../../infrastructure/database/schema";
 
 interface FindBySimilarityRow {
   id: string;
@@ -59,36 +61,38 @@ export class BiometricsRepository implements IBiometricRepository {
     modelVersion: string = CURRENT_MODEL_VERSION,
     memberId?: string
   ): Promise<SimilarityMatch | null> {
-    const vectorLiteral = `[${embedding.join(",")}]`;
-    const memberFilter = memberId ? sql`AND member_id = ${memberId}::uuid` : sql``;
+    return withTenantContext(this.db, organizationId, async (tx: Tx) => {
+      const vectorLiteral = `[${embedding.join(",")}]`;
+      const memberFilter = memberId ? sql`AND member_id = ${memberId}::uuid` : sql``;
 
-    const rows = await this.db.execute(sql`
-      SELECT
-        id,
-        member_id,
-        1 - (face_embedding <=> ${vectorLiteral}::vector) AS similarity,
-        model_version
-      FROM biometric_profiles
-      WHERE
-        organization_id = ${organizationId}::uuid
-        AND model_version = ${modelVersion}
-        AND is_active = TRUE
-        ${memberFilter}
-      ORDER BY face_embedding <=> ${vectorLiteral}::vector
-      LIMIT 1
-    `);
+      const rows = await tx.execute(sql`
+        SELECT
+          id,
+          member_id,
+          1 - (face_embedding <=> ${vectorLiteral}::vector) AS similarity,
+          model_version
+        FROM biometric_profiles
+        WHERE
+          organization_id = ${organizationId}::uuid
+          AND model_version = ${modelVersion}
+          AND is_active = TRUE
+          ${memberFilter}
+        ORDER BY face_embedding <=> ${vectorLiteral}::vector
+        LIMIT 1
+      `);
 
-    if (rows.rows.length === 0) return null;
+      if (rows.rows.length === 0) return null;
 
-    const row = rows.rows[0] as FindBySimilarityRow | undefined;
-    if (!row) return null;
+      const row = rows.rows[0] as FindBySimilarityRow | undefined;
+      if (!row) return null;
 
-    return {
-      profileId: row.id,
-      memberId: row.member_id,
-      similarity: Number(row.similarity),
-      modelVersion: row.model_version,
-    };
+      return {
+        profileId: row.id,
+        memberId: row.member_id,
+        similarity: Number(row.similarity),
+        modelVersion: row.model_version,
+      };
+    });
   }
 
   /**
@@ -99,95 +103,104 @@ export class BiometricsRepository implements IBiometricRepository {
     organizationId: string,
     memberId?: string
   ): Promise<BiometricProfileLookup[]> {
-    const conditions = [
-      eq(biometricProfiles.organizationId, organizationId),
-      eq(biometricProfiles.isActive, true),
-    ];
+    return withTenantContext(this.db, organizationId, async (tx: Tx) => {
+      const conditions = [
+        eq(biometricProfiles.organizationId, organizationId),
+        eq(biometricProfiles.isActive, true),
+      ];
 
-    if (memberId) {
-      conditions.push(eq(biometricProfiles.memberId, memberId));
-    }
+      if (memberId) {
+        conditions.push(eq(biometricProfiles.memberId, memberId));
+      }
 
-    const rows = await this.db
-      .select(this.lookupSelection)
-      .from(biometricProfiles)
-      .where(and(...conditions))
-      .orderBy(desc(biometricProfiles.enrolledAt));
+      const rows = await tx
+        .select(this.lookupSelection)
+        .from(biometricProfiles)
+        .where(and(...conditions))
+        .orderBy(desc(biometricProfiles.enrolledAt));
 
-    return rows;
+      return rows;
+    });
   }
 
   async findActiveProfileById(
     profileId: string,
     organizationId: string
   ): Promise<BiometricProfileLookup | null> {
-    const [profile] = await this.db
-      .select(this.lookupSelection)
-      .from(biometricProfiles)
-      .where(
-        and(
-          eq(biometricProfiles.id, profileId),
-          eq(biometricProfiles.organizationId, organizationId),
-          eq(biometricProfiles.isActive, true)
+    return withTenantContext(this.db, organizationId, async (tx: Tx) => {
+      const [profile] = await tx
+        .select(this.lookupSelection)
+        .from(biometricProfiles)
+        .where(
+          and(
+            eq(biometricProfiles.id, profileId),
+            eq(biometricProfiles.organizationId, organizationId),
+            eq(biometricProfiles.isActive, true)
+          )
         )
-      )
-      .limit(1);
+        .limit(1);
 
-    return profile ?? null;
+      return profile ?? null;
+    });
   }
 
   /**
    * Create a new biometric profile (enroll).
    * Deactivates any existing active profile for the same member+model before inserting.
+   * Both operations run in the same transaction — atomically.
    */
   async enroll(params: EnrollParams): Promise<string> {
-    const modelVersion = params.modelVersion ?? CURRENT_MODEL_VERSION;
+    return withTenantContext(this.db, params.organizationId, async (tx: Tx) => {
+      const modelVersion = params.modelVersion ?? CURRENT_MODEL_VERSION;
 
-    // Deactivate existing active profile for this member+model (if any)
-    await this.db
-      .update(biometricProfiles)
-      .set({ isActive: false })
-      .where(
-        and(
-          eq(biometricProfiles.memberId, params.memberId),
-          eq(biometricProfiles.modelVersion, modelVersion),
-          eq(biometricProfiles.isActive, true)
-        )
-      );
+      // Deactivate existing active profile for this member+model (if any)
+      await tx
+        .update(biometricProfiles)
+        .set({ isActive: false })
+        .where(
+          and(
+            eq(biometricProfiles.memberId, params.memberId),
+            eq(biometricProfiles.modelVersion, modelVersion),
+            eq(biometricProfiles.isActive, true)
+          )
+        );
 
-    const vectorLiteral = `[${params.faceEmbedding.join(",")}]`;
+      const vectorLiteral = `[${params.faceEmbedding.join(",")}]`;
 
-    const result = await this.db.execute(sql`
-      INSERT INTO biometric_profiles
-        (organization_id, member_id, face_embedding, model_version, quality_score, is_active)
-      VALUES
-        (${params.organizationId}::uuid, ${params.memberId}::uuid,
-         ${vectorLiteral}::vector, ${modelVersion}, ${params.qualityScore}, TRUE)
-      RETURNING id
-    `);
+      const result = await tx.execute(sql`
+        INSERT INTO biometric_profiles
+          (organization_id, member_id, face_embedding, model_version, quality_score, is_active)
+        VALUES
+          (${params.organizationId}::uuid, ${params.memberId}::uuid,
+           ${vectorLiteral}::vector, ${modelVersion}, ${params.qualityScore}, TRUE)
+        RETURNING id
+      `);
 
-    const row = result.rows[0] as ReturningIdRow | undefined;
-    if (!row) {
-      throw new Error("Failed to persist biometric profile");
-    }
+      const row = result.rows[0] as ReturningIdRow | undefined;
+      if (!row) {
+        throw new Error("Failed to persist biometric profile");
+      }
 
-    return row.id;
+      return row.id;
+    });
   }
 
   /**
    * Update last_matched_at timestamp after a successful recognition.
    */
   async touchLastMatched(memberId: string, organizationId: string): Promise<void> {
-    await this.db
-      .update(biometricProfiles)
-      .set({ lastMatchedAt: new Date() })
-      .where(
-        and(
-          eq(biometricProfiles.memberId, memberId),
-          eq(biometricProfiles.organizationId, organizationId),
-          eq(biometricProfiles.isActive, true)
-        )
-      );
+    await withTenantContext(this.db, organizationId, async (tx: Tx) => {
+      await tx
+        .update(biometricProfiles)
+        .set({ lastMatchedAt: new Date() })
+        .where(
+          and(
+            eq(biometricProfiles.memberId, memberId),
+            eq(biometricProfiles.organizationId, organizationId),
+            eq(biometricProfiles.isActive, true)
+          )
+        );
+    });
   }
 
   /**
@@ -195,19 +208,21 @@ export class BiometricsRepository implements IBiometricRepository {
    * Sets is_active = FALSE, nullifies the embedding vector and records deletion audit columns.
    */
   async revoke(profileId: string, organizationId: string, deletedBy: string): Promise<boolean> {
-    const result = await this.db.execute(sql`
-      UPDATE biometric_profiles
-      SET
-        is_active = FALSE,
-        face_embedding = NULL,
-        deleted_at = NOW(),
-        deleted_by = ${deletedBy}::uuid
-      WHERE id = ${profileId}::uuid
-        AND organization_id = ${organizationId}::uuid
-        AND is_active = TRUE
-      RETURNING id
-    `);
+    return withTenantContext(this.db, organizationId, async (tx: Tx) => {
+      const result = await tx.execute(sql`
+        UPDATE biometric_profiles
+        SET
+          is_active = FALSE,
+          face_embedding = NULL,
+          deleted_at = NOW(),
+          deleted_by = ${deletedBy}::uuid
+        WHERE id = ${profileId}::uuid
+          AND organization_id = ${organizationId}::uuid
+          AND is_active = TRUE
+        RETURNING id
+      `);
 
-    return result.rows.length > 0;
+      return result.rows.length > 0;
+    });
   }
 }

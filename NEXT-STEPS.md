@@ -90,12 +90,29 @@ Após configurar o auth, criar a estrutura base da API:
 
 Com a estrutura base pronta, implementar os módulos seguindo a arquitetura hexagonal:
 
-- [ ] `members/` — CRUD de membros por tenant
-- [ ] `devices/` — cadastro e rotação de `api_key` dos ESP32
-- [ ] `biometric-profiles/` — enroll e revogação LGPD
-- [ ] `attendance-sessions/` — abertura/encerramento de sessões
-- [ ] `attendance-records/` — registro de presenças (consumer da fila Redis)
-- [ ] `reports/` — relatórios de presença e bem-estar (RH)
+- [x] `members/` — CRUD de membros por tenant (port + repo + 5 use cases + rotas + 15 testes)
+- [x] `devices/` — cadastro e rotação de `api_key` dos ESP32 (port + repo + 5 use cases + rotas + 13 testes)
+- [x] `biometric-profiles/` — enroll e revogação LGPD (port + repo + 4 use cases + rotas + 17 testes)
+- [x] `attendance-sessions/` — abertura/encerramento de sessões (port + repo + use cases + rotas + 21 testes)
+- [x] `attendance-records/` — registro de presenças (consumer da fila Redis) — integrado em `attendance/`
+- [x] `reports/` — relatórios de presença e bem-estar (port + repo SQL raw + 2 use cases + rotas)
+
+## 4. Infraestrutura e Frontend (status atual)
+
+- [x] **Docker Compose** — PostgreSQL 16, Redis 7, AI Service, API Core (`infra/docker-compose.yml`)
+- [x] **`packages/types`** — contrato TypeScript compartilhado entre API e frontends (`@vultra/types`)
+- [x] **Frontend Admin** — Next.js 15 + TanStack Query: login, membros (CRUD), dispositivos (registro + rotação de chave), relatórios de presença, health monitor (`apps/frontend-admin/`)
+- [x] **Frontend Professores** — chamada em tempo real (WebSocket), registro manual, relatórios por turma (`apps/frontend-professores/`)
+- [x] **Frontend RH** — presença e wellbeing dashboard com alertas LGPD-compliant (`apps/frontend-rh/`)
+
+## 5. Próximas etapas pendentes
+
+- [ ] **Testes de integração** — contra banco real (migrations + seed + stack Docker)
+- [ ] **Firmware (ESP32-CAM)** — implementação C++/Arduino com autenticação X-Device-Token e envio de frames JPEG (`firmware/esp32-cam/`)
+- [ ] **Install npm deps nos frontends** — `cd apps/frontend-admin && npm install` (e idem para professores/rh)
+- [ ] **Shadcn/UI CLI** — `npx shadcn@latest init` em cada portal para instalar os primitivos (`Button`, `Table`, `Dialog`, `Badge`, `AlertDialog`)
+- [ ] **WebSocket no API Core** — implementar endpoint `GET /v1/attendance/sessions/:id/ws` para o LiveAttendancePanel
+- [ ] **Exportação de relatórios (RH)** — PDF/XLSX a partir dos dados do wellbeing e attendance report
 
 ---
 

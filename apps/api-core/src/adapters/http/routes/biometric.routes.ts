@@ -12,14 +12,14 @@
 
 import { createId } from "@paralleldrive/cuid2";
 import Elysia, { t } from "elysia";
-import { authPlugin } from "../middleware/auth.plugin";
-import type { AIJobQueue } from "../../queue/ai-job.queue.ts";
-import { AuditLogRepository } from "../../repositories/audit-log.repository";
-import { BiometricsRepository } from "../../repositories/biometric.repository";
+import { OrganizationNotFoundError } from "../../../core/domain/errors/DomainError";
 import { EnrollBiometricUseCase } from "../../../core/use-cases/biometrics/EnrollBiometricUseCase";
 import { RevokeBiometricUseCase } from "../../../core/use-cases/biometrics/RevokeBiometricUseCase";
 import { db } from "../../../infrastructure/database/client";
-import { OrganizationNotFoundError } from "../../../core/domain/errors/DomainError";
+import type { AIJobQueue } from "../../queue/ai-job.queue.ts";
+import { AuditLogRepository } from "../../repositories/audit-log.repository";
+import { BiometricsRepository } from "../../repositories/biometric.repository";
+import { authPlugin } from "../middleware/auth.plugin";
 
 // ── Singletons (built once when initBiometricRoutes is called) ────────────────
 

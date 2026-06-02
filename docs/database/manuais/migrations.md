@@ -21,7 +21,8 @@ migrations/
 ├── 0011_create_auth_core_tables.sql
 ├── 0012_create_auth_organization_tables.sql
 ├── 0013_create_auth_passkey_tables.sql
-└── 0014_add_members_user_fk.sql
+├── 0014_add_members_user_fk.sql
+└── 0015_biometric_profiles_audit_columns.sql
 ```
 
 - Numeração **sequencial com 4 dígitos** (`0001`, `0002`, ...) — suporta até 9999 migrations sem renomear arquivos existentes

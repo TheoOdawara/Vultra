@@ -1,14 +1,13 @@
 import { describe, expect, it } from "bun:test";
-import type {
-  BiometricProfileLookup,
-  SimilarityMatch,
-} from "../../core/ports/IBiometricRepository.ts";
-import type { AIJobResult, IAIQueueAdapter } from "../../core/ports/IAIQueueAdapter.ts";
 import {
   AIServiceUnavailableError,
   BiometricProfileNotFoundError,
 } from "../../core/domain/errors/DomainError.ts";
-import * as biometricsModule from "../../core/use-cases/biometrics/index.ts";
+import type { AIJobResult, IAIQueueAdapter } from "../../core/ports/IAIQueueAdapter.ts";
+import type {
+  BiometricProfileLookup,
+  SimilarityMatch,
+} from "../../core/ports/IBiometricRepository.ts";
 import type {
   EnrollBiometricInput,
   EnrollBiometricOutput,
@@ -17,6 +16,7 @@ import type {
   VerifyFaceInput,
   VerifyFaceOutput,
 } from "../../core/use-cases/biometrics/index.ts";
+import * as biometricsModule from "../../core/use-cases/biometrics/index.ts";
 
 type UseCaseConstructor<TArgs extends unknown[], TInstance> = new (...args: TArgs) => TInstance;
 

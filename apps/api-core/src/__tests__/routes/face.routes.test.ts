@@ -1,16 +1,16 @@
 import { afterAll, beforeEach, describe, expect, it, mock } from "bun:test";
 import Elysia from "elysia";
-import { globalErrorHandler } from "../../infrastructure/error-handler.ts";
-import type {
-  BiometricProfileLookup,
-  SimilarityMatch,
-} from "../../core/ports/IBiometricRepository.ts";
 import {
   AIServiceUnavailableError,
   BiometricProfileNotFoundError,
   DomainError,
   UnauthorizedError,
 } from "../../core/domain/errors/DomainError.ts";
+import type {
+  BiometricProfileLookup,
+  SimilarityMatch,
+} from "../../core/ports/IBiometricRepository.ts";
+import { globalErrorHandler } from "../../infrastructure/error-handler.ts";
 
 const authPluginPath = import.meta.resolve("../../adapters/http/middleware/auth.plugin.ts");
 const biometricsRepoPath = import.meta.resolve(
@@ -845,7 +845,7 @@ describe("cutover legado /v1/biometric", () => {
       });
 
       expect(response.status).toBe(404);
-      expect(body).toEqual("NOT_FOUND");
+      expect(body).toEqual({ error: "NOT_FOUND" });
       expect(routeState.aiCalls).toHaveLength(0);
       expect(routeState.repoCalls.enroll).toHaveLength(0);
       expect(routeState.repoCalls.findBySimilarity).toHaveLength(0);

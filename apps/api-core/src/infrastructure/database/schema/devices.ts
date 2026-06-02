@@ -2,15 +2,16 @@ import { sql } from "drizzle-orm";
 import { boolean, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { organizations } from "./organizations";
 
+/**
+ * Stores device business data only. Credentials are managed by Better Auth
+ * (@better-auth/api-key plugin) and stored in auth_api_keys — never here.
+ */
 export const devices = pgTable("devices", {
   id: uuid("id").notNull().default(sql`gen_uuid_v7()`).primaryKey(),
 
   organizationId: uuid("organization_id")
     .notNull()
     .references(() => organizations.id, { onDelete: "restrict" }),
-
-  /** Hash bcrypt do X-Device-Token. NUNCA armazenar o token em plaintext */
-  apiKeyHash: text("api_key_hash").notNull().unique(),
 
   /** Identificador legível. Ex: 'CAM-SALA-101', 'CAM-ENTRADA-RH' */
   label: text("label").notNull(),
