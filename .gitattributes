@@ -1,0 +1,2 @@
+# Scripts shell devem sempre ter LF — CRLF quebra a execução em containers e no Git Bash
+*.sh text eol=lf

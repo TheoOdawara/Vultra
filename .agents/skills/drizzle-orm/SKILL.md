@@ -10,7 +10,7 @@ description: >-
   ou qualquer operação com drizzle-orm ou postgres.js.
 ---
 
-# Drizzle ORM — Vultra (PostgreSQL 16 + pgvector 0.7)
+# Drizzle ORM — Vultra (PostgreSQL 16 + pgvector 0.8)
 
 ## Overview
 

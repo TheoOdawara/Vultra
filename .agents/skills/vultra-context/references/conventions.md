@@ -56,7 +56,7 @@ feat(attendance): implement cosine similarity search for face recognition
 fix(auth): correct X-Device-Token validation on key rotation
 docs(database): add ER diagram for biometric_profiles schema
 refactor(core): extract FaceEmbedding value object from RecordAttendanceUseCase
-chore(deps): upgrade pgvector to 0.7.4
+chore(deps): upgrade pgvector to 0.8.6
 ```
 
 ## Import Order (TypeScript)

@@ -29,7 +29,7 @@ O isolamento de tenant é garantido por **três camadas independentes**:
 | Componente | Versão mínima | Observação |
 |------------|---------------|------------|
 | PostgreSQL | 16.x | HNSW index disponível |
-| pgvector | 0.7.x | Suporte a `halfvec` e HNSW |
+| pgvector | 0.8.x (pinado em `0.8.6-pg16`) | HNSW, `halfvec` e `iterative_scan` (exigido pelos experimentos da IC — ver ADR-002) |
 | Redis | 7.x | Filas para o AI Service |
 
 ---

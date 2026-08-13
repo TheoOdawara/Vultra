@@ -53,7 +53,7 @@ Além da presença, o sistema analisa a **expressão facial** dos membros no mom
 │              ▼                 ▼                                         │
 │   ┌─────────────┐    ┌──────────────────┐                                │
 │   │    Redis    │    │   PostgreSQL 16  │                                │
-│   │  (Filas de  │    │  + pgvector 0.7  │                                │
+│   │  (Filas de  │    │  + pgvector 0.8  │                                │
 │   │    Jobs)    │    │   vector(512)    │                                │
 │   └──────┬──────┘    └──────────────────┘                                │
 │          │ BLPOP                                                         │
@@ -82,7 +82,7 @@ Além da presença, o sistema analisa a **expressão facial** dos membros no mom
 | **Runtime** | [Bun](https://bun.sh) ^1.x |
 | **API Framework** | [ElysiaJS](https://elysiajs.com) + TypeBox |
 | **Autenticação** | [Better Auth](https://better-auth.com) (Organization, RBAC, Passkeys, MultiSession) |
-| **Banco de Dados** | PostgreSQL 16 + [pgvector](https://github.com/pgvector/pgvector) 0.7 |
+| **Banco de Dados** | PostgreSQL 16 + [pgvector](https://github.com/pgvector/pgvector) 0.8 (pinado em `0.8.6-pg16`) |
 | **Fila / Cache** | Redis 7 |
 | **AI Engine** | Python 3.11 + FastAPI + [DeepFace](https://github.com/serengil/deepface) (ArcFace) |
 | **Frontend** | Next.js 15 (App Router) + Tailwind CSS 4 + Shadcn/UI |
@@ -194,7 +194,7 @@ feat(attendance): implementa reconhecimento facial por vetor cosseno
 fix(auth):        corrige validação de X-Device-Token em rotação de chaves
 docs(database):   adiciona diagrama ER do schema de embeddings
 refactor(core):   extrai RecordAttendanceUseCase para camada de domínio
-chore(deps):      atualiza pgvector para 0.7.4
+chore(deps):      atualiza pgvector para 0.8.6
 ```
 
 ---
