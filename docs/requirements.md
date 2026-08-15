@@ -237,8 +237,9 @@ bem-estar e o portal que o consome renderizam um dado que nunca é produzido. To
 andaime em volta de uma capacidade ausente. Com entrega em dezembro, esta é a prioridade única até estar
 de pé.
 
-**R-02 · O ciclo de correção anterior fechou com critério não cumprido.** Existem onze planos em
-`implementation/` com critérios de aceite, dados como concluídos. A auditoria de 2026-08-14 reencontrou
+**R-02 · O ciclo de correção anterior fechou com critério não cumprido.** Havia onze planos em
+`implementation/`, removidos em 2026-08-15 e recuperáveis pelo git, com critérios de aceite dados como
+concluídos. A auditoria de 2026-08-14 reencontrou
 critérios explicitamente não atendidos em pelo menos dois deles. A causa não foi execução, foi verificação
 auto-declarada — e qualquer processo novo que não conserte isso repete o ciclo.
 
@@ -312,3 +313,17 @@ decidido na sessão de levantamento:
 - **Nenhum dado real de pessoa real no sistema hoje** — os achados críticos da auditoria são bloqueadores
   de piloto, não incidentes abertos.
 - **Registrado R-01:** a análise afetiva, que sustenta o artigo, não existe em nenhuma camada do código.
+
+**2026-08-15 — Baseline de segurança e contrato de trabalho.**
+
+- **`docs/decisions/0001-baseline-de-seguranca.md`** fixa as regras transversais que fecham os achados
+  Critical da auditoria. Nenhum requisito mudou; o que mudou é que as restrições de segurança passaram a
+  ter um lugar único e citável.
+- **`CLAUDE.md` na raiz** passa a ser o contrato de trabalho do repositório: comandos reais por aplicação,
+  fronteiras da arquitetura, política de branch, e a definição de pronto que exige verificação não
+  auto-declarada — a causa direta de R-02.
+- **Ferramental agêntico consolidado em Claude Code.** As configurações de OpenCode e Copilot e as treze
+  skills locais foram removidas por descreverem um sistema que não corresponde ao código. `implementation/`
+  e `NEXT-STEPS.md` saíram pelo mesmo motivo.
+- **Política de branch decidida:** `main` protegida, todo trabalho por Pull Request com aprovação do outro
+  integrante.
