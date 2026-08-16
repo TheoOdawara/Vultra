@@ -32,7 +32,7 @@ sustenta a demonstração nem o artigo é posterior a dezembro.
 | **Gestor da instituição** | Secretaria ou coordenação da escola | Cadastra alunos e turmas, registra câmeras, acompanha frequência |
 | **Professor** | Docente da turma | Abre e encerra a chamada, corrige presença manualmente, consulta a própria turma |
 | **Aluno** | Titular do dado biométrico e afetivo | Não opera o sistema. É reconhecido pela câmera |
-| **Equipe de RH** | Outra equipe, outro sistema | Consome o dado agregado de bem-estar. Não é usuária da nossa interface |
+| **Equipe de RH** | Outra equipe, outro sistema | Consome o dado agregado de bem-estar, autenticada e restrita a ele. Não opera nenhuma outra parte do sistema |
 | **Time de desenvolvimento** | Theo e Vitor | Únicos com acesso ao repositório |
 | **Orientador** | Supervisão acadêmica, fora do repositório | Recebe relatórios; valida a direção da pesquisa |
 
@@ -79,8 +79,9 @@ sistema afirma sobre ele.
 
 - **RF-01** — Cada instituição é um tenant isolado. Nenhuma leitura ou escrita atravessa a fronteira do
   tenant, em nenhuma rota, sob nenhum papel.
-- **RF-02** — Papéis: gestor da instituição, professor, aluno. O que cada papel pode fazer é decidido no
-  servidor; a interface apenas reflete a decisão, nunca a substitui.
+- **RF-02** — Papéis autenticados: gestor da instituição, professor e RH. O aluno é titular do dado e não
+  autentica — o Vultra é ferramenta de gestão interna e não tem interface de aluno nesta entrega. O que
+  cada papel pode fazer é decidido no servidor; a interface apenas reflete a decisão, nunca a substitui.
 - **RF-03** — O professor alcança apenas as próprias turmas e sessões. Escopo por professor é regra de
   servidor, não filtro de tela.
 - **RF-04** — Câmeras autenticam por credencial própria, revogável e rotacionável, distinta de credencial
@@ -276,18 +277,19 @@ inferência afetiva. Precisa de finalidade declarada, tamanho mínimo de grupo e
 exibido — não de mitigação depois.
 *Fechar até:* antes de RF-17 entrar em desenvolvimento. *Dono:* Theo e Vitor, com o orientador.
 
-**Q-04 · Origem dos dados cadastrais da instituição.** RNF-02 assume consulta ao banco da instituição. O
-mecanismo — integração, importação periódica, cadastro manual — não está decidido, e ele determina o que o
-portal institucional precisa oferecer.
-*Fechar até:* antes de especificar o cadastro de aluno.
+**Q-04 · Origem dos dados cadastrais da instituição.** Fechada em parte em 2026-08-16 por
+`docs/specs/api-core-contrato-e-estrutura.md`: o cadastro é manual, unitário ou em lote por importação, e
+os dois caminhos estão especificados. A integração com o sistema da instituição segue sem decisão, e
+depende de instituição parceira que ainda não existe.
+*Fechar até:* antes de qualquer piloto com instituição real. *Dono:* Theo e Vitor.
 
 **Q-05 · Conjunto fechado de rótulos afetivos.** Fechada em 2026-08-16 por
 `docs/specs/ai-service-pipeline-inferencia.md`, Regra 6: sete rótulos, junto com o modelo que os produz e
 o mapeamento literal da saída dele para a coluna persistida.
 
-**Q-06 · Turma como entidade.** RF-09 e RF-17 pressupõem turma. O modelo de dados atual tem organização,
-membro, dispositivo e sessão — não tem turma. Sem ela, não há como agregar por professor.
-*Fechar até:* antes de RF-17.
+**Q-06 · Turma como entidade.** Fechada em 2026-08-16 por
+`docs/specs/api-core-contrato-e-estrutura.md`: turma é recurso de primeira classe, com matrícula de aluno e
+professor responsável, e a sessão de chamada passa a pertencer a ela.
 
 ---
 
@@ -352,3 +354,30 @@ decidido na sessão de levantamento:
 - **Registrado que a suíte de testes do `ai-service` nunca terminou de rodar**: dois testes do worker
   pendem indefinidamente, e `ruff` acusa 35 erros. Nenhum gate verde daquela aplicação jamais foi
   verdadeiro — é a mesma verificação auto-declarada de R-02, agora com evidência.
+
+**2026-08-16 — Contrato e estrutura da API especificados; Q-06 e Q-04 fechadas.**
+
+- **`docs/specs/api-core-contrato-e-estrutura.md`** descreve a API na sua versão final: convenções
+  transversais, superfície de sete módulos, papéis, limites e prazos, com 51 cenários de aceite. É a
+  primeira vez que o contrato público existe como decisão em vez de crescer rota a rota.
+- **`docs/decisions/0003-contrato-e-estrutura-da-api.md`** emenda o **ADR-004** — a estrutura da
+  `api-core` passa de camada técnica para módulo de negócio — e emenda o **ADR-006** apenas no caminho da
+  superfície biométrica, que passa a nomear o recurso em vez do verbo. Tudo o que o ADR-006 decidiu de
+  substância permanece.
+- **Q-06 fechada.** Turma é recurso de primeira classe, com matrícula e professor responsável. Isso
+  destrava RF-17 e portanto a contribuição de pesquisa, e torna falta computável em RF-20.
+- **Q-04 fechada em parte.** Cadastro manual, unitário ou em lote. A integração com o sistema da
+  instituição segue aberta por depender de instituição parceira inexistente.
+- **RF-02 corrigido.** O aluno não autentica: não há interface de aluno nesta entrega, e papel com sessão
+  e sem cliente é superfície que ninguém exercita. A equipe de RH ganha papel próprio, restrito ao dado
+  agregado, porque ele não pode ser público.
+- **RF-11 e RF-13 ganham mecanismo.** A chamada preenche-se por polling condicional com `ETag`, e a sessão
+  aberta passa a ser localizável por leitura — hoje não existe rota nenhuma que devolva uma sessão, o que
+  torna RF-13 impossível de cumprir.
+- **RF-18 ganha número.** O tamanho mínimo de grupo na agregação afetiva é `5`, e recorte menor aparece
+  suprimido em vez de omitido, para que o tamanho do grupo não seja inferível por diferença.
+- **RNF-03 ganha executor.** Os prazos de retenção estão declarados e há uma rota que os executa. Até
+  agora o requisito exigia "algo que execute o prazo" e não havia nada.
+- **Registrado que a rota do ESP32 não tinha cota nem teto de payload**, enquanto as rotas de usuário
+  tinham as duas — e que `audit_logs` e `organizations`, as duas tabelas sem RLS, incluem justamente a
+  trilha que RNF-04 exige.
