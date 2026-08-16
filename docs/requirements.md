@@ -51,6 +51,7 @@ sistema afirma sobre ele.
 - Abertura, operação e encerramento de sessão de chamada pelo professor.
 - Correção manual de presença pelo professor, distinguível do registro automático.
 - Inferência de expressão facial no mesmo quadro do reconhecimento.
+- Verificação de vivacidade na captura, de modo que foto ou tela não gerem presença nem cadastro.
 - Agregação do dado afetivo por turma, horário e professor.
 - Entrega do dado agregado para o sistema de RH de terceiros.
 - Multitenancy: uma instituição não alcança dado de outra, em nenhuma circunstância.
@@ -93,11 +94,16 @@ sistema afirma sobre ele.
 - **RF-07** — Um cadastro biométrico pode ser revogado. Depois disso, o aluno deixa de ser reconhecido.
 - **RF-08** — Toda operação sobre dado biométrico deixa registro de auditoria imutável — inclusive as que
   falham e as automáticas.
+- **RF-22** — Uma captura que não corresponda a uma pessoa fisicamente presente — foto impressa, tela de
+  celular — é recusada, tanto no cadastro quanto na chamada, e a tentativa fica auditável. Aplica-se a
+  todos os fluxos que consomem quadro facial.
 
 ### 4.3 Chamada
 
 - **RF-09** — O professor abre uma sessão de chamada associada a uma turma e a uma câmera.
-- **RF-10** — Enquanto a sessão está aberta, cada rosto reconhecido registra presença uma única vez.
+- **RF-10** — Enquanto a sessão está aberta, cada rosto reconhecido registra presença uma única vez. A
+  câmera é única e fica na porta da sala: os alunos passam um por vez, e um quadro com mais de um rosto é
+  ambíguo quanto a quem está presente, portanto não registra presença.
 - **RF-11** — O professor vê a chamada preencher-se durante a aula.
 - **RF-12** — O professor registra ou corrige presença manualmente. O registro manual é distinguível do
   automático em todo relatório e auditoria.
@@ -275,10 +281,9 @@ mecanismo — integração, importação periódica, cadastro manual — não es
 portal institucional precisa oferecer.
 *Fechar até:* antes de especificar o cadastro de aluno.
 
-**Q-05 · Conjunto fechado de rótulos afetivos.** RF-15 exige um conjunto fechado. O README menciona sete
-rótulos; o código não define nenhum. O conjunto precisa ser decidido junto com o modelo, porque é o que o
-artigo vai reportar.
-*Fechar até:* junto com R-01.
+**Q-05 · Conjunto fechado de rótulos afetivos.** Fechada em 2026-08-16 por
+`docs/specs/ai-service-pipeline-inferencia.md`, Regra 6: sete rótulos, junto com o modelo que os produz e
+o mapeamento literal da saída dele para a coluna persistida.
 
 **Q-06 · Turma como entidade.** RF-09 e RF-17 pressupõem turma. O modelo de dados atual tem organização,
 membro, dispositivo e sessão — não tem turma. Sem ela, não há como agregar por professor.
@@ -327,3 +332,23 @@ decidido na sessão de levantamento:
   e `NEXT-STEPS.md` saíram pelo mesmo motivo.
 - **Política de branch decidida:** `main` protegida, todo trabalho por Pull Request com aprovação do outro
   integrante.
+
+**2026-08-16 — Pipeline de inferência especificado; R-01 deixa de ser só um risco.**
+
+- **`docs/specs/ai-service-pipeline-inferencia.md`** fecha o contrato do `ai-service`: detecção, gate de
+  frontalidade, verificação de vivacidade, embedding e inferência de expressão facial, com os limiares, os
+  códigos de erro e o orçamento de tempo. É o primeiro documento a atacar R-01 diretamente.
+- **`docs/decisions/0002-pipeline-de-inferencia-do-ai-service.md`** escolhe os modelos e **emenda o
+  ADR-005**: o modo "PoC local por HTTP síncrono" deixa de existir. `POST /process-image` era alcançável
+  sem autenticação e com a porta publicada no host, em contradição direta com RNF-07. A fila passa a ser o
+  único contrato de inferência.
+- **Q-05 fechada.** O conjunto de sete rótulos afetivos passa a estar decidido junto com o modelo que os
+  produz.
+- **RF-22 criado:** verificação de vivacidade. O produto existe porque a chamada manual era falsificável;
+  aceitar a foto do colega no celular reintroduziria a mesma fraude.
+- **RF-10 precisado:** a câmera é única e fica na porta da sala, com os alunos passando um por vez. Quadro
+  com mais de um rosto não registra presença. Isso estava implícito no código e em lugar nenhum na
+  documentação.
+- **Registrado que a suíte de testes do `ai-service` nunca terminou de rodar**: dois testes do worker
+  pendem indefinidamente, e `ruff` acusa 35 erros. Nenhum gate verde daquela aplicação jamais foi
+  verdadeiro — é a mesma verificação auto-declarada de R-02, agora com evidência.
