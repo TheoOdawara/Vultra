@@ -381,3 +381,32 @@ decidido na sessão de levantamento:
 - **Registrado que a rota do ESP32 não tinha cota nem teto de payload**, enquanto as rotas de usuário
   tinham as duas — e que `audit_logs` e `organizations`, as duas tabelas sem RLS, incluem justamente a
   trilha que RNF-04 exige.
+
+**2026-08-16 — Interface especificada na forma final; RNF-16 a RNF-19 ganham executor.**
+
+- **`docs/specs/frontend-portal-forma-final.md`** descreve a interface na sua versão final: um app com
+  três áreas por papel, o mapa completo de telas, 27 regras de negócio e 62 cenários de aceite. É a
+  primeira vez que a interface existe como decisão em vez de três aplicações copiadas.
+- **`docs/decisions/0004-topologia-e-fundacao-do-portal.md`** decide a topologia. Os três apps eram a
+  mesma aplicação triplicada — `middleware.ts`, `lib/api.ts`, `lib/auth-client.ts`, `lib/query-client.ts`
+  e `lib/utils.ts` duplicados linha a linha — e passam a ser `apps/web`, com autorização de rota que nega
+  por omissão em um único arquivo.
+- **RNF-16 a RNF-19 ganham executor.** Mobile-first verificado em `390` px com emulação de toque, os
+  quatro estados com deslocamento de layout zero, filtro e sessão de chamada na URL, e acessibilidade
+  verificada por `axe-core` dentro do E2E. Até agora os quatro requisitos não tinham nada que os cumprisse
+  e nenhum teste de frontend existia.
+- **RF-05 ganha as duas origens de captura.** Webcam ao vivo e arquivo de imagem, como caminhos
+  equivalentes. Isso **não** enfraquece RF-22: a verificação de vivacidade é passiva, single-frame e roda
+  no servidor sobre todo quadro (ADR-0002), então uma foto de foto reprova venha de onde vier — e a webcam
+  não prova nada por si, já que o cliente controla os bytes enviados de qualquer forma.
+- **Acesso passa a nascer por convite.** O cadastro de membro só cria papel `student`, que não autentica;
+  papel com login nasce por convite do gestor, com senha definida pelo convidado. Isso mantém trilha de
+  quem concedeu acesso a quem e tira do gestor a posse da senha alheia.
+- **Q-02 continua aberta, e o papel `rh` não depende dela.** A entrega ao sistema de terceiros segue sem
+  canal combinado; a tela de bem-estar existe dentro do Vultra, restrita ao papel `rh`. A nota de
+  2026-08-15 sobre `frontend-rh` ser "entrega exploratória" fica superada: a área existe como parte do
+  produto, a integração é que continua fora.
+- **Registrado que a interface consome hoje um contrato que deixou de existir.** As 2.111 linhas de tela
+  atuais não compilam contra a SPEC-002, `frontend-professores` chama duas rotas que nunca existiram, e
+  nenhum dos três apps processa Tailwind por falta de `postcss.config`. Nada do que está na tela hoje foi
+  verificado contra a API — é a mesma verificação auto-declarada de R-02, agora do lado do cliente.
