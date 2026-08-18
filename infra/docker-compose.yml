@@ -9,6 +9,7 @@
 #   docker compose -f infra/docker-compose.yml up api-core    # serviço isolado
 #   docker compose -f infra/docker-compose.yml logs -f        # seguir logs
 #   docker compose -f infra/docker-compose.yml down -v        # destruir + volumes
+#   sh infra/scripts/check-pgvector.sh                        # smoke test da versão do pgvector
 #
 # Stack: PostgreSQL 16 + pgvector | Redis 7 | AI Service (FastAPI) | API Core (Bun)
 
@@ -17,11 +18,13 @@ name: vultra-dev
 services:
 
   # ---------------------------------------------------------------------------
-  # PostgreSQL 16 + pgvector 0.7
+  # PostgreSQL 16 + pgvector 0.8 (pinado — ver ADR-002 em docs/database/adrs/)
+  # Tag exata obrigatória: reprodutibilidade dos experimentos da IC depende da
+  # versão do índice HNSW/iterative_scan. Validar com infra/scripts/check-pgvector.sh
   # Referência: docs/database/README.md
   # ---------------------------------------------------------------------------
   postgres:
-    image: pgvector/pgvector:pg16
+    image: pgvector/pgvector:0.8.6-pg16-bookworm
     container_name: vultra-postgres
     restart: unless-stopped
     environment:

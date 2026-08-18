@@ -30,7 +30,7 @@ Um agente que encontrar qualquer um desses itens já resolvido deve confirmar no
 | Runtime e gerenciador | Bun, em todo o repositório |
 | API | ElysiaJS + TypeBox |
 | Auth | Better Auth (organization, RBAC, passkeys) |
-| Banco | PostgreSQL 16 + pgvector 0.7, `vector(512)` |
+| Banco | PostgreSQL 16 + pgvector 0.8 (imagem pinada em `0.8.6-pg16-bookworm`, ver ADR-002), `vector(512)` |
 | Fila | Redis 7 |
 | IA | Python 3.11, FastAPI, InsightFace `buffalo_l` (ArcFace 512d), ONNX Runtime |
 | Front | Next.js 15 App Router, React 19, TanStack Query, Tailwind v4 |

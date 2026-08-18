@@ -143,7 +143,7 @@ src/
 │  Runtime     │ Bun ^1.x                         │
 │  Framework   │ ElysiaJS ^1.x + TypeBox          │
 │  Auth        │ Better Auth (Org, RBAC, Passkeys)│
-│  Database    │ PostgreSQL 16 + pgvector 0.7     │
+│  Database    │ PostgreSQL 16 + pgvector 0.8     │
 │  Cache/Queue │ Redis 7                          │
 │  AI Engine   │ Python 3.11 + FastAPI + InsightFace │
 │  Hardware    │ ESP32-CAM (C++/Arduino)          │
@@ -169,7 +169,7 @@ feat(attendance): implementa reconhecimento facial por vetor cosseno
 fix(auth):        corrige validação de X-Device-Token em rotação de keys
 docs(database):   adiciona diagrama ER do schema de embeddings
 refactor(core):   extrai AttendanceUseCase para camada de domínio
-chore(deps):      atualiza pgvector para 0.7.4
+chore(deps):      atualiza pgvector para 0.8.6
 ```
 
 ---

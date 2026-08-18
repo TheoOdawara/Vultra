@@ -71,7 +71,7 @@ O serviço `ai-service` no `docker-compose.yml`:
 
 ## PostgreSQL + pgvector
 
-**Imagem:** `pgvector/pgvector:pg16`
+**Imagem:** `pgvector/pgvector:0.8.6-pg16-bookworm` (tag exata — ver [ADR-002](../../database/adrs/ADR-002-pin-pgvector-0.8.md))
 
 O pgvector já vem habilitado na imagem. As migrations do Drizzle habilitam a extensão via `CREATE EXTENSION IF NOT EXISTS vector`.
 
