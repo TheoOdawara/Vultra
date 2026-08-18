@@ -19,7 +19,7 @@ Dois problemas:
 
 ## Decisão
 
-1. Pinar a imagem em **`pgvector/pgvector:0.8.6-pg16`** (versão exata; 0.8.6 é a última da série 0.8.x na data desta decisão).
+1. Pinar a imagem em **`pgvector/pgvector:0.8.6-pg16-bookworm`** (versão exata; 0.8.6 é a última da série 0.8.x na data desta decisão). O sufixo `-bookworm` é explícito porque a tag `0.8.6-pg16` resolve para essa variante hoje, mas o repositório publica também `-trixie` — com o sufixo, a base do sistema deixa de flutuar.
 2. Adicionar o smoke test **`infra/scripts/check-pgvector.sh`**, que compara a versão disponível/instalada no container com a tag pinada no compose e falha em divergência.
 3. A versão exata do pgvector passa a constar na seção de setup experimental do paper.
 
@@ -28,6 +28,7 @@ Dois problemas:
 ## Regras de upgrade
 
 - Upgrade de versão é **sempre deliberado**: alterar a tag no `docker-compose.yml`, rodar `ALTER EXTENSION vector UPDATE;` nos bancos existentes e registrar a mudança (o smoke test aponta divergência entre imagem e extensão instalada).
+- A tag pinada fixa a versão do pgvector e a base do sistema, mas ainda é reconstruída quando o PostgreSQL 16 recebe um patch. O congelamento definitivo é por digest: registrar o `sha256` de `docker image inspect pgvector/pgvector:0.8.6-pg16-bookworm` junto aos resultados e citá-lo na seção de setup do paper.
 - **Durante a janela de coleta de dados dos experimentos, a versão é congelada** — nenhum upgrade, nem de patch, até a rodada terminar.
 - Índices HNSW criados em versões anteriores permanecem válidos após `ALTER EXTENSION ... UPDATE`, mas para os experimentos os índices devem ser **recriados na versão pinada** (o build do grafo é parte do objeto de estudo).
 

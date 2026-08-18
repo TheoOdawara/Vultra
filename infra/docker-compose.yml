@@ -24,7 +24,7 @@ services:
   # Referência: docs/database/README.md
   # ---------------------------------------------------------------------------
   postgres:
-    image: pgvector/pgvector:0.8.6-pg16
+    image: pgvector/pgvector:0.8.6-pg16-bookworm
     container_name: vultra-postgres
     restart: unless-stopped
     environment:

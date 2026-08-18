@@ -29,11 +29,12 @@ run_sql() {
     sh -c "psql -U \"\$POSTGRES_USER\" -d \"\$POSTGRES_DB\" -tA -c \"$1\"" | tr -d '[:space:]'
 }
 
-AVAILABLE=$(run_sql "SELECT default_version FROM pg_available_extensions WHERE name = 'vector'") || {
+AVAILABLE=$(run_sql "SELECT default_version FROM pg_available_extensions WHERE name = 'vector'")
+if [ -z "$AVAILABLE" ]; then
   echo "ERRO: não consegui consultar o container 'postgres'. A stack está no ar?" >&2
   echo "      docker compose -f infra/docker-compose.yml up -d postgres" >&2
   exit 1
-}
+fi
 
 if [ "$AVAILABLE" != "$EXPECTED" ]; then
   echo "FALHA: imagem entrega pgvector $AVAILABLE, mas o pin em docker-compose.yml é $EXPECTED." >&2

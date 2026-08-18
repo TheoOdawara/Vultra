@@ -82,7 +82,7 @@ Além da presença, o sistema analisa a **expressão facial** dos membros no mom
 | **Runtime** | [Bun](https://bun.sh) ^1.x |
 | **API Framework** | [ElysiaJS](https://elysiajs.com) + TypeBox |
 | **Autenticação** | [Better Auth](https://better-auth.com) (Organization, RBAC, Passkeys, MultiSession) |
-| **Banco de Dados** | PostgreSQL 16 + [pgvector](https://github.com/pgvector/pgvector) 0.8 (pinado em `0.8.6-pg16`) |
+| **Banco de Dados** | PostgreSQL 16 + [pgvector](https://github.com/pgvector/pgvector) 0.8 (pinado em `0.8.6-pg16-bookworm`) |
 | **Fila / Cache** | Redis 7 |
 | **AI Engine** | Python 3.11 + FastAPI + [DeepFace](https://github.com/serengil/deepface) (ArcFace) |
 | **Frontend** | Next.js 15 (App Router) + Tailwind CSS 4 + Shadcn/UI |
