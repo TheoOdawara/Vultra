@@ -13,7 +13,6 @@ Leia isto antes de afirmar que algo está pronto. A auditoria de agosto de 2026 
 - Nenhum dos três frontends processa Tailwind: não existe `postcss.config.*` em lugar nenhum, e os três declaram `@tailwindcss/postcss` com `@import "tailwindcss"` no `globals.css`.
 - `0016_device_auth_migration.sql` está em disco e fora do `_journal.json`. Em qualquer ambiente migrado, autenticação de dispositivo não existe.
 - `next` está fixado em `15.3.3` nos três frontends, dentro de faixa de advisory.
-- `api-core` não tem script `test`, apesar de ter suíte. Rode `bun test` direto.
 - Não existe configuração de ESLint em lugar nenhum, então `next lint` não checa nada nos três frontends.
 - Nenhum workflow de CI existe. Todo gate roda na máquina de quem desenvolve.
 - Análise afetiva não está implementada em nenhuma camada. `api-core` e `frontend-rh` leem e exibem `sentimentLabel` e `sentimentScore` que o `ai-service` nunca produz.
@@ -49,7 +48,7 @@ Não existe `package.json` na raiz. Cada app é instalado e verificado dentro da
 bun install
 bun run typecheck
 bun run lint
-bun test
+bun run test
 bun run db:migrate
 bun run dev
 ```
