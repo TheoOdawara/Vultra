@@ -26,17 +26,13 @@ import io
 
 import numpy as np
 import pytest
+
 from validators.frame_validator import (
-    MAX_BRIGHTNESS,
     MIN_BLUR_LAPLACIAN,
-    MIN_BRIGHTNESS,
-    MIN_FACE_PX,
-    DecodeResult,
     QualityResult,
     decode_frame,
     validate_quality,
 )
-
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
 

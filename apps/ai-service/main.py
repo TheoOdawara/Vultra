@@ -10,10 +10,10 @@ from __future__ import annotations
 import asyncio
 import logging
 import time
+from collections.abc import AsyncGenerator, Awaitable, Callable
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.responses import JSONResponse
 from redis.asyncio import from_url as redis_from_url
 
@@ -65,7 +65,9 @@ app = FastAPI(
 
 
 @app.middleware("http")
-async def enforce_payload_limit(request: Request, call_next):
+async def enforce_payload_limit(
+    request: Request, call_next: Callable[[Request], Awaitable[Response]]
+) -> Response:
     content_length = request.headers.get("content-length")
     if content_length is not None and int(content_length) > settings.max_payload_bytes:
         return JSONResponse(
@@ -109,10 +111,10 @@ async def process_image(body: ProcessImageRequest, request: Request) -> ProcessI
             face_service.process_frame(body.frame_base64),
             timeout=settings.job_timeout_s,
         )
-    except asyncio.TimeoutError:
-        raise HTTPException(status_code=503, detail={"error": "PROCESSING_TIMEOUT"})
+    except TimeoutError as exc:
+        raise HTTPException(status_code=503, detail={"error": "PROCESSING_TIMEOUT"}) from exc
     except FaceServiceError as exc:
-        raise HTTPException(status_code=422, detail={"error": exc.error_code})
+        raise HTTPException(status_code=422, detail={"error": exc.error_code}) from exc
 
     return ProcessImageResponse(
         embedding=result["embedding"],

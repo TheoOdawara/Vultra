@@ -69,6 +69,7 @@ bun run dev
 ```
 pip install -e ".[dev]"
 ruff check .
+mypy
 pytest
 uvicorn main:app --reload
 ```
