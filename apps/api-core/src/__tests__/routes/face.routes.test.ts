@@ -12,6 +12,10 @@ import type {
 } from "../../core/ports/IBiometricRepository.ts";
 import { globalErrorHandler } from "../../infrastructure/error-handler.ts";
 
+import { environmentModulePath, mockedEnvironment } from "../environment.mock.ts";
+
+mock.module(environmentModulePath, () => ({ env: mockedEnvironment }));
+
 const authPluginPath = import.meta.resolve("../../adapters/http/middleware/auth.plugin.ts");
 const biometricsRepoPath = import.meta.resolve(
   "../../adapters/repositories/biometric.repository.ts"

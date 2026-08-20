@@ -28,10 +28,10 @@ services:
     container_name: vultra-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER:     ${POSTGRES_USER:-vultra}
+      POSTGRES_USER: ${POSTGRES_USER:-vultra}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
-      POSTGRES_DB:       ${POSTGRES_DB:-vultra_db}
-      PGDATA:            /var/lib/postgresql/data/pgdata
+      POSTGRES_DB: ${POSTGRES_DB:-vultra_db}
+      PGDATA: /var/lib/postgresql/data/pgdata
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
@@ -39,8 +39,8 @@ services:
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-vultra} -d ${POSTGRES_DB:-vultra_db}"]
       interval: 10s
-      timeout:  5s
-      retries:  5
+      timeout: 5s
+      retries: 5
       start_period: 10s
     networks:
       - vultra-net
@@ -65,8 +65,8 @@ services:
     healthcheck:
       test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:?REDIS_PASSWORD is required}", "ping"]
       interval: 10s
-      timeout:  5s
-      retries:  5
+      timeout: 5s
+      retries: 5
       start_period: 5s
     networks:
       - vultra-net
@@ -82,16 +82,16 @@ services:
     container_name: vultra-ai-service
     restart: unless-stopped
     environment:
-      REDIS_URL:         "redis://:${REDIS_PASSWORD}@redis:6379"
-      AI_QUEUE_NAME:     "ai:recognition:queue"
-      AI_RESULT_PREFIX:  "ai:recognition:result:"
-      MODEL_NAME:        buffalo_l
+      REDIS_URL: "redis://:${REDIS_PASSWORD}@redis:6379"
+      AI_QUEUE_NAME: "ai:recognition:queue"
+      AI_RESULT_PREFIX: "ai:recognition:result:"
+      MODEL_NAME: buffalo_l
       MAX_PAYLOAD_BYTES: 1048576
-      JOB_TIMEOUT_S:     3.0
-      RESULT_TTL_S:      60
-      DEBUG:             "false"
-      HOST:              0.0.0.0
-      PORT:              8000
+      JOB_TIMEOUT_S: 3.0
+      RESULT_TTL_S: 60
+      DEBUG: "false"
+      HOST: 0.0.0.0
+      PORT: 8000
     ports:
       - "${AI_SERVICE_PORT:-8000}:8000"
     depends_on:
@@ -100,8 +100,8 @@ services:
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 15s
-      timeout:  5s
-      retries:  3
+      timeout: 5s
+      retries: 3
       start_period: 60s   # InsightFace model load takes ~30-60s on first run
     networks:
       - vultra-net
@@ -121,15 +121,17 @@ services:
     container_name: vultra-api-core
     restart: unless-stopped
     environment:
-      PORT:                        "3000"
+      PORT: "3000"
       # Postgres — usa o hostname do container (não localhost)
-      DATABASE_URL:                "postgresql://${POSTGRES_USER:-vultra}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-vultra_db}"
+      DATABASE_URL: "postgresql://${POSTGRES_USER:-vultra}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-vultra_db}"
       # Redis — usa o hostname do container
-      REDIS_URL:                   "redis://:${REDIS_PASSWORD}@redis:6379"
+      REDIS_URL: "redis://:${REDIS_PASSWORD}@redis:6379"
       # Better Auth
-      BETTER_AUTH_SECRET:          "${BETTER_AUTH_SECRET:?BETTER_AUTH_SECRET is required}"
-      BETTER_AUTH_URL:             "${BETTER_AUTH_URL:-http://localhost:3000}"
+      BETTER_AUTH_SECRET: "${BETTER_AUTH_SECRET:?BETTER_AUTH_SECRET is required}"
+      BETTER_AUTH_URL: "${BETTER_AUTH_URL:-http://localhost:3000}"
       BETTER_AUTH_TRUSTED_ORIGINS: "${BETTER_AUTH_TRUSTED_ORIGINS:-http://localhost:3001,http://localhost:3002,http://localhost:3003}"
+      AI_QUEUE_NAME: "ai:recognition:queue"
+      AI_RESULT_PREFIX: "ai:recognition:result:"
     ports:
       - "${API_CORE_PORT:-3000}:3000"
     depends_on:
@@ -140,8 +142,8 @@ services:
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/v1/health/ai-service"]
       interval: 15s
-      timeout:  5s
-      retries:  3
+      timeout: 5s
+      retries: 3
       start_period: 15s
     networks:
       - vultra-net

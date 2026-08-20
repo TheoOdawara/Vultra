@@ -10,12 +10,9 @@
  */
 
 import { Redis } from "ioredis";
+import { env } from "../shared/infra/env/env.ts";
 
-if (!process.env.REDIS_URL) {
-  throw new Error("REDIS_URL environment variable is required");
-}
-
-export const redis = new Redis(process.env.REDIS_URL);
+export const redis = new Redis(env.redisUrl);
 
 redis.on("error", () => undefined);
 redis.on("connect", () => undefined);

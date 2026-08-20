@@ -25,6 +25,7 @@ import { initMemberRoutes, memberRoutes } from "../adapters/http/routes/members.
 import { initReportRoutes, reportRoutes } from "../adapters/http/routes/reports.routes";
 import { auth } from "./auth";
 import { aiQueue } from "./container";
+import { env } from "../shared/infra/env/env.ts";
 import { globalErrorHandler } from "./error-handler";
 
 // ── Inject AIJobQueue into route modules ──────────────────────────────────────
@@ -48,10 +49,7 @@ export const app = new Elysia()
   // 2. CORS — before auth
   .use(
     cors({
-      origin: (process.env.BETTER_AUTH_TRUSTED_ORIGINS ?? "")
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean),
+      origin: [...env.trustedOrigins],
       credentials: true,
     })
   )

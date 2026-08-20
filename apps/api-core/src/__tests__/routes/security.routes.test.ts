@@ -17,6 +17,10 @@ const PROFILE_ID = "60000000-0000-0000-0000-000000000001";
 const CLASS_ID = "70000000-0000-0000-0000-000000000001";
 const ORG_ID = "80000000-0000-0000-0000-000000000001";
 
+import { environmentModulePath, mockedEnvironment } from "../environment.mock.ts";
+
+mock.module(environmentModulePath, () => ({ env: mockedEnvironment }));
+
 const authPath = import.meta.resolve("../../infrastructure/auth.ts");
 const containerPath = import.meta.resolve("../../infrastructure/container.ts");
 const dbClientPath = import.meta.resolve("../../infrastructure/database/client.ts");
@@ -552,7 +556,7 @@ describe("baseline security routes", () => {
   it("GET /v1/members/:id bloqueia estudante acessando outro membro", async () => {
     const app = await createApp();
 
-    const { response, body } = await requestJson(app, `/v1/members/${OTHER_MEMBER_ID}`, {
+    const { response } = await requestJson(app, `/v1/members/${OTHER_MEMBER_ID}`, {
       headers: authenticatedHeaders({
         "x-test-role": "student",
         "x-test-user-id": STUDENT_USER_ID,
