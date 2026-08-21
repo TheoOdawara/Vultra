@@ -10,7 +10,7 @@ import type {
   BiometricProfileLookup,
   SimilarityMatch,
 } from "../../core/ports/IBiometricRepository.ts";
-import { httpPlugin } from "../../shared/infra/http/http.plugin.ts";
+import { createHttpApp } from "../../shared/infra/http/http.app.ts";
 
 import { environmentModulePath, mockedEnvironment } from "../environment.mock.ts";
 
@@ -333,7 +333,7 @@ async function createApp() {
     },
   } as unknown as Parameters<typeof initFaceRoutes>[0]);
 
-  return new Elysia().use(httpPlugin).group("/v1", (v1) => v1.use(faceRoutes));
+  return createHttpApp().group("/v1", (v1) => v1.use(faceRoutes));
 }
 
 async function requestJson(
@@ -881,3 +881,4 @@ describe("cutover legado /v1/biometric", () => {
     });
   }
 });
+

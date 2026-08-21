@@ -2,7 +2,7 @@
  * VULTRA — Server Composition
  *
  * Plugin mount order is MANDATORY (docs/backend/arquitetura/hexagonal.md):
- *   1. httpPlugin          → correlation id, error shape and request log
+ *   1. createHttpApp()     → strict schemas, correlation id, error shape and request log
  *   2. cors()              → must precede auth to handle OPTIONS correctly
  *   3. mount(auth.handler) → Better Auth at /api/auth/*
  *   4. .group('/v1', ...)  → all domain routes with version prefix
@@ -12,7 +12,6 @@
  */
 
 import cors from "@elysiajs/cors";
-import Elysia from "elysia";
 import {
   attendanceDeviceRoutes,
   attendanceUserRoutes,
@@ -24,7 +23,7 @@ import { healthRoutes, initHealthRoutes } from "../adapters/http/routes/health.r
 import { initMemberRoutes, memberRoutes } from "../adapters/http/routes/members.routes";
 import { initReportRoutes, reportRoutes } from "../adapters/http/routes/reports.routes";
 import { env } from "../shared/infra/env/env.ts";
-import { httpPlugin } from "../shared/infra/http/http.plugin.ts";
+import { createHttpApp } from "../shared/infra/http/http.app.ts";
 import { auth } from "./auth";
 import { aiQueue } from "./container";
 
@@ -42,9 +41,7 @@ initReportRoutes();
 
 // ── App composition ───────────────────────────────────────────────────────────
 
-export const app = new Elysia()
-  // 1. Global error handler — must be first
-  .use(httpPlugin)
+export const app = createHttpApp()
 
   // 2. CORS — before auth
   .use(
