@@ -2,7 +2,7 @@ import { afterAll, beforeEach, describe, expect, it, mock } from "bun:test";
 import Elysia from "elysia";
 import { UnauthorizedError } from "../../core/domain/errors/DomainError.ts";
 import type { MemberRole, MemberSnapshot } from "../../core/ports/IMemberRepository.ts";
-import { globalErrorHandler } from "../../infrastructure/error-handler.ts";
+import { createHttpApp } from "../../shared/infra/http/http.app.ts";
 
 const ADMIN_USER_ID = "10000000-0000-0000-0000-000000000001";
 const STUDENT_USER_ID = "10000000-0000-0000-0000-000000000002";
@@ -16,6 +16,10 @@ const SESSION_ID = "50000000-0000-0000-0000-000000000001";
 const PROFILE_ID = "60000000-0000-0000-0000-000000000001";
 const CLASS_ID = "70000000-0000-0000-0000-000000000001";
 const ORG_ID = "80000000-0000-0000-0000-000000000001";
+
+import { environmentModulePath, mockedEnvironment } from "../environment.mock.ts";
+
+mock.module(environmentModulePath, () => ({ env: mockedEnvironment }));
 
 const authPath = import.meta.resolve("../../infrastructure/auth.ts");
 const containerPath = import.meta.resolve("../../infrastructure/container.ts");
@@ -488,7 +492,7 @@ async function createApp() {
   attendanceModule.initAttendanceRoutes(aiQueue);
   reportsModule.initReportRoutes();
 
-  return new Elysia().use(globalErrorHandler).group("/v1", (v1) =>
+  return createHttpApp().group("/v1", (v1) =>
     v1
       .use(membersModule.memberRoutes)
       .use(devicesModule.deviceRoutes)
@@ -552,7 +556,7 @@ describe("baseline security routes", () => {
   it("GET /v1/members/:id bloqueia estudante acessando outro membro", async () => {
     const app = await createApp();
 
-    const { response, body } = await requestJson(app, `/v1/members/${OTHER_MEMBER_ID}`, {
+    const { response } = await requestJson(app, `/v1/members/${OTHER_MEMBER_ID}`, {
       headers: authenticatedHeaders({
         "x-test-role": "student",
         "x-test-user-id": STUDENT_USER_ID,
@@ -692,3 +696,4 @@ describe("baseline security routes", () => {
     expect(routeState.reportCalls.at(-1)?.professorId).not.toBe(PROFESSOR_USER_ID);
   });
 });
+

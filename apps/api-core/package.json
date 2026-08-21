@@ -8,6 +8,7 @@
     "build": "bun build src/main.ts --outdir dist --target bun",
     "start": "bun dist/main.js",
     "typecheck": "tsc --noEmit",
+    "test": "bun test",
     "lint": "biome lint ./src",
     "format": "biome format --write ./src",
     "check": "biome check --write ./src",

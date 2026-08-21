@@ -17,7 +17,6 @@ import pytest
 
 from tests.conftest import TEST_EMBEDDING, TEST_FRAME_B64
 
-
 # ── Success path ─────────────────────────────────────────────────────────────
 
 

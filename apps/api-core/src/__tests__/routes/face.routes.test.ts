@@ -10,7 +10,11 @@ import type {
   BiometricProfileLookup,
   SimilarityMatch,
 } from "../../core/ports/IBiometricRepository.ts";
-import { globalErrorHandler } from "../../infrastructure/error-handler.ts";
+import { createHttpApp } from "../../shared/infra/http/http.app.ts";
+
+import { environmentModulePath, mockedEnvironment } from "../environment.mock.ts";
+
+mock.module(environmentModulePath, () => ({ env: mockedEnvironment }));
 
 const authPluginPath = import.meta.resolve("../../adapters/http/middleware/auth.plugin.ts");
 const biometricsRepoPath = import.meta.resolve(
@@ -329,7 +333,7 @@ async function createApp() {
     },
   } as unknown as Parameters<typeof initFaceRoutes>[0]);
 
-  return new Elysia().use(globalErrorHandler).group("/v1", (v1) => v1.use(faceRoutes));
+  return createHttpApp().group("/v1", (v1) => v1.use(faceRoutes));
 }
 
 async function requestJson(
@@ -611,8 +615,11 @@ describe("/v1/face routes", () => {
 
       expect(response.status).toBe(401);
       expect(body).toEqual({
-        error: "UNAUTHORIZED",
-        message: "Authentication required",
+        error: {
+          code: "UNAUTHORIZED",
+          message: "Authentication required",
+          correlationId: expect.any(String),
+        },
       });
     });
   }
@@ -663,8 +670,11 @@ describe("/v1/face routes", () => {
 
     expect(response.status).toBe(404);
     expect(body).toEqual({
-      error: "MEMBER_NOT_FOUND",
-      message: "Member not found in tenant",
+      error: {
+        code: "MEMBER_NOT_FOUND",
+        message: "Member not found in tenant",
+        correlationId: expect.any(String),
+      },
     });
   });
 
@@ -761,8 +771,11 @@ describe("/v1/face routes", () => {
     expect(response.status).toBe(503);
     expect(response.headers.get("retry-after")).toBe("17");
     expect(body).toEqual({
-      error: "AI_SERVICE_UNAVAILABLE",
-      message: "AI service is currently unavailable",
+      error: {
+        code: "AI_SERVICE_UNAVAILABLE",
+        message: "AI service is currently unavailable",
+        correlationId: expect.any(String),
+      },
     });
   });
 
@@ -781,8 +794,11 @@ describe("/v1/face routes", () => {
     expect(response.status).toBe(503);
     expect(response.headers.get("retry-after")).toBe("11");
     expect(body).toEqual({
-      error: "AI_SERVICE_UNAVAILABLE",
-      message: "AI service is currently unavailable",
+      error: {
+        code: "AI_SERVICE_UNAVAILABLE",
+        message: "AI service is currently unavailable",
+        correlationId: expect.any(String),
+      },
     });
   });
 
@@ -803,8 +819,11 @@ describe("/v1/face routes", () => {
     expect(response.status).toBe(503);
     expect(response.headers.get("retry-after")).toBeNull();
     expect(body).toEqual({
-      error: "AI_SERVICE_UNAVAILABLE",
-      message: "AI service is currently unavailable",
+      error: {
+        code: "AI_SERVICE_UNAVAILABLE",
+        message: "AI service is currently unavailable",
+        correlationId: expect.any(String),
+      },
     });
   });
 });
@@ -845,7 +864,13 @@ describe("cutover legado /v1/biometric", () => {
       });
 
       expect(response.status).toBe(404);
-      expect(body).toEqual({ error: "NOT_FOUND" });
+      expect(body).toEqual({
+        error: {
+          code: "NOT_FOUND",
+          message: "Resource not found",
+          correlationId: expect.any(String),
+        },
+      });
       expect(routeState.aiCalls).toHaveLength(0);
       expect(routeState.repoCalls.enroll).toHaveLength(0);
       expect(routeState.repoCalls.findBySimilarity).toHaveLength(0);
@@ -856,3 +881,4 @@ describe("cutover legado /v1/biometric", () => {
     });
   }
 });
+

@@ -6,9 +6,8 @@
  */
 
 import { app } from "./infrastructure/server";
+import { env } from "./shared/infra/env/env.ts";
 
-const port = Number(process.env.PORT ?? 3000);
-
-app.listen(port);
+app.listen(env.port);
 
 export type App = typeof app;

@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 class RedisWorker:
     def __init__(
         self,
-        redis: "AsyncRedis",
+        redis: AsyncRedis,
         face_service: FaceService,
         settings: Settings,
     ) -> None:
@@ -62,6 +62,7 @@ class RedisWorker:
             try:
                 raw = await self._redis.blpop(self._settings.ai_queue_name, timeout=2)
                 if raw is None:
+                    await asyncio.sleep(0)
                     continue
                 _, payload = raw
                 await self._handle_job(payload)
@@ -91,7 +92,7 @@ class RedisWorker:
                 quality_score=outcome["quality_score"],
                 processing_ms=outcome["processing_ms"],
             )
-        except asyncio.TimeoutError:
+        except TimeoutError:
             result = AIResult(
                 job_id=job.job_id,
                 processing_ms=int((time.monotonic() - start) * 1000),

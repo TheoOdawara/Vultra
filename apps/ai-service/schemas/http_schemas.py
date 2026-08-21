@@ -1,11 +1,10 @@
-from typing import Optional
 
 from pydantic import BaseModel, Field
 
 
 class ProcessImageRequest(BaseModel):
     frame_base64: str = Field(..., description="JPEG frame encoded as base64 string")
-    organization_id: Optional[str] = Field(
+    organization_id: str | None = Field(
         None, description="Tenant identifier (required for Redis worker path)"
     )
 

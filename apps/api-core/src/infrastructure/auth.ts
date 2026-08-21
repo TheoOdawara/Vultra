@@ -23,6 +23,7 @@ import { apiKey } from "@better-auth/api-key";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { createAccessControl, multiSession, organization } from "better-auth/plugins";
+import { env } from "../shared/infra/env/env.ts";
 import { db } from "./database/client";
 import * as authSchema from "./database/schema/auth-schema";
 
@@ -129,11 +130,8 @@ export const auth = betterAuth({
     }),
   ],
 
-  trustedOrigins: (process.env.BETTER_AUTH_TRUSTED_ORIGINS ?? "")
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean),
+  trustedOrigins: [...env.trustedOrigins],
 
-  secret: process.env.BETTER_AUTH_SECRET,
-  baseURL: process.env.BETTER_AUTH_URL ?? "http://localhost:3000",
+  secret: env.authSecret,
+  baseURL: env.authBaseUrl,
 });

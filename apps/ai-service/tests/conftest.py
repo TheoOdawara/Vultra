@@ -7,16 +7,12 @@ This lets tests run without InsightFace or Redis installed.
 """
 from __future__ import annotations
 
-import asyncio
 import base64
 import io
-from contextlib import asynccontextmanager
-from typing import AsyncGenerator
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from fastapi.testclient import TestClient
-
 
 # ── Minimal valid test JPEG (100×100 grey square) ───────────────────────────
 
@@ -109,6 +105,7 @@ def client(face_service_mock):
     worker_mock = make_worker_mock()
 
     from unittest.mock import patch
+
     import main as _main  # ensure main is imported before patching
 
     with (

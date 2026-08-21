@@ -13,9 +13,13 @@ import asyncio
 import logging
 import time
 from concurrent.futures import ThreadPoolExecutor
+from typing import TYPE_CHECKING
 
 from config import Settings
 from validators.frame_validator import decode_frame, validate_quality
+
+if TYPE_CHECKING:
+    from insightface.app import FaceAnalysis
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +35,7 @@ class FaceServiceError(Exception):
 class FaceService:
     def __init__(self, settings: Settings) -> None:
         self._settings = settings
-        self._app = None
+        self._app: FaceAnalysis | None = None
         self._executor = ThreadPoolExecutor(max_workers=4, thread_name_prefix="face")
 
     def load_models(self) -> None:

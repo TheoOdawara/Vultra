@@ -21,8 +21,8 @@ WORKDIR /app
 
 # ── Dependencies ──────────────────────────────────────────────────────────────
 
-COPY requirements.txt ./
-RUN uv pip install --system --no-cache -r requirements.txt
+COPY pyproject.toml ./
+RUN uv pip install --system --no-cache -r pyproject.toml
 
 ENV INSIGHTFACE_HOME=/opt/insightface
 
