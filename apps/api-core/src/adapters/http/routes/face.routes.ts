@@ -26,7 +26,6 @@ import { RevokeBiometricUseCase } from "../../../core/use-cases/biometrics/Revok
 import { VerifyFaceUseCase } from "../../../core/use-cases/biometrics/VerifyFaceUseCase";
 import { checkPermission } from "../../../infrastructure/auth";
 import { db } from "../../../infrastructure/database/client";
-import { handleHttpError } from "../../../infrastructure/error-handler";
 import type { AIJobQueue } from "../../queue/ai-job.queue.ts";
 import { AuditLogRepository } from "../../repositories/audit-log.repository";
 import { BiometricsRepository } from "../../repositories/biometric.repository";
@@ -150,7 +149,6 @@ function resolveIpAddress(request: Request): string | undefined {
 // ── Route tree ────────────────────────────────────────────────────────────────
 
 export const faceRoutes = new Elysia()
-  .onError(({ code, error, set }) => handleHttpError({ code, error, set }))
   .use(authPlugin)
   .derive({ as: "scoped" }, ({ currentOrg, currentRole, currentUser }) => {
     if (!currentOrg) throw new OrganizationNotFoundError();

@@ -2,7 +2,7 @@
  * VULTRA — Server Composition
  *
  * Plugin mount order is MANDATORY (docs/backend/arquitetura/hexagonal.md):
- *   1. globalErrorHandler  → captures errors from all subsequent plugins
+ *   1. httpPlugin          → correlation id, error shape and request log
  *   2. cors()              → must precede auth to handle OPTIONS correctly
  *   3. mount(auth.handler) → Better Auth at /api/auth/*
  *   4. .group('/v1', ...)  → all domain routes with version prefix
@@ -23,10 +23,10 @@ import { faceRoutes, initFaceRoutes } from "../adapters/http/routes/face.routes"
 import { healthRoutes, initHealthRoutes } from "../adapters/http/routes/health.routes";
 import { initMemberRoutes, memberRoutes } from "../adapters/http/routes/members.routes";
 import { initReportRoutes, reportRoutes } from "../adapters/http/routes/reports.routes";
+import { env } from "../shared/infra/env/env.ts";
+import { httpPlugin } from "../shared/infra/http/http.plugin.ts";
 import { auth } from "./auth";
 import { aiQueue } from "./container";
-import { env } from "../shared/infra/env/env.ts";
-import { globalErrorHandler } from "./error-handler";
 
 // ── Inject AIJobQueue into route modules ──────────────────────────────────────
 
@@ -44,7 +44,7 @@ initReportRoutes();
 
 export const app = new Elysia()
   // 1. Global error handler — must be first
-  .use(globalErrorHandler)
+  .use(httpPlugin)
 
   // 2. CORS — before auth
   .use(

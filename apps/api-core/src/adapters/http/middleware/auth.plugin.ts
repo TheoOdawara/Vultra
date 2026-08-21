@@ -17,11 +17,13 @@ import { UnauthorizedError } from "../../../core/domain/errors/DomainError";
 import { auth } from "../../../infrastructure/auth";
 import { db } from "../../../infrastructure/database/client";
 import { authMembers } from "../../../infrastructure/database/schema";
+import { rememberRequestIdentity } from "../../../shared/infra/http/request-identity.ts";
 
 export const authPlugin = new Elysia({ name: "auth-plugin" }).derive(
   { as: "scoped" },
   async ({
     headers,
+    request,
   }): Promise<{
     currentUser: typeof auth.$Infer.Session.user;
     currentOrg: string | undefined | null;
@@ -34,7 +36,7 @@ export const authPlugin = new Elysia({ name: "auth-plugin" }).derive(
     if (!session) throw new UnauthorizedError();
 
     const currentOrg = session.session.activeOrganizationId;
-    const currentMember = currentOrg
+    const memberships = currentOrg
       ? await db
           .select({
             role: authMembers.role,
@@ -46,10 +48,19 @@ export const authPlugin = new Elysia({ name: "auth-plugin" }).derive(
           .limit(1)
       : [];
 
+    const [membership] = memberships;
+    const currentRole = membership === undefined ? null : membership.role;
+
+    rememberRequestIdentity(request, {
+      userId: session.user.id,
+      organizationId: currentOrg ?? null,
+      role: currentRole,
+    });
+
     return {
       currentUser: session.user,
       currentOrg,
-      currentRole: currentMember[0]?.role ?? null,
+      currentRole,
     };
   }
 );

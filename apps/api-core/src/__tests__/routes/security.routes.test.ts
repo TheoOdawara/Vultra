@@ -2,7 +2,7 @@ import { afterAll, beforeEach, describe, expect, it, mock } from "bun:test";
 import Elysia from "elysia";
 import { UnauthorizedError } from "../../core/domain/errors/DomainError.ts";
 import type { MemberRole, MemberSnapshot } from "../../core/ports/IMemberRepository.ts";
-import { globalErrorHandler } from "../../infrastructure/error-handler.ts";
+import { httpPlugin } from "../../shared/infra/http/http.plugin.ts";
 
 const ADMIN_USER_ID = "10000000-0000-0000-0000-000000000001";
 const STUDENT_USER_ID = "10000000-0000-0000-0000-000000000002";
@@ -492,7 +492,7 @@ async function createApp() {
   attendanceModule.initAttendanceRoutes(aiQueue);
   reportsModule.initReportRoutes();
 
-  return new Elysia().use(globalErrorHandler).group("/v1", (v1) =>
+  return new Elysia().use(httpPlugin).group("/v1", (v1) =>
     v1
       .use(membersModule.memberRoutes)
       .use(devicesModule.deviceRoutes)

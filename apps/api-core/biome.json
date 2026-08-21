@@ -53,5 +53,11 @@
       "semicolons": "always",
       "bracketSpacing": true
     }
-  }
+  },
+  "overrides": [
+    {
+      "includes": ["src/shared/infra/http/request-log.ts"],
+      "linter": { "rules": { "suspicious": { "noConsole": "off" } } }
+    }
+  ]
 }
