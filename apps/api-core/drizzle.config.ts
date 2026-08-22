@@ -1,4 +1,5 @@
 import type { Config } from 'drizzle-kit';
+import { env } from './src/shared/infra/env/env.ts';
 
 /**
  * Drizzle Kit — Configuração para api-core
@@ -15,7 +16,7 @@ export default {
   out:       './src/infrastructure/database/migrations',
   dialect:   'postgresql',
   dbCredentials: {
-    url: process.env['DATABASE_URL']!,
+    url: env.databaseUrl,
   },
   verbose: true,
   strict:  true,

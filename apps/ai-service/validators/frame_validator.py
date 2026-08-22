@@ -11,7 +11,6 @@ from __future__ import annotations
 
 import base64
 from dataclasses import dataclass, field
-from typing import Optional
 
 import cv2
 import numpy as np
@@ -20,19 +19,19 @@ import numpy as np
 @dataclass
 class DecodeResult:
     valid: bool
-    image: Optional[np.ndarray] = field(default=None, repr=False)
-    error: Optional[str] = None
+    image: np.ndarray | None = field(default=None, repr=False)
+    error: str | None = None
 
 
 @dataclass
 class QualityResult:
     valid: bool
     quality_score: float = 0.0
-    error: Optional[str] = None
-    blur: Optional[float] = None
-    brightness: Optional[float] = None
-    centering_x: Optional[float] = None
-    centering_y: Optional[float] = None
+    error: str | None = None
+    blur: float | None = None
+    brightness: float | None = None
+    centering_x: float | None = None
+    centering_y: float | None = None
 
 
 MIN_FACE_PX = 50
@@ -53,7 +52,7 @@ def decode_frame(frame_base64: str, max_bytes: int) -> DecodeResult:
         return DecodeResult(valid=False, error="FRAME_TOO_LARGE")
 
     try:
-        img_array = np.frombuffer(img_bytes, dtype=np.uint8)
+        img_array: np.ndarray = np.frombuffer(img_bytes, dtype=np.uint8)
         img = cv2.imdecode(img_array, cv2.IMREAD_COLOR)
     except Exception:
         return DecodeResult(valid=False, error="INVALID_IMAGE")

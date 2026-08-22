@@ -1,7 +1,6 @@
 """
 Smoke tests — GET /health endpoint.
 """
-import pytest
 
 
 def test_health_returns_200(client):

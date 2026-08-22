@@ -30,7 +30,7 @@ export class RotateDeviceKeyUseCase {
   async execute(input: RotateDeviceKeyInput): Promise<DeviceSnapshot> {
     const device = await this.deviceRepo.findById(input.deviceId, input.organizationId);
 
-    if (!device || !device.isActive) {
+    if (!device?.isActive) {
       throw new DeviceNotFoundError();
     }
 

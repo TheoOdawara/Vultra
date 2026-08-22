@@ -8,26 +8,31 @@ dependencies = [
     "fastapi>=0.115.0",
     "uvicorn[standard]>=0.34.0",
     "insightface>=0.7.3",
-    "onnxruntime>=1.17.0",       # CPU inference backend for InsightFace
+    "onnxruntime>=1.18.0",
     "redis>=5.2.0",
     "opencv-python-headless>=4.10.0",
     "numpy>=1.26.0",
     "pillow>=11.0.0",
-    "pydantic>=2.0.0",
-    "pydantic-settings>=2.0.0",
+    "pydantic>=2.7.0",
+    "pydantic-settings>=2.3.0",
 ]
 
 [project.optional-dependencies]
 dev = [
-    "pytest>=8.0.0",
+    "pytest>=8.2.0",
     "pytest-asyncio>=0.23.0",
-    "httpx>=0.27.0",             # TestClient transport
+    "pytest-timeout>=2.3.0",
+    "httpx>=0.27.0",
     "ruff>=0.4.0",
+    "mypy>=1.11.0",
 ]
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["schemas", "services", "validators", "workers"]
 
 [tool.ruff]
 line-length = 100
@@ -37,6 +42,25 @@ target-version = "py311"
 select = ["E", "F", "I", "UP", "B", "C4"]
 ignore = ["E501"]
 
+[tool.mypy]
+plugins = ["pydantic.mypy"]
+files = ["config.py", "main.py", "schemas", "services", "validators", "workers"]
+ignore_missing_imports = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+warn_unreachable = true
+no_implicit_optional = true
+disallow_untyped_defs = true
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["."]
+timeout = 30
 asyncio_mode = "auto"
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+
+[[tool.mypy.overrides]]
+module = ["numpy.*", "cv2.*", "insightface.*", "onnxruntime.*"]
+follow_imports = "skip"

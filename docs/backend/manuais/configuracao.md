@@ -6,7 +6,7 @@
 
 ## API Core (`api-core`)
 
-Arquivo: `apps/api-core/.env` (copiar de `.env.example`). Todas as variáveis abaixo são obrigatórias em produção.
+Arquivo: `apps/api-core/.env` (copiar de `.env.example`). Todas as variáveis abaixo são obrigatórias em qualquer ambiente: `src/shared/infra/env` valida no boot e o processo não sobe com configuração incompleta. Nenhuma tem valor padrão no ponto de leitura.
 
 | Variável | Exemplo | Descrição |
 |----------|---------|-----------|
@@ -15,7 +15,9 @@ Arquivo: `apps/api-core/.env` (copiar de `.env.example`). Todas as variáveis ab
 | `BETTER_AUTH_SECRET` | `openssl rand -base64 32` | Segredo para assinatura de sessões (mín. 32 chars) |
 | `BETTER_AUTH_URL` | `http://localhost:3000` | URL base da API (para links em e-mails, OAuth callbacks) |
 | `BETTER_AUTH_TRUSTED_ORIGINS` | `https://admin.vultra.app,https://rh.vultra.app` | CSV de origens permitidas no CORS e `trustedOrigins` do Better Auth |
-| `PORT` | `3000` | Porta do servidor ElysiaJS (padrão: `3000`) |
+| `PORT` | `3000` | Porta do servidor ElysiaJS (inteiro entre 1 e 65535) |
+| `AI_QUEUE_NAME` | `ai:recognition:queue` | Fila Redis consumida pelo `ai-service` — precisa ser idêntica dos dois lados |
+| `AI_RESULT_PREFIX` | `ai:recognition:result:` | Prefixo das chaves de resultado — precisa ser idêntico dos dois lados |
 | `NODE_ENV` | `production` | Ativa otimizações e desativa logs verbose |
 
 > Em Docker Compose, `DATABASE_URL` e `REDIS_URL` devem usar os hostnames dos containers (`postgres`, `redis`), não `localhost`.

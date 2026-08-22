@@ -24,8 +24,7 @@ Covers:
 from __future__ import annotations
 
 import asyncio
-import json
-from unittest.mock import AsyncMock, MagicMock, call, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -33,7 +32,6 @@ from config import Settings
 from schemas.job_schemas import AIJob, AIResult
 from services.face_service import FaceServiceError
 from workers.redis_worker import RedisWorker
-
 
 # ── Fixtures ──────────────────────────────────────────────────────────────────
 
@@ -251,7 +249,7 @@ async def test_consume_loop_processes_jobs_from_queue(worker, redis_mock):
         call_count += 1
         if call_count == 1:
             return (b"ai:recognition:queue", payload)
-        await asyncio.sleep(999)  # block after first job
+        await asyncio.sleep(999)
 
     redis_mock.blpop = _blpop_once
 
@@ -269,20 +267,23 @@ async def test_consume_loop_continues_after_exception(worker, redis_mock):
     """A crash inside the loop body must not terminate the loop."""
     call_count = 0
 
+    real_sleep = asyncio.sleep
+
     async def _blpop_raises(*_, **__):
         nonlocal call_count
         call_count += 1
         if call_count == 1:
             raise ConnectionError("simulated Redis error")
-        # After the error the loop should recover and keep polling
-        await asyncio.sleep(999)
+        await real_sleep(999)
 
     redis_mock.blpop = _blpop_raises
 
-    with patch("workers.redis_worker.asyncio.sleep", new=AsyncMock()):
+    async def _instant_backoff(*_, **__):
+        await real_sleep(0)
+
+    with patch("workers.redis_worker.asyncio.sleep", new=_instant_backoff):
         await worker.start()
-        await asyncio.sleep(0.05)
+        await real_sleep(0.05)
         await worker.stop()
 
-    # The loop must have called blpop at least twice (once failing, once recovering)
-    assert call_count >= 1
+    assert call_count >= 2

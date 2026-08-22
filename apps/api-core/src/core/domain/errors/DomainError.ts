@@ -6,7 +6,7 @@
  * to build the HTTP response — handlers never construct error responses manually.
  *
  * Conventions:
- *   errorCode  → SCREAMING_SNAKE_CASE, matches the error map in error-handler.ts
+ *   errorCode  → SCREAMING_SNAKE_CASE, matches the error map in shared/infra/http/error-response.ts
  *   httpStatus → standard HTTP semantics
  */
 

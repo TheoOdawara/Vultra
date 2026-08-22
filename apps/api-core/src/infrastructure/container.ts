@@ -9,10 +9,11 @@
  */
 
 import { AIJobQueue } from "../adapters/queue/ai-job.queue";
+import { env } from "../shared/infra/env/env.ts";
 import { redis } from "./redis";
 
 export const aiQueue = new AIJobQueue(
   redis,
-  process.env.AI_QUEUE_NAME ?? "ai:recognition:queue",
-  process.env.AI_RESULT_PREFIX ?? "ai:recognition:result:"
+  env.aiQueueName,
+  env.aiResultPrefix
 );
