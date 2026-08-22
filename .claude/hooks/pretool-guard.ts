@@ -72,14 +72,16 @@ if (touchesDotEnv) {
 	);
 }
 
-const isGitCommitOrPush = /\bgit\b[^\n]*\b(commit|push)\b/.test(command);
+// Spans stop at command separators so a flag of a *different* command on the
+// same line (e.g. `git push origin x && gh pr create --base main`) never counts.
+const isGitCommitOrPush = /\bgit\b[^\n;|&]*\b(commit|push)\b/.test(command);
 if (isGitCommitOrPush && currentBranch() === "main") {
 	deny(
 		"Você está na main. Nada entra nela por commit ou push direto: crie uma branch (feat/, fix/, docs/, chore/) e abra PR. CLAUDE.md — Processo.",
 	);
 }
 
-if (/\bgit\s+push\b[^\n]*[\s:+]main(?![\w/-])/.test(command)) {
+if (/\bgit\s+push\b[^\n;|&]*[\s:+]main(?![\w/-])/.test(command)) {
 	deny(
 		"Push direcionado à main é bloqueado: a main só recebe merge por Pull Request aprovado. A exceção existe apenas quando o dono do repositório pede explicitamente, caso a caso.",
 	);
