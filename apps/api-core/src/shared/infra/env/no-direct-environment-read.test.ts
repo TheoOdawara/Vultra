@@ -1,13 +1,16 @@
 import { describe, expect, it } from "bun:test";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { Glob } from "bun";
 
-const PROJECT_ROOT = new URL("../../../../", import.meta.url).pathname;
+// URL#pathname on Windows yields "/C:/…", which Glob.scan and Bun.file cannot open.
+const PROJECT_ROOT = fileURLToPath(new URL("../../../../", import.meta.url));
 const ENVIRONMENT_MODULE_PREFIX = "src/shared/infra/env/";
 const ENVIRONMENT_ACCESS = /\b(?:process|Bun)\.env\b/;
 
 async function sourceFiles(): Promise<string[]> {
   const scanned = await Array.fromAsync(new Glob("src/**/*.ts").scan({ cwd: PROJECT_ROOT }));
-  return [...scanned, "drizzle.config.ts"];
+  return [...scanned.map((path) => path.replaceAll("\\", "/")), "drizzle.config.ts"];
 }
 
 async function filesReadingEnvironmentDirectly(): Promise<string[]> {
@@ -17,7 +20,7 @@ async function filesReadingEnvironmentDirectly(): Promise<string[]> {
     if (relativePath.startsWith(ENVIRONMENT_MODULE_PREFIX)) {
       continue;
     }
-    const contents = await Bun.file(`${PROJECT_ROOT}${relativePath}`).text();
+    const contents = await Bun.file(join(PROJECT_ROOT, relativePath)).text();
     if (ENVIRONMENT_ACCESS.test(contents)) {
       offenders.push(relativePath);
     }
