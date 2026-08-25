@@ -1,0 +1,29 @@
+@import "tailwindcss";
+
+/* Full token set and the three-state theme land with SPEC-003 §3 (issue #116).
+ * Until then only the two bootstrap tokens exist; no screen writes raw color. */
+:root {
+  --background: #ffffff;
+  --foreground: #111418;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial,
+    sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0b0d10;
+    --foreground: #e8eaed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
