@@ -15,7 +15,8 @@ Leia isto antes de afirmar que algo está pronto. A auditoria de agosto de 2026 
 - Não existe configuração de ESLint em lugar nenhum, então `next lint` não checa nada nos três frontends.
 - Nenhum workflow de CI existe. Todo gate roda na máquina de quem desenvolve.
 - Análise afetiva não está implementada em nenhuma camada. `api-core` e `frontend-rh` leem e exibem `sentimentLabel` e `sentimentScore` que o `ai-service` nunca produz.
-- Nenhum lockfile é versionado.
+- O `ai-service` não tem lockfile Python. Os `bun.lock` dos apps TypeScript são versionados.
+- `infra/docker-compose.yml` publica a porta `8000` do `ai-service` no host, contrariando o ADR-0001. A remoção é a issue #63.
 
 Um agente que encontrar qualquer um desses itens já resolvido deve confirmar no código antes de acreditar.
 
@@ -81,7 +82,7 @@ docker compose -f infra/docker-compose.yml logs -f
 docker compose -f infra/docker-compose.yml exec api-core bun run db:migrate
 ```
 
-O `ai-service` não publica porta no host. Para inspecioná-lo, use `docker compose exec`.
+O `ai-service` não deve publicar porta no host (ADR-0001); hoje o compose ainda publica a `8000` — a remoção é a issue #63. Para inspecioná-lo, use `docker compose exec`.
 
 ---
 
@@ -126,6 +127,17 @@ O resumo em uma frase: autorização nega por padrão, tenant só via `withTenan
 
 ---
 
+## Início de sessão e coordenação
+
+O hook de `SessionStart` em `.claude/settings.json` imprime o brief da sessão: branch e distância de `origin/main`, PRs abertos, issues assignadas e milestones em curso. Ele é o ponto de partida, não um detalhe — sessão que ignora o brief repete trabalho ou colide com o outro integrante.
+
+- Todo trabalho nasce de uma issue do GitHub, e a issue é assignada antes do primeiro commit.
+- Antes de escolher trabalho, verifique os PRs abertos e as branches remotas ativas. Trabalho anunciado por outro não é atropelado.
+- A base é sempre `origin/main` atualizada. Branch atrás da main se rebaseia antes de continuar.
+- Estado compartilhado vive no GitHub (issues, PRs, milestones) e nos docs versionados. Memória local de agente não é canal de coordenação, e arquivo de estado fora do repositório não existe para o time.
+
+---
+
 ## Processo
 
 **Branches.** `main` é protegida. Nada entra nela por push direto. Todo trabalho sai de uma branch própria (`feat/`, `fix/`, `docs/`, `chore/`) e entra por Pull Request com aprovação do outro integrante. Somos dois: Theo e Vitor. A exceção existe apenas quando o dono do repositório pede explicitamente, caso a caso, e não vira precedente.
@@ -143,7 +155,7 @@ O resumo em uma frase: autorização nega por padrão, tenant só via `withTenan
 
 **Testes antes do código** para lógica, regra de negócio e correção de bug. Mudança cosmética é isenta.
 
-**Documentação.** ADR transversal vai para `docs/decisions/NNNN-slug.md`. ADR de um domínio continua em `docs/backend/adrs/` ou `docs/database/adrs/`, que é onde os sete existentes moram. Um requisito novo ou alterado atualiza `docs/requirements.md` e ganha entrada no log de evolução.
+**Documentação.** ADR transversal vai para `docs/decisions/NNNN-slug.md`. ADR de um domínio continua em `docs/backend/adrs/` ou `docs/database/adrs/`, que é onde os oito existentes moram. Um requisito novo ou alterado atualiza `docs/requirements.md` e ganha entrada no log de evolução.
 
 **Dívida.** Achado de segurança adiado vira issue `security-debt`. Os outros eixos viram `tech-debt`. Trade-off deliberado e documentado não é dívida: vira decisão. Silêncio é falha.
 
