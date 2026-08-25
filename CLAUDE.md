@@ -11,7 +11,6 @@ A verdade de produto vive em `docs/requirements.md`. Este arquivo não a repete:
 Leia isto antes de afirmar que algo está pronto. A auditoria de agosto de 2026 encontrou 6 achados Critical e 17 High, e o ciclo anterior fechou declarando pronto o que não estava. O que segue quebrado hoje:
 
 - Nenhum dos três frontends processa Tailwind: não existe `postcss.config.*` em lugar nenhum, e os três declaram `@tailwindcss/postcss` com `@import "tailwindcss"` no `globals.css`.
-- `0016_device_auth_migration.sql` está em disco e fora do `_journal.json`. Em qualquer ambiente migrado, autenticação de dispositivo não existe.
 - `next` está fixado em `15.3.3` nos três frontends, dentro de faixa de advisory.
 - Não existe configuração de ESLint em lugar nenhum, então `next lint` não checa nada nos três frontends.
 - Nenhum workflow de CI existe. Todo gate roda na máquina de quem desenvolve.
