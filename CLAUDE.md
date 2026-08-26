@@ -10,11 +10,10 @@ A verdade de produto vive em `docs/requirements.md`. Este arquivo não a repete:
 
 Leia isto antes de afirmar que algo está pronto. A auditoria de agosto de 2026 encontrou 6 achados Critical e 17 High, e o ciclo anterior fechou declarando pronto o que não estava. O que segue quebrado hoje:
 
-- Nenhum dos três frontends processa Tailwind: não existe `postcss.config.*` em lugar nenhum, e os três declaram `@tailwindcss/postcss` com `@import "tailwindcss"` no `globals.css`.
-- `next` está fixado em `15.3.3` nos três frontends, dentro de faixa de advisory.
-- Não existe configuração de ESLint em lugar nenhum, então `next lint` não checa nada nos três frontends.
 - Nenhum workflow de CI existe. Todo gate roda na máquina de quem desenvolve.
-- Análise afetiva não está implementada em nenhuma camada. `api-core` e `frontend-rh` leem e exibem `sentimentLabel` e `sentimentScore` que o `ai-service` nunca produz.
+- Análise afetiva não está implementada em nenhuma camada. `api-core` lê e expõe `sentimentLabel` e `sentimentScore` que o `ai-service` nunca produz.
+- `apps/web` não tem rede de teste: sem Vitest, sem Testing Library, sem Playwright. As issues são #124 e #125.
+- O portal é uma casca: `apps/web` tem uma única página de placeholder. Toda tela da SPEC-003 ainda está por construir.
 - O `ai-service` não tem lockfile Python. Os `bun.lock` dos apps TypeScript são versionados.
 - `infra/docker-compose.yml` publica a porta `8000` do `ai-service` no host, contrariando o ADR-0001. A remoção é a issue #63.
 
@@ -53,16 +52,17 @@ bun run db:migrate
 bun run dev
 ```
 
-**`apps/frontend-admin`, `apps/frontend-rh`, `apps/frontend-professores`**
+**`apps/web`**
 
 ```
 bun install
+bun run lint
 bun run typecheck
 bun run build
 bun run dev
 ```
 
-`bun run lint` existe nos três mas não checa nada até haver configuração de ESLint. Não conte esse comando como gate.
+`bun run lint` é Biome e conta como gate. Não existe `bun run test` aqui até a issue #124 trazer Vitest.
 
 **`apps/ai-service`**
 

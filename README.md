@@ -172,9 +172,7 @@ Vultra/
 ├── apps/
 │   ├── api-core/                Bun + ElysiaJS
 │   ├── ai-service/              Python + FastAPI + DeepFace
-│   ├── frontend-admin/          Next.js 15
-│   ├── frontend-rh/             Next.js 15
-│   └── frontend-professores/    Next.js 15
+│   └── web/                     Next.js 15 (portal único, três áreas por papel)
 ├── firmware/
 │   └── esp32-cam/               C++/Arduino
 ├── packages/

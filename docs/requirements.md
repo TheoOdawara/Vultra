@@ -265,10 +265,11 @@ sobre pessoas, e independe de onde o dado é guardado ou de quem o controla. Pre
 qualquer coleta com aluno real e antes da submissão do artigo.
 *Fechar até:* antes da primeira coleta com pessoa real. *Dono:* Theo e Vitor, com o orientador.
 
-**Q-02 · Forma de entrega do dado ao sistema de RH.** Ainda não combinado com a outra equipe. A intenção
-atual é disponibilizar o front e o back existentes para que eles analisem. Enquanto não fechar, o
-`frontend-rh` permanece como entrega exploratória e não recebe investimento de qualidade.
-*Fechar até:* antes de qualquer refatoração do `frontend-rh`. *Dono:* Theo e Vitor.
+**Q-02 · Forma de entrega do dado ao sistema de RH.** Ainda não combinado com a outra equipe: não há canal,
+formato nem cadência acordados. O que está aberto é a integração, não a tela — a área de bem-estar existe
+dentro do Vultra, restrita ao papel `rh`, como decidido em 2026-08-16. A nota original desta questão falava
+de um app `frontend-rh` separado, que deixou de existir em 2026-08-26.
+*Fechar até:* antes de qualquer entrega de dado afetivo para fora do Vultra. *Dono:* Theo e Vitor.
 
 **Q-03 · Base legal e desenho da correlação entre estado afetivo do aluno e professor.** O produto pretende
 responder qual professor concentra determinados estados emocionais. Isso cria duas exposições simultâneas:
@@ -410,3 +411,19 @@ decidido na sessão de levantamento:
   atuais não compilam contra a SPEC-002, `frontend-professores` chama duas rotas que nunca existiram, e
   nenhum dos três apps processa Tailwind por falta de `postcss.config`. Nada do que está na tela hoje foi
   verificado contra a API — é a mesma verificação auto-declarada de R-02, agora do lado do cliente.
+
+**2026-08-26 — Os três portais deixam de existir; `apps/web` é o único frontend.**
+
+- **`apps/frontend-admin`, `apps/frontend-rh` e `apps/frontend-professores` removidos**, junto com os 19
+  arquivos de `docs/frontend/` que os descreviam. Executa a topologia decidida em ADR-0004 e fecha a #114.
+  O código apagado consumia um contrato que deixou de existir e nunca processou Tailwind; reescrevê-lo tela
+  a tela custaria mais do que construir sobre a SPEC-003. O histórico permanece no git.
+- **`next lint` deixa de existir no repositório.** `apps/web` já nasceu com Biome, o mesmo linter do
+  `api-core`, então o gate de lint do frontend passa a checar algo de fato — fecha a #123. A perda das
+  regras de imagem, fonte e script do `eslint-config-next` é o trade-off que a decisão 6 do ADR-0004 aceita
+  explicitamente.
+- **Q-02 reescrita.** Continua aberta, mas parou de se apoiar em um app que não existe mais: o que falta é
+  o canal de entrega para a equipe de RH, não a interface.
+- **Registrado que `apps/web` é uma casca sem rede de teste.** Uma página de placeholder, nenhum Vitest e
+  nenhum Playwright. As telas da SPEC-003 não devem começar antes de #124, sob pena de repetir a
+  verificação auto-declarada de R-02.
