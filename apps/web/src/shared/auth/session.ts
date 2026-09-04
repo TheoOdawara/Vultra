@@ -7,9 +7,18 @@ const sessionSchema = z.object({
   member: z.object({ role: z.enum(ROLES) }).optional(),
 });
 
+export const SESSION_PATH = "/api/auth/get-session";
+
 export interface Session {
   userId: string;
   role: Role;
+}
+
+export function parseSession(payload: unknown): Session | null {
+  const parsed = sessionSchema.safeParse(payload);
+  if (!parsed.success || parsed.data.member === undefined) return null;
+
+  return { userId: parsed.data.user.id, role: parsed.data.member.role };
 }
 
 export async function fetchSession(cookieHeader: string | null): Promise<Session | null> {
@@ -18,7 +27,7 @@ export async function fetchSession(cookieHeader: string | null): Promise<Session
   let response: Response;
 
   try {
-    response = await fetch(`${env.NEXT_PUBLIC_API_URL}/api/auth/get-session`, {
+    response = await fetch(`${env.NEXT_PUBLIC_API_URL}${SESSION_PATH}`, {
       headers: { cookie: cookieHeader },
       cache: "no-store",
     });
@@ -36,8 +45,5 @@ export async function fetchSession(cookieHeader: string | null): Promise<Session
     return null;
   }
 
-  const parsed = sessionSchema.safeParse(payload);
-  if (!parsed.success || parsed.data.member === undefined) return null;
-
-  return { userId: parsed.data.user.id, role: parsed.data.member.role };
+  return parseSession(payload);
 }
