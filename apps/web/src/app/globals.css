@@ -1,29 +1,112 @@
 @import "tailwindcss";
 
-/* Full token set and the three-state theme land with SPEC-003 §3 (issue #116).
- * Until then only the two bootstrap tokens exist; no screen writes raw color. */
+@custom-variant dark {
+  @media (prefers-color-scheme: dark) {
+    &:where(:root:not([data-theme="light"]), :root:not([data-theme="light"]) *) {
+      @slot;
+    }
+  }
+
+  &:where(:root[data-theme="dark"], :root[data-theme="dark"] *) {
+    @slot;
+  }
+}
+
 :root {
   --background: #ffffff;
+  --surface: #f7f8fa;
+  --border: #e2e5ea;
   --foreground: #111418;
+  --muted: #5c6470;
+  --primary: #1d4ed8;
+  --primary-foreground: #ffffff;
+  --success: #15803d;
+  --warning: #b45309;
+  --danger: #b91c1c;
+  --overlay: #0b0d10;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --background: #0b0d10;
+    --surface: #14181d;
+    --border: #2a3038;
+    --foreground: #e8eaed;
+    --muted: #9aa3af;
+    --primary: #60a5fa;
+    --primary-foreground: #0b0d10;
+    --success: #4ade80;
+    --warning: #fbbf24;
+    --danger: #f87171;
+    --overlay: #000000;
+  }
+}
+
+:root[data-theme="dark"] {
+  --background: #0b0d10;
+  --surface: #14181d;
+  --border: #2a3038;
+  --foreground: #e8eaed;
+  --muted: #9aa3af;
+  --primary: #60a5fa;
+  --primary-foreground: #0b0d10;
+  --success: #4ade80;
+  --warning: #fbbf24;
+  --danger: #f87171;
+  --overlay: #000000;
 }
 
 @theme inline {
   --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-border: var(--border);
   --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-overlay: var(--overlay);
+
   --font-sans:
     ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial,
     sans-serif;
-}
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0b0d10;
-    --foreground: #e8eaed;
-  }
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.25rem;
+  --text-xl: 1.5rem;
+  --text-2xl: 2rem;
+
+  --color-card: var(--surface);
+  --color-card-foreground: var(--foreground);
+  --color-popover: var(--surface);
+  --color-popover-foreground: var(--foreground);
+  --color-secondary: var(--surface);
+  --color-secondary-foreground: var(--foreground);
+  --color-accent: color-mix(in oklab, var(--foreground) 8%, transparent);
+  --color-accent-foreground: var(--foreground);
+  --color-muted-foreground: var(--muted);
+  --color-destructive: var(--danger);
+  --color-destructive-foreground: var(--primary-foreground);
+  --color-input: var(--border);
+  --color-ring: var(--primary);
+  --radius: var(--radius-md);
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
+}
+
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }
