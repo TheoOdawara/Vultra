@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { decideAccess } from "@/shared/auth/guards";
+import { ROLE_HEADER } from "@/shared/auth/role-header";
 import { fetchSession } from "@/shared/auth/session";
 
 export async function middleware(request: NextRequest) {
@@ -14,7 +15,11 @@ export async function middleware(request: NextRequest) {
     return NextResponse.rewrite(new URL("/denied", request.url));
   }
 
-  return NextResponse.next();
+  const headers = new Headers(request.headers);
+  headers.delete(ROLE_HEADER);
+  if (session !== null) headers.set(ROLE_HEADER, session.role);
+
+  return NextResponse.next({ request: { headers } });
 }
 
 export const config = {

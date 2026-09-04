@@ -83,3 +83,35 @@ describe("middleware", () => {
     );
   });
 });
+
+describe("the role the shell renders from", () => {
+  it("hands the resolved role to the served route", async () => {
+    signedInAs("professor");
+
+    const response = await middleware(navigateTo("/attendance"));
+
+    expect(response.headers.get("x-middleware-request-x-vultra-role")).toBe("professor");
+  });
+
+  it("overwrites a role the caller tried to declare for itself", async () => {
+    signedInAs("professor");
+
+    const request = navigateTo("/attendance");
+    request.headers.set("x-vultra-role", "gestor");
+
+    const response = await middleware(request);
+
+    expect(response.headers.get("x-middleware-request-x-vultra-role")).toBe("professor");
+  });
+
+  it("strips the header on a public route where nobody is signed in", async () => {
+    signedInAs(null);
+
+    const request = navigateTo("/login", false);
+    request.headers.set("x-vultra-role", "gestor");
+
+    const response = await middleware(request);
+
+    expect(response.headers.get("x-middleware-request-x-vultra-role")).toBe(null);
+  });
+});
