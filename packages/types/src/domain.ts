@@ -1,93 +1,84 @@
-/**
- * VULTRA — Core Domain Types
- *
- * These are the canonical representations of domain entities as returned by the
- * API Core. All timestamps are ISO 8601 strings (serialized from Date in the API).
- */
+export type MemberRole = "gestor" | "professor" | "rh" | "student";
 
-// ── Roles ─────────────────────────────────────────────────────────────────────
-
-/** RBAC roles available within a VULTRA tenant. */
-export type MemberRole = "admin" | "professor" | "rh" | "student";
-
-// ── Member ────────────────────────────────────────────────────────────────────
-
-/**
- * A member of a VULTRA tenant. Represents a person tracked by the system
- * (student, professor, admin, or HR staff).
- *
- * LGPD: `deletedAt` != null indicates soft-deleted (data retained per policy).
- */
 export interface Member {
   id: string;
   organizationId: string;
-  /** Auth user ID (Better Auth `auth_users.id`). Null if no account linked yet. */
   userId: string | null;
   fullName: string;
   email: string | null;
   role: MemberRole;
-  /** External system identifier (e.g., student enrollment number). */
   externalCode: string | null;
   isActive: boolean;
-  /** ISO 8601 — null when not soft-deleted. */
   deletedAt: string | null;
-  /** ISO 8601 */
   createdAt: string;
-  /** ISO 8601 */
   updatedAt: string;
 }
 
-// ── Device ────────────────────────────────────────────────────────────────────
+export type MemberImportStatus = "pending" | "running" | "completed" | "failed";
 
-/**
- * An ESP32-CAM IoT device registered to a tenant.
- * Devices authenticate via `X-Device-Token` header (bcrypt-hashed API key).
- */
+export type MemberImportLineStatus = "created" | "rejected";
+
+export interface MemberImportResult {
+  line: number;
+  status: MemberImportLineStatus;
+  memberId: string | null;
+  errorCode: string | null;
+}
+
+export interface MemberImport {
+  id: string;
+  organizationId: string;
+  status: MemberImportStatus;
+  results: MemberImportResult[];
+  createdAt: string;
+  completedAt: string | null;
+}
+
+export interface Class {
+  id: string;
+  organizationId: string;
+  name: string;
+  code: string;
+  professorId: string;
+  isActive: boolean;
+  enrollmentCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Enrollment {
+  classId: string;
+  memberId: string;
+  enrolledAt: string;
+}
+
 export interface Device {
   id: string;
   organizationId: string;
-  /** Human-readable label (e.g., "CAM-SALA-101"). */
   label: string;
   location: string | null;
   firmwareVersion: string | null;
-  /** ISO 8601 — null if device has never connected. */
   lastSeenAt: string | null;
   isActive: boolean;
-  /** ISO 8601 */
   createdAt: string;
-  /** ISO 8601 */
   updatedAt: string;
 }
 
-// ── Attendance Session ─────────────────────────────────────────────────────────
+export type SessionStatus = "open" | "closed";
 
-/** Status of an attendance session. */
-export type SessionStatus = "open" | "closed" | "cancelled";
-
-/**
- * An attendance capture session — opened by a device, closed by a professor
- * or automatically after a configured duration.
- */
 export interface AttendanceSession {
   id: string;
   organizationId: string;
-  /** Null for corporate check-in context; set for educational context. */
-  classId: string | null;
+  classId: string;
   deviceId: string;
-  professorId: string | null;
-  /** ISO 8601 */
+  professorId: string;
   startedAt: string;
-  /** ISO 8601 — null while session is open. */
   endedAt: string | null;
   status: SessionStatus;
 }
 
-// ── Attendance Record ─────────────────────────────────────────────────────────
-
-/** How a presence record was created. */
 export type RecognitionMethod = "face" | "manual";
 
-/** Sentiment label from AI facial analysis. */
 export type SentimentLabel =
   | "happy"
   | "neutral"
@@ -97,75 +88,56 @@ export type SentimentLabel =
   | "fear"
   | "disgust";
 
-/**
- * A single presence record for a member in a session.
- *
- * LGPD: No frame or embedding is included. Only the derived metadata.
- */
 export interface AttendanceRecord {
   id: string;
   organizationId: string;
   sessionId: string;
   memberId: string;
-  /** ISO 8601 */
   recordedAt: string;
-  /** Cosine similarity score [0, 1]. */
   confidenceScore: number;
-  /** Snapshot of the active threshold at record time (default 0.85). */
   matchThreshold: number;
   recognitionMethod: RecognitionMethod;
   sentimentLabel: SentimentLabel | null;
-  /** Dominant sentiment confidence [0, 1]. */
   sentimentScore: number | null;
-  isManual: boolean;
+  notes: string | null;
 }
 
-// ── Biometric Profile ──────────────────────────────────────────────────────────
-
-/**
- * Biometric profile of a member — references the stored face embedding.
- *
- * LGPD Art. 11: The embedding itself is NEVER returned in API responses.
- * Only metadata is exposed.
- */
 export interface BiometricProfile {
   profileId: string;
   organizationId: string;
   memberId: string;
-  /** Model used to generate the embedding (e.g., "ArcFace-v1"). */
   modelVersion: string;
-  /** Quality score of the enrolled frame [0, 1]. Enrolls < 0.50 are rejected. */
   qualityScore: number;
-  /** False = revoked by LGPD request or pending re-enrollment. */
   isActive: boolean;
-  /** UUID of the device that captured the enrollment frame. */
-  deviceId: string | null;
-  /** UUID of the actor who initiated the enrollment. */
-  createdBy: string | null;
-  /** ISO 8601 */
   enrolledAt: string;
-  /** ISO 8601 — null if never matched after enrollment. */
   lastMatchedAt: string | null;
-  /** ISO 8601 — null if not revoked. */
-  deletedAt: string | null;
-  /** UUID of the actor who executed the revocation. */
-  deletedBy: string | null;
 }
 
-// ── Face Verification Result ───────────────────────────────────────────────────
+export type VerificationResult = "MATCH" | "POSSIBLE" | "NO_MATCH";
 
-/**
- * Result of a biometric verification attempt (POST /v1/face/verify).
- *
- * HTTP 200 is always returned for valid biometric results.
- * Error codes (4xx/5xx) are reserved for auth, tenant, and infrastructure failures.
- */
-export type VerifyResult = "MATCH" | "POSSÍVEL" | "SEM_MATCH";
+export type ActorType = "user" | "device";
 
-// ── Circuit Breaker ────────────────────────────────────────────────────────────
+export interface AuditLog {
+  id: string;
+  action: string;
+  resourceType: string;
+  resourceId: string | null;
+  actorId: string;
+  actorType: ActorType;
+  ipAddress: string | null;
+  payload: Record<string, unknown>;
+  createdAt: string;
+}
 
-/** High-level AI Service availability status. */
-export type AiServiceStatus = "ok" | "degraded" | "unavailable";
+export interface RetentionRun {
+  executedAt: string;
+  deleted: {
+    biometricProfiles: number;
+    memberImports: number;
+    attendanceRecords: number;
+    auditLogs: number;
+  };
+  capped: boolean;
+}
 
-/** Technical state of the AI Service circuit breaker. */
 export type CircuitBreakerState = "CLOSED" | "OPEN" | "HALF_OPEN";
