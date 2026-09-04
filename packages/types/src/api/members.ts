@@ -1,63 +1,32 @@
-/**
- * VULTRA — Members API Types
- *
- * Contracts for POST/GET/PATCH/DELETE /v1/members
- */
-
 import type { Member, MemberRole } from "../domain.js";
+import type { Collection, CursorQuery, SortDirection } from "../pagination.js";
 
-// ── List Members ───────────────────────────────────────────────────────────────
-
-export interface ListMembersQuery {
+export interface ListMembersQuery extends CursorQuery {
   role?: MemberRole;
-  /** "true" | "false" — defaults to "true" (active only) */
-  isActive?: string;
+  isActive?: boolean;
   search?: string;
-  limit?: number;
-  offset?: number;
+  sort?: "fullName" | "createdAt";
+  direction?: SortDirection;
 }
 
-export interface ListMembersResponse {
-  members: Member[];
-  total: number;
-  limit: number;
-  offset: number;
-}
-
-// ── Create Member ─────────────────────────────────────────────────────────────
+export type ListMembersResponse = Collection<Member>;
 
 export interface CreateMemberBody {
   fullName: string;
   email?: string;
   role: MemberRole;
   externalCode?: string;
-  userId?: string;
 }
 
-/** HTTP 201 */
 export type CreateMemberResponse = Member;
 
-// ── Get Member ────────────────────────────────────────────────────────────────
-
-/** HTTP 200 */
 export type GetMemberResponse = Member;
-
-// ── Update Member ──────────────────────────────────────────────────────────────
 
 export interface UpdateMemberBody {
   fullName?: string;
   email?: string | null;
   role?: MemberRole;
   externalCode?: string | null;
-  userId?: string | null;
 }
 
-/** HTTP 200 */
 export type UpdateMemberResponse = Member;
-
-// ── Deactivate Member ─────────────────────────────────────────────────────────
-
-/** HTTP 200 */
-export interface DeactivateMemberResponse {
-  success: boolean;
-}

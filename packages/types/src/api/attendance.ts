@@ -1,92 +1,58 @@
-/**
- * VULTRA — Attendance API Types
- *
- * Contracts for /v1/attendance/sessions and /v1/attendance/records
- */
-
-import type { SentimentLabel } from "../domain.js";
-
-// ── Open Session ───────────────────────────────────────────────────────────────
+import type {
+  AttendanceSession,
+  RecognitionMethod,
+  SentimentLabel,
+  SessionStatus,
+} from "../domain.js";
+import type { Collection, CursorQuery, SortDirection } from "../pagination.js";
 
 export interface OpenSessionBody {
+  classId: string;
   deviceId: string;
+}
+
+export type OpenSessionResponse = AttendanceSession;
+
+export interface ListSessionsQuery extends CursorQuery {
+  status?: SessionStatus;
   classId?: string;
-  professorId?: string;
+  from?: string;
+  to?: string;
+  sort?: "startedAt";
+  direction?: SortDirection;
 }
 
-/** HTTP 201 */
-export interface OpenSessionResponse {
-  sessionId: string;
-  status: string;
-  /** ISO 8601 */
-  startedAt: string;
+export type ListSessionsResponse = Collection<AttendanceSession>;
+
+export type GetSessionResponse = AttendanceSession;
+
+export interface CloseSessionBody {
+  status: "closed";
 }
 
-// ── Close Session ──────────────────────────────────────────────────────────────
-
-/** HTTP 200 */
-export interface CloseSessionResponse {
-  success: boolean;
-}
-
-// ── Manual Record ─────────────────────────────────────────────────────────────
-
-export interface ManualRecordBody {
-  memberId: string;
-  notes?: string;
-}
-
-/** HTTP 201 */
-export interface ManualRecordResponse {
-  recordId: string;
-  memberId: string;
-  recognitionMethod: string;
-  /** ISO 8601 */
-  recordedAt: string;
-}
-
-// ── List Session Records ───────────────────────────────────────────────────────
+export type CloseSessionResponse = AttendanceSession;
 
 export interface SessionAttendanceRecord {
   recordId: string;
   memberId: string;
   memberName: string;
-  recognitionMethod: string;
+  recognitionMethod: RecognitionMethod;
   confidenceScore: number;
-  sentimentLabel: string | null;
-  /** ISO 8601 */
+  sentimentLabel: SentimentLabel | null;
+  notes: string | null;
   recordedAt: string;
 }
 
-/** HTTP 200 for `GET /v1/attendance/sessions/:id/records` */
-export interface ListSessionRecordsResponse {
-  records: SessionAttendanceRecord[];
-}
+export type ListSessionRecordsResponse = Collection<SessionAttendanceRecord>;
 
-// ── Device Record (Face Recognition) ─────────────────────────────────────────
-
-/**
- * Body for `POST /v1/attendance/record`
- *
- * LGPD: `frameBase64` is processed entirely in RAM by the AI Service.
- * It is NEVER stored anywhere — not in the API Core, not in the AI Service,
- * not in any log.
- */
 export interface RecordAttendanceBody {
-  sessionId: string;
-  /** JPEG frame encoded as Base64. Never persisted. */
   frameBase64: string;
 }
 
-/** HTTP 201 */
-export interface RecordAttendanceResponse {
-  recordId: string;
-  memberId: string;
-  /** Cosine similarity [0, 1] */
-  confidenceScore: number;
-  sentimentLabel: SentimentLabel | null;
-  /** Sentiment confidence [0, 1] */
-  sentimentScore: number | null;
-  /** ISO 8601 */
-  recordedAt: string;
+export type RecordAttendanceResponse = SessionAttendanceRecord;
+
+export interface PutManualRecordBody {
+  notes?: string;
 }
+
+export type PutManualRecordResponse = SessionAttendanceRecord;

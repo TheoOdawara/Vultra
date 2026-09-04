@@ -1,107 +1,114 @@
-/**
- * @vultra/types — Shared TypeScript contract for VULTRA frontends
- *
- * All types here are derived from the API Core contracts (TypeBox schemas in
- * `apps/api-core/src/adapters/http/`). When the API changes, update this
- * package to match before updating the frontends.
- *
- * Usage:
- *   import type { Member, AttendanceRecord } from "@vultra/types";
- *   import type { CreateMemberBody, ListMembersResponse } from "@vultra/types/api/members";
- *
- * @packageDocumentation
- */
-
-// ── Domain entities ───────────────────────────────────────────────────────────
-
 export type {
-  MemberRole,
-  Member,
-  Device,
-  SessionStatus,
-  AttendanceSession,
-  RecognitionMethod,
-  SentimentLabel,
+  ActorType,
   AttendanceRecord,
+  AttendanceSession,
+  AuditLog,
   BiometricProfile,
-  VerifyResult,
-  AiServiceStatus,
   CircuitBreakerState,
+  Class,
+  Device,
+  Enrollment,
+  Member,
+  MemberImport,
+  MemberImportLineStatus,
+  MemberImportResult,
+  MemberImportStatus,
+  MemberRole,
+  RecognitionMethod,
+  RetentionRun,
+  SentimentLabel,
+  SessionStatus,
+  VerificationResult,
 } from "./domain.js";
 
-// ── Error types ───────────────────────────────────────────────────────────────
-
 export type {
-  ApiError,
-  AuthErrorCode,
-  MemberErrorCode,
-  DeviceErrorCode,
-  AttendanceErrorCode,
-  BiometricErrorCode,
-  ReportErrorCode,
-  AiServiceErrorCode,
-  KnownErrorCode,
-  AiUnavailableError,
+  ApiErrorBody,
+  ApiErrorCode,
+  ApiErrorDetail,
+  ApiErrorPayload,
+  KnownApiErrorCode,
 } from "./errors.js";
+export { API_ERROR_CODES, isKnownApiErrorCode } from "./errors.js";
 
-export { isKnownError } from "./errors.js";
-
-// ── API request/response contracts ────────────────────────────────────────────
+export type { Collection, CursorQuery, PageInfo, SortDirection } from "./pagination.js";
 
 export type {
-  ListMembersQuery,
-  ListMembersResponse,
   CreateMemberBody,
   CreateMemberResponse,
   GetMemberResponse,
+  ListMembersQuery,
+  ListMembersResponse,
   UpdateMemberBody,
   UpdateMemberResponse,
-  DeactivateMemberResponse,
 } from "./api/members.js";
 
 export type {
+  CreateMemberImportBody,
+  CreateMemberImportResponse,
+  GetMemberImportResponse,
+} from "./api/member-imports.js";
+
+export type {
+  CreateClassBody,
+  CreateClassResponse,
+  GetClassResponse,
+  ListClassesQuery,
+  ListClassesResponse,
+  ListEnrollmentsQuery,
+  ListEnrollmentsResponse,
+  PutEnrollmentResponse,
+  UpdateClassBody,
+  UpdateClassResponse,
+} from "./api/classes.js";
+
+export type {
+  CreateDeviceBody,
+  CreateDeviceKeyResponse,
+  CreateDeviceResponse,
+  GetDeviceResponse,
   ListDevicesQuery,
   ListDevicesResponse,
-  RegisterDeviceBody,
-  RegisterDeviceResponse,
   UpdateDeviceBody,
   UpdateDeviceResponse,
-  RotateDeviceKeyResponse,
-  DeactivateDeviceResponse,
 } from "./api/devices.js";
 
 export type {
+  CreateBiometricProfileBody,
+  CreateBiometricProfileResponse,
+  CreateBiometricVerificationBody,
+  CreateBiometricVerificationResponse,
+  ListBiometricProfilesQuery,
+  ListBiometricProfilesResponse,
+} from "./api/biometrics.js";
+
+export type {
+  CloseSessionBody,
+  CloseSessionResponse,
+  GetSessionResponse,
+  ListSessionRecordsResponse,
+  ListSessionsQuery,
+  ListSessionsResponse,
   OpenSessionBody,
   OpenSessionResponse,
-  CloseSessionResponse,
-  ManualRecordBody,
-  ManualRecordResponse,
-  SessionAttendanceRecord,
-  ListSessionRecordsResponse,
+  PutManualRecordBody,
+  PutManualRecordResponse,
   RecordAttendanceBody,
   RecordAttendanceResponse,
+  SessionAttendanceRecord,
 } from "./api/attendance.js";
 
 export type {
-  EnrollBody,
-  EnrollResponse,
-  VerifyBody,
-  VerifyResponse,
-  ListFacesQuery,
-  ListFacesResponse,
-  DeleteFaceResponse,
-} from "./api/face.js";
-
-export type {
   AttendanceReportQuery,
-  AttendanceReportRow,
-  AttendanceReportFilter,
   AttendanceReportResponse,
+  AttendanceReportRow,
+  WellbeingDistribution,
   WellbeingReportQuery,
-  WellbeingRow,
-  WellbeingAlert,
-  WellbeingReportFilter,
   WellbeingReportResponse,
+  WellbeingReportRow,
 } from "./api/reports.js";
 
-export type { AiServiceHealthResponse } from "./api/health.js";
+export type { ListAuditLogsQuery, ListAuditLogsResponse } from "./api/audit.js";
+
+export type { CreateRetentionRunResponse } from "./api/retention.js";
+
+export type { DependenciesHealthResponse, HealthResponse } from "./api/health.js";
