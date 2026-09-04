@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import "./src/shared/env/env";
 
 const nextConfig: NextConfig = {
   // Each app in this repo is installed and built on its own (no root manifest),

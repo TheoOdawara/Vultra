@@ -1,2 +1,7 @@
+# Os blobs deste repositorio sao LF. Sem esta declaracao, `core.autocrlf=true`
+# entrega CRLF na arvore de trabalho no Windows e o Biome, que le a arvore e nao
+# o blob, reprova todo arquivo por fim de linha.
+* text=auto eol=lf
+
 # Scripts shell devem sempre ter LF — CRLF quebra a execução em containers e no Git Bash
 *.sh text eol=lf
