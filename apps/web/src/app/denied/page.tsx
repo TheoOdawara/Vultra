@@ -1,12 +1,7 @@
-import { DENIED_MESSAGE } from "@/shared/auth/guards";
+import { headers } from "next/headers";
+import { DeniedScreen } from "@/modules/auth";
+import { ROLE_HEADER, roleFromHeader } from "@/shared/auth/role-header";
 
-export default function DeniedPage() {
-  return (
-    <main className="flex min-h-screen items-center justify-center p-6">
-      <div className="max-w-md rounded-lg border border-border bg-surface p-8 text-center">
-        <h1 className="text-lg font-semibold text-foreground">Acesso negado</h1>
-        <p className="mt-2 text-sm text-muted">{DENIED_MESSAGE}</p>
-      </div>
-    </main>
-  );
+export default async function DeniedPage() {
+  return <DeniedScreen viewerRole={roleFromHeader((await headers()).get(ROLE_HEADER))} />;
 }

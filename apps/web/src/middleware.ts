@@ -11,13 +11,13 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL(decision.to, request.url));
   }
 
-  if (decision.outcome === "deny") {
-    return NextResponse.rewrite(new URL("/denied", request.url));
-  }
-
   const headers = new Headers(request.headers);
   headers.delete(ROLE_HEADER);
   if (session !== null) headers.set(ROLE_HEADER, session.role);
+
+  if (decision.outcome === "deny") {
+    return NextResponse.rewrite(new URL("/denied", request.url), { request: { headers } });
+  }
 
   return NextResponse.next({ request: { headers } });
 }

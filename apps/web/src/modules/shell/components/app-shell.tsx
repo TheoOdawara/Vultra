@@ -47,15 +47,21 @@ function NavTree({
   );
 }
 
-export function AppShell({ role, children }: { role: Role | null; children: React.ReactNode }) {
+export function AppShell({
+  viewerRole,
+  children,
+}: {
+  viewerRole: Role | null;
+  children: React.ReactNode;
+}) {
   const pathname = usePathname();
   const [isSheetOpen, setSheetOpen] = useState(false);
 
-  if (role === null) {
+  if (viewerRole === null) {
     return <main className="min-h-screen p-4 md:p-6">{children}</main>;
   }
 
-  const activeHref = activeHrefFor(role, pathname);
+  const activeHref = activeHrefFor(viewerRole, pathname);
 
   return (
     <div className="min-h-screen md:grid md:grid-cols-[16rem_1fr]">
@@ -71,7 +77,11 @@ export function AppShell({ role, children }: { role: Role | null; children: Reac
               <SheetTitle>Vultra</SheetTitle>
             </SheetHeader>
             <nav aria-label={NAV_LABEL}>
-              <NavTree activeHref={activeHref} onNavigate={() => setSheetOpen(false)} role={role} />
+              <NavTree
+                activeHref={activeHref}
+                onNavigate={() => setSheetOpen(false)}
+                role={viewerRole}
+              />
             </nav>
           </SheetContent>
         </Sheet>
@@ -81,7 +91,7 @@ export function AppShell({ role, children }: { role: Role | null; children: Reac
       <aside className="hidden border-border border-r p-4 md:block">
         <p className="mb-6 px-3 font-semibold text-foreground">Vultra</p>
         <nav aria-label={NAV_LABEL}>
-          <NavTree activeHref={activeHref} role={role} />
+          <NavTree activeHref={activeHref} role={viewerRole} />
         </nav>
       </aside>
 

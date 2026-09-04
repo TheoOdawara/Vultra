@@ -1,3 +1,4 @@
+export { DeniedScreen } from "./components/denied-screen";
 export { SignInForm } from "./components/sign-in-form";
 export {
   DISABLED_ACCOUNT_MESSAGE,

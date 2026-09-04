@@ -115,3 +115,14 @@ describe("the role the shell renders from", () => {
     expect(response.headers.get("x-middleware-request-x-vultra-role")).toBe(null);
   });
 });
+
+describe("the way back from the denied screen", () => {
+  it("hands the role to the denied screen so it can offer the way home", async () => {
+    signedInAs("rh");
+
+    const response = await middleware(navigateTo("/members"));
+
+    expect(response.headers.get("x-middleware-rewrite")).toContain("/denied");
+    expect(response.headers.get("x-middleware-request-x-vultra-role")).toBe("rh");
+  });
+});

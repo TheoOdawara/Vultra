@@ -14,7 +14,7 @@ vi.mock("next/navigation", () => ({
 function renderShell(role: Role | null, at = "/members") {
   pathname = at;
   return render(
-    <AppShell role={role}>
+    <AppShell viewerRole={role}>
       <h1>Conteúdo</h1>
     </AppShell>
   );
