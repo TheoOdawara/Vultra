@@ -91,10 +91,8 @@ Cada área possui a seguinte estrutura interna:
 ### 🖥️ Camada de Frontend
 | Documento | Descrição | Audiência |
 |-----------|-----------|-----------|
-| [frontend/README.md](./frontend/README.md) | Índice dos portais | Todos |
-| [frontend/admin/README.md](./frontend/admin/README.md) | Portal de administração global | Admins VULTRA |
-| [frontend/rh/README.md](./frontend/rh/README.md) | Relatórios de bem-estar | Gestores de RH |
-| [frontend/professores/README.md](./frontend/professores/README.md) | Chamada em tempo real e diário | Professores |
+| [specs/frontend-portal-forma-final.md](./specs/frontend-portal-forma-final.md) | Forma final do portal único: áreas por papel, mapa de telas, regras e cenários de aceite | Todos |
+| [decisions/0004-topologia-e-fundacao-do-portal.md](./decisions/0004-topologia-e-fundacao-do-portal.md) | Por que os três portais viraram `apps/web` | Todos |
 
 ---
 
