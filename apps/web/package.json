@@ -6,9 +6,8 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "biome lint ./src",
-    "format": "biome format --write ./src",
-    "check": "biome check ./src",
+    "lint": "biome check .",
+    "format": "biome check --write .",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
