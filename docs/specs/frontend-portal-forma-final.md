@@ -68,6 +68,12 @@ apps/web/
 └── public/               manifest, ícones
 ```
 
+> **Corrigido pelo ADR-0005.** Os grupos `(manager)`, `(teacher)` e `(hr)` desenhados acima não
+> compilam: `/classes`, `/reports/attendance` e `/reports/wellbeing` pertencem a mais de um papel e
+> resolveriam a mesma URL em dois grupos, o que o App Router recusa no build. As rotas privadas vivem em
+> um único grupo `(app)`, cujo layout monta a navegação do papel do chamador. O mapa de telas abaixo vale
+> integralmente; só o arranjo de diretórios muda.
+
 Regras de fronteira:
 
 - Um `modules/<módulo>/` alcança outro **apenas** por componente exportado no seu `index.ts`. Nunca por
