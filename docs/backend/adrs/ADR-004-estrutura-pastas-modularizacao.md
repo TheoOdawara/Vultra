@@ -1,6 +1,6 @@
 # ADR-004 — Estrutura de Pastas e Modularização do Monorepo
 
-**Status:** Aceito  
+**Status:** Substituído por [0005](../../decisions/0005-backend-unico-em-python.md)  
 **Data:** Março de 2026  
 **Contexto:** Necessidade de uma estrutura que suporte o crescimento do ecossistema VULTRA (SaaS Multitenant) sem gerar débito técnico ou complexidade excessiva ("ninho de pastas").
 

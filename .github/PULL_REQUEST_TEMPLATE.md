@@ -7,14 +7,14 @@
 Issue: #
 Milestone:
 
-## Definição de pronto (CLAUDE.md — Processo)
+## Definição de pronto (AGENTS.md — Processo)
 
 - [ ] Gates verdes na superfície tocada, do mais barato ao mais caro (lint → typecheck → build → testes), zero erro e zero aviso — evidência colada abaixo
 - [ ] Guard novo ou alterado provado por mutante: removendo o guard o teste fica vermelho; restaurando, verde
 - [ ] Rodou e foi observado funcionando — evidência real, não descrição
 - [ ] Sanidade de performance: sem N+1, sem trabalho repetido, nada pesado no caminho quente
 - [ ] Segurança contabilizada: corrigida aqui, ou issue `security-debt` aberta e referenciada
-- [ ] Requisito novo ou alterado refletido em `docs/requirements.md` com entrada no log de evolução
+- [ ] Requisito novo ou alterado refletido em `docs/requirements/` com versão nova e entrada no `CHANGELOG.md`
 - [ ] Nenhum arquivo `.env` lido ou editado sem pedido explícito
 
 ## Evidência dos gates

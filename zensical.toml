@@ -1,0 +1,100 @@
+[project]
+site_name = "Vultra — documentação interna"
+docs_dir = "docs"
+nav = [
+  { "Início" = "README.md" },
+  { "Requisitos" = [
+    "requirements/README.md",
+    { "Visão geral" = "requirements/overview.md" },
+    { "Glossário" = "requirements/glossary.md" },
+    { "Regras de negócio" = "requirements/business-rules.md" },
+    { "Funcionais" = [
+      "requirements/functional/README.md",
+      { "Registro de pessoas" = "requirements/functional/registry.md" },
+      { "Câmeras" = "requirements/functional/devices.md" },
+      { "Cadastro biométrico" = "requirements/functional/biometrics.md" },
+      { "Reconhecimento" = "requirements/functional/recognition.md" },
+      { "Emoção" = "requirements/functional/affective.md" },
+      { "Acesso" = "requirements/functional/access.md" },
+      { "Chamada" = "requirements/functional/attendance.md" },
+      { "Relatórios" = "requirements/functional/reports.md" },
+      { "Governança" = "requirements/functional/governance.md" },
+    ] },
+    { "Não funcionais" = [
+      "requirements/non-functional/README.md",
+      { "Segurança" = "requirements/non-functional/security.md" },
+      { "Desempenho" = "requirements/non-functional/performance.md" },
+      { "Confiabilidade" = "requirements/non-functional/reliability.md" },
+      { "Flexibilidade" = "requirements/non-functional/flexibility.md" },
+      { "Interação" = "requirements/non-functional/interaction.md" },
+    ] },
+    { "Questões abertas" = "requirements/open-questions.md" },
+    { "Changelog" = "requirements/CHANGELOG.md" },
+  ] },
+  { "Decisões" = [
+    "decisions/README.md",
+    { "0005 · Backend único em Python" = "decisions/0005-backend-unico-em-python.md" },
+    { "0006 · Inferência no processo do serviço" = "decisions/0006-inferencia-no-processo-do-servico.md" },
+    { "0007 · Canal da câmera por WebSocket" = "decisions/0007-canal-da-camera-por-websocket.md" },
+    { "0001 · Baseline de segurança" = "decisions/0001-baseline-de-seguranca.md" },
+    { "0002 · Modelos de inferência" = "decisions/0002-pipeline-de-inferencia-do-ai-service.md" },
+    { "0004 · Topologia do portal" = "decisions/0004-topologia-e-fundacao-do-portal.md" },
+    { "0003 · Contrato da api-core (substituído)" = "decisions/0003-contrato-e-estrutura-da-api.md" },
+  ] },
+  { "Arquitetura" = [
+    "architecture/README.md",
+    { "Blocos" = [
+      "architecture/building-blocks/README.md",
+      { "Câmera" = "architecture/building-blocks/camera.md" },
+      { "Proxy TLS" = "architecture/building-blocks/proxy.md" },
+      { "Serviço" = "architecture/building-blocks/service.md" },
+      { "Pipeline" = "architecture/building-blocks/pipeline.md" },
+      { "PostgreSQL" = "architecture/building-blocks/postgres.md" },
+      { "Redis" = "architecture/building-blocks/redis.md" },
+      { "Painel" = "architecture/building-blocks/panel.md" },
+    ] },
+    { "Cenários" = [
+      "architecture/runtime/README.md",
+      { "Cadastrar um rosto" = "architecture/runtime/enrollment.md" },
+      { "Reconhecer quem passa" = "architecture/runtime/recognition.md" },
+    ] },
+    { "Implantação e entrega" = "architecture/deployment.md" },
+    { "Conceitos" = [
+      "architecture/concepts/README.md",
+      { "Segurança" = "architecture/concepts/security.md" },
+      { "Quadro só em memória" = "architecture/concepts/frame-in-memory.md" },
+      { "Isolamento por instituição" = "architecture/concepts/tenancy.md" },
+    ] },
+    { "Riscos e dívida" = "architecture/risks.md" },
+  ] },
+  { "Modelo de dados" = [
+    "data-model/README.md",
+    { "Padrões de acesso" = "data-model/access-patterns.md" },
+    { "Armazenamento" = "data-model/storage.md" },
+  ] },
+  { "Pesquisa" = [
+    { "Pré-registro" = "research/pre-registro.md" },
+  ] },
+  { "Plano anterior" = [
+    { "SPEC-001 · Pipeline do ai-service" = "specs/ai-service-pipeline-inferencia.md" },
+    { "SPEC-002 · Contrato da api-core" = "specs/api-core-contrato-e-estrutura.md" },
+    { "SPEC-003 · Portal" = "specs/frontend-portal-forma-final.md" },
+    { "ADRs de backend" = [
+      "backend/adrs/README.md",
+      "backend/adrs/ADR-001-typebox-sobre-zod.md",
+      "backend/adrs/ADR-002-arcface-modelo-padrao.md",
+      "backend/adrs/ADR-003-circuit-breaker-redis.md",
+      "backend/adrs/ADR-004-estrutura-pastas-modularizacao.md",
+      "backend/adrs/ADR-005-face-recognition-pipeline.md",
+      "backend/adrs/ADR-006-biometric-profiles-e-rate-limiting-biometria.md",
+    ] },
+    { "ADRs de banco" = [
+      "database/adrs/README.md",
+      "database/adrs/ADR-001-pgvector-hnsw.md",
+      "database/adrs/ADR-002-pin-pgvector-0.8.md",
+    ] },
+  ] },
+]
+
+[project.theme]
+language = "pt-BR"

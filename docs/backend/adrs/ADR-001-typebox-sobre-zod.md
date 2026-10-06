@@ -1,6 +1,6 @@
 # ADR-001 — TypeBox como Biblioteca de Validação
 
-> **Status:** Aceito  
+> **Status:** Substituído por [0005](../../decisions/0005-backend-unico-em-python.md)  
 > **Data:** Fevereiro 2026  
 > **Contexto:** Backend API Core (ElysiaJS)
 

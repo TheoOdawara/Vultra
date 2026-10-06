@@ -1,6 +1,6 @@
 # ADR-005 — Pipeline de Reconhecimento Facial (PoC e Produção)
 
-Status: Aceito (proposta)
+Status: Substituído por [0006](../../decisions/0006-inferencia-no-processo-do-servico.md)
 Data: 2026-03-22
 
 Contexto

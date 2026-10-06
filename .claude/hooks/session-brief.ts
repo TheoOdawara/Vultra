@@ -34,7 +34,7 @@ if (branch.ok) {
 	const [behind, ahead] = counts.ok ? counts.out.split(/\s+/) : ["?", "?"];
 	lines.push(`Branch: ${branch.out} (${ahead} ahead / ${behind} behind de origin/main)`);
 	if (branch.out === "main") {
-		lines.push("AVISO: você está na main. Todo trabalho sai de uma branch própria e entra por PR (CLAUDE.md — Processo).");
+		lines.push("AVISO: você está na main. Todo trabalho sai de uma branch própria e entra por PR (AGENTS.md — Processo).");
 	} else if (behind !== "0" && behind !== "?") {
 		lines.push(`AVISO: esta branch está ${behind} commit(s) atrás de origin/main. Rebase antes de continuar.`);
 	}

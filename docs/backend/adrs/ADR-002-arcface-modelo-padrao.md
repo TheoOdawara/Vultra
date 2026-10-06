@@ -4,7 +4,7 @@
 > **Data:** Fevereiro 2026  
 > **Contexto:** AI Service
 >
-> **⚠️ Errata (Maio 2026):** A decisão de usar ArcFace 512d permanece válida. No entanto, a implementação final usa **InsightFace** diretamente (via pack `buffalo_l` + ONNX Runtime), **não DeepFace/TensorFlow**. Referências a "DeepFace" abaixo são históricas — a variável de configuração real é `MODEL_NAME` (não `DEEPFACE_MODEL`). Ver [guias/modelos-ia.md](../guias/modelos-ia.md) e [arquitetura/processamento-ram.md](../arquitetura/processamento-ram.md) para a implementação atual.
+> **⚠️ Errata (Maio 2026):** A decisão de usar ArcFace 512d permanece válida. No entanto, a implementação final usa **InsightFace** diretamente (via pack `buffalo_l` + ONNX Runtime), **não DeepFace/TensorFlow**. Referências a "DeepFace" abaixo são históricas — a variável de configuração real é `MODEL_NAME` (não `DEEPFACE_MODEL`). Ver `guias/modelos-ia.md` (removido em 2026-10-06) e `arquitetura/processamento-ram.md` (removido em 2026-10-06) para a implementação atual.
 
 ---
 
@@ -38,5 +38,5 @@ ArcFace e Facenet512 têm a mesma precisão, mas ArcFace possui maior adoção e
 
 - **Positivas:** Alta precisão com vetores compactos (512d). Compatível com HNSW no pgvector. Threshold de 0.85 (cosseno) bem estabelecido para produção.
 - **Negativas:** Latência de ~80ms por frame — aceitável para o fluxo assíncrono via Redis, mas não para cenários síncronos.
-- **Risco:** Trocar de modelo no futuro exige **re-enrollment físico** de todos os membros (imagens não armazenadas por LGPD). Ver [database/arquitetura/versionamento-embeddings.md](../../database/arquitetura/versionamento-embeddings.md).
+- **Risco:** Trocar de modelo no futuro exige **re-enrollment físico** de todos os membros (imagens não armazenadas por LGPD). Ver `database/arquitetura/versionamento-embeddings.md` (removido em 2026-10-06).
 - **Restrição:** A variável `DEEPFACE_MODEL` só pode ser alterada após análise de impacto de re-enrollment.

@@ -1,6 +1,6 @@
 # ADR-003 — Circuit Breaker para Comunicação com o AI Service
 
-> **Status:** Aceito  
+> **Status:** Substituído por [0006](../../decisions/0006-inferencia-no-processo-do-servico.md)  
 > **Data:** Fevereiro 2026  
 > **Contexto:** API Core (Bun) ↔ AI Service (Python) via Redis
 

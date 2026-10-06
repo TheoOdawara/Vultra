@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 // PreToolUse guard for Bash: mechanizes the branch policy and the .env rule
-// from CLAUDE.md. Denies the tool call by printing a permissionDecision;
+// from AGENTS.md. Denies the tool call by printing a permissionDecision;
 // anything not denied falls through to the normal permission flow.
 
 interface HookInput {
@@ -53,13 +53,13 @@ const command = input.tool_input?.command ?? "";
 const segments = command.split(/[\n;|&]+/);
 if (segments.some((s) => /\bgit\s/.test(s) && /\s--no-verify\b/.test(s))) {
 	deny(
-		"Gates de verificação não podem ser pulados (--no-verify). CLAUDE.md — Definição de pronto. Se a flag aparece apenas como texto (corpo de issue/PR), escreva o corpo num arquivo e use --body-file.",
+		"Gates de verificação não podem ser pulados (--no-verify). AGENTS.md — Definição de pronto. Se a flag aparece apenas como texto (corpo de issue/PR), escreva o corpo num arquivo e use --body-file.",
 	);
 }
 
 const writesCommitOrPr = /\bgit\s+commit\b|\bgh\s+pr\s+(create|edit)\b/.test(command);
 if (writesCommitOrPr && (/co-authored-by:\s*claude/i.test(command) || /generated with \[?claude/i.test(command))) {
-	deny("Nenhuma atribuição a assistente em commit ou PR, em nenhum trailer, nunca. CLAUDE.md — Commits.");
+	deny("Nenhuma atribuição a assistente em commit ou PR, em nenhum trailer, nunca. AGENTS.md — Commits.");
 }
 
 const touchesDotEnv =
@@ -68,7 +68,7 @@ const touchesDotEnv =
 	) || /[>]{1,2}\s*[^|;&\s]*\.env(?:\.[\w.-]+)?\b/.test(command);
 if (touchesDotEnv) {
 	deny(
-		"Arquivo .env (incluindo o de exemplo) só é lido, criado ou editado com pedido explícito do usuário. CLAUDE.md — Nunca. Peça ao usuário e use as ferramentas de arquivo, que passam pelo prompt de permissão.",
+		"Arquivo .env (incluindo o de exemplo) só é lido, criado ou editado com pedido explícito do usuário. AGENTS.md — Nunca. Peça ao usuário e use as ferramentas de arquivo, que passam pelo prompt de permissão.",
 	);
 }
 
@@ -77,7 +77,7 @@ if (touchesDotEnv) {
 const isGitCommitOrPush = /\bgit\b[^\n;|&]*\b(commit|push)\b/.test(command);
 if (isGitCommitOrPush && currentBranch() === "main") {
 	deny(
-		"Você está na main. Nada entra nela por commit ou push direto: crie uma branch (feat/, fix/, docs/, chore/) e abra PR. CLAUDE.md — Processo.",
+		"Você está na main. Nada entra nela por commit ou push direto: crie uma branch (feat/, fix/, docs/, chore/) e abra PR. AGENTS.md — Processo.",
 	);
 }
 

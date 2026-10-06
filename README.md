@@ -5,7 +5,7 @@
 [![Status](https://img.shields.io/badge/status-em%20desenvolvimento-yellow?style=flat-square)](.)
 [![Licença](https://img.shields.io/badge/licença-MIT-blue?style=flat-square)](./LICENSE)
 [![Iniciação Científica](https://img.shields.io/badge/pesquisa-iniciação%20científica-purple?style=flat-square)](./docs/README.md)
-[![LGPD](https://img.shields.io/badge/conformidade-LGPD%20Art.%2011-green?style=flat-square)](./docs/backend/guias/seguranca-lgpd.md)
+[![LGPD](https://img.shields.io/badge/conformidade-LGPD%20Art.%2011-green?style=flat-square)](./docs/decisions/0001-baseline-de-seguranca.md)
 
 </div>
 

@@ -1,6 +1,6 @@
 # ADR-0003 — Contrato público e estrutura interna da `api-core`
 
-> **Status:** Aceito
+> **Status:** Substituído por [0005](0005-backend-unico-em-python.md)
 > **Data:** 16 de agosto de 2026
 > **Escopo:** `apps/api-core` e todo cliente do contrato `/v1`
 > **Emenda:** `docs/backend/adrs/ADR-004` (estrutura de pastas) e `docs/backend/adrs/ADR-006` (caminho da superfície biométrica)

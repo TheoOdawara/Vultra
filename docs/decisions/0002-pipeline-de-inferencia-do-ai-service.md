@@ -1,6 +1,6 @@
 # 0002. Pipeline de inferência do ai-service: modelos, superfície e contrato
 
-- Status: proposto
+- Status: emendado por [0006](0006-inferencia-no-processo-do-servico.md) — os modelos ficam; o contrato de fila sai
 - Data: 2026-08-16
 - Emenda: ADR-005 (Pipeline de Reconhecimento Facial — PoC e Produção)
 - Especificação relacionada: `docs/specs/ai-service-pipeline-inferencia.md`

@@ -12,3 +12,4 @@
 /apps/api-core/dist
 **/.next
 /.venv
+/site
