@@ -15,29 +15,37 @@ A ESP32-CAM envia o quadro, a API o processa em memória, e saem reconhecimento 
 proteções de segurança desde o início. GitHub Milestone:
 [E1 — Núcleo](https://github.com/TheoOdawara/Vultra/milestone/10).
 
-Os épicos estão em ordem de construção: o domínio vem primeiro e o acesso depois.
+Os épicos estão em ordem de construção: o caminho do quadro vem primeiro, da câmera ao pipeline, e o
+que se grava a partir dele vem depois.
 
 | Épico | Issue | Cobre |
 | --- | --- | --- |
-| Pipeline de inferência: qualidade, vivacidade, vetor e emoção de um quadro | #174 | FR-BIO-02, FR-BIO-03, FR-AFF-01 |
-| Cadastro e reconhecimento: galeria, evento, emoção e auditoria | #175 | FR-BIO-01, FR-BIO-04, FR-REC-01, FR-REC-02, FR-AFF-02, FR-GOV-01, NFR-REL-01, NFR-SEC-01 |
-| Acesso do gestor e criação de pessoa | #176 | FR-ACC-01, FR-REG-01, NFR-SEC-04, NFR-SEC-06 |
+| Acesso do gestor e criação de pessoa | #176 | FR-ACC-01, FR-REG-01, NFR-SEC-01, NFR-SEC-04, NFR-SEC-06 |
 | Credencial da câmera: registrar, revogar e rotacionar | #177 | FR-DEV-01, FR-DEV-02, FR-DEV-03 |
 | Captura disparada pela API, sobre TLS e sob cota | #178 | FR-DEV-04, NFR-SEC-02, NFR-SEC-03 |
+| Pipeline de inferência: qualidade, vivacidade, vetor e emoção de um quadro | #174 | FR-BIO-02, FR-BIO-03, FR-AFF-01 |
+| Cadastro e reconhecimento: galeria, evento, emoção e auditoria | #175 | FR-BIO-01, FR-BIO-04, FR-REC-01, FR-REC-02, FR-AFF-02, FR-GOV-01, NFR-REL-01 |
 | Núcleo medido de ponta a ponta nos dois ambientes | #179 | NFR-PERF-01, NFR-PERF-02, NFR-FLEX-01, NFR-SEC-05 |
 
-Decisões que sustentam essa ordem, tomadas no planejamento de 2026-10-06:
+Decisões que sustentam essa ordem, tomadas no replanejamento de 2026-10-06 (issue #184):
 
-- **Nenhuma rota HTTP nasce antes do épico #176.** Até lá, cadastro e reconhecimento rodam por teste e
-  por script que injeta quadros, sem câmera e sem login. É o que deixa o acesso para depois sem servir
-  rota sem autenticação ([NFR-SEC-04](../requirements/non-functional/security.md#nfr-sec-04)).
-- **O isolamento por instituição nasce com a primeira tabela, no épico #175.**
+- **O quadro que alimenta o pipeline chega pela ESP32-CAM desde o início.** Nenhum épico é construído
+  sobre quadro injetado por script. Por isso a captura (#178) vem antes do pipeline (#174).
+- **O teste de bancada do [ADR 0007](../decisions/0007-canal-da-camera-por-websocket.md) é a issue
+  #181 e é o primeiro trabalho do E1.** Ele precisa fechar antes de o épico #178 ser especificado.
+- **O épico #176 é o primeiro com código**, porque registrar câmera e disparar captura são operações de
+  um gestor autenticado. Nenhuma rota nasce sem autenticação
+  ([NFR-SEC-04](../requirements/non-functional/security.md#nfr-sec-04)), e nenhuma câmera conecta sem
+  credencial ([FR-DEV-01](../requirements/functional/devices.md#fr-dev-01)).
+- **O isolamento por instituição nasce com a primeira tabela, no épico #176.**
+- **O levantamento de modelos de vivacidade é a issue #183** e precisa fechar antes de o épico #174
+  ser especificado: o MiniFASNetV2 do
+  [ADR 0006](../decisions/0006-inferencia-no-processo-do-servico.md) não tem ONNX oficial, e a escolha
+  não registra alternativa comparada.
 - **NFR-SEC-05 e NFR-FLEX-01 ficam no épico #179** porque o critério de aceite dos dois pede o fluxo
   completo. O mecanismo de cada um nasce antes, com o código que ele protege.
 - **O E1 é planejado sob a hipótese de trabalho de
   [OQ-01](../requirements/open-questions.md#oq-01)**, que continua aberta.
-- **O teste de bancada do [ADR 0007](../decisions/0007-canal-da-camera-por-websocket.md) é a issue
-  #181** e precisa fechar antes de o épico #178 ser especificado.
 
 ## Cobertura de requisitos
 
@@ -60,7 +68,7 @@ Todo requisito aprovado de um estágio planejado pertence a exatamente um épico
 | [FR-AFF-02](../requirements/functional/affective.md#fr-aff-02) | #175 | E1 |
 | [FR-ACC-01](../requirements/functional/access.md#fr-acc-01) | #176 | E1 |
 | [FR-GOV-01](../requirements/functional/governance.md#fr-gov-01) | #175 | E1 |
-| [NFR-SEC-01](../requirements/non-functional/security.md#nfr-sec-01) | #175 | E1 |
+| [NFR-SEC-01](../requirements/non-functional/security.md#nfr-sec-01) | #176 | E1 |
 | [NFR-SEC-02](../requirements/non-functional/security.md#nfr-sec-02) | #178 | E1 |
 | [NFR-SEC-03](../requirements/non-functional/security.md#nfr-sec-03) | #178 | E1 |
 | [NFR-SEC-04](../requirements/non-functional/security.md#nfr-sec-04) | #176 | E1 |
@@ -73,4 +81,4 @@ Todo requisito aprovado de um estágio planejado pertence a exatamente um épico
 
 ## Sprints
 
-- [Sprint 1](sprints/sprint-01.md) — dado um quadro, o pipeline devolve a recusa ou o vetor e a emoção
+- [Sprint 1](sprints/sprint-01.md) — a ESP32-CAM real conecta por `wss://`, entrega um quadro e reconecta
