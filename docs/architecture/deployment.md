@@ -1,6 +1,6 @@
 # Implantação e entrega
 
-![Diagrama de implantação](../diagrams/deployment.drawio.svg)
+![Diagrama de implantação](diagrams/deployment.drawio.svg)
 
 ## Ambientes
 

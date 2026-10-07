@@ -1,6 +1,6 @@
 # Blocos do sistema
 
-![Diagrama de contêineres](../../diagrams/containers.drawio.svg)
+![Diagrama de contêineres](../diagrams/containers.drawio.svg)
 
 | Bloco | Tecnologia | Responsabilidade | Fala com (protocolo) | Estágio | Arquivo |
 | --- | --- | --- | --- | --- | --- |

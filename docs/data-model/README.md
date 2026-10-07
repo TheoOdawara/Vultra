@@ -5,13 +5,13 @@ requisitos. Nenhuma tabela do backend novo existe ainda.
 
 ## Núcleo (E1)
 
-![Modelo conceitual do núcleo](../diagrams/data-conceptual.drawio.svg)
+![Modelo conceitual do núcleo](diagrams/conceptual.drawio.svg)
 
 ## Chamada (E2)
 
 Usuário, Pessoa, Câmera e Evento de reconhecimento são as mesmas entidades do núcleo.
 
-![Modelo conceitual da chamada](../diagrams/data-conceptual-attendance.drawio.svg)
+![Modelo conceitual da chamada](diagrams/conceptual-attendance.drawio.svg)
 
 ## Entidades
 

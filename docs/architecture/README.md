@@ -25,7 +25,7 @@ Estão na seção Restrições da [visão geral dos requisitos](../requirements/
 
 ## Contexto
 
-![Diagrama de contexto](../diagrams/context.drawio.svg)
+![Diagrama de contexto](diagrams/context.drawio.svg)
 
 | Ator ou sistema | O que troca com o Vultra |
 | --- | --- |
