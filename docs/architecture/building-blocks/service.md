@@ -1,6 +1,7 @@
 # Serviço
 
-`apps/api` · Python 3.13, FastAPI · estágio E1 · ainda não existe.
+`apps/api` · Python 3.13, FastAPI · estágio E1 · em construção: existe a fundação (ambiente, `GET /health`,
+OpenAPI sob `API_DOCS_ENABLED`), sem banco, autenticação nem módulo de capacidade.
 
 ## O que faz
 
@@ -15,7 +16,9 @@ ao [Pipeline](pipeline.md), compara o vetor com a galeria da instituição e gra
 
 ## Blocos internos
 
-Um módulo por capacidade, com os nomes das áreas do SRS. Rota, regra e consulta de uma capacidade ficam
+A infraestrutura (ambiente, banco, Redis, log) fica em `app/core/`. Em `app/features/` há um módulo por
+capacidade, com os nomes das áreas do SRS, e dentro dele um arquivo por responsabilidade: `router.py`,
+`service.py`, `queries.py`, `schemas.py`, `models.py`. Rota, regra e consulta de uma capacidade ficam
 juntas no módulo dela.
 
 | Módulo | Responsabilidade | Requisitos | Estágio |
@@ -38,8 +41,8 @@ decidido.
   [OQ-03](../../requirements/open-questions.md#oq-03); só o ponto de chamada do Pipeline muda.
 - O usuário e a sessão vêm do `fastapi-users`, que mantém o `sqlalchemy` na linha 2.0
   ([0005](../../decisions/0005-backend-unico-em-python.md)).
-- Cada rota declara os papéis que a acessam ou que é pública. Uma rota sem declaração é retirada na
-  inicialização (E1, [SPEC-004](../../specs/acesso-do-gestor-e-criacao-de-pessoa.md)).
+- Cada rota protegida declara os papéis que a acessam, na dependência do router ou da rota (E1,
+  [SPEC-004](../../specs/acesso-do-gestor-e-criacao-de-pessoa.md)).
 - A sessão é um token Bearer guardado no PostgreSQL, com 8 horas de validade; o logout o apaga (E1,
   SPEC-004).
 - A instituição da requisição é definida no banco em um único ponto, na mesma transação da consulta

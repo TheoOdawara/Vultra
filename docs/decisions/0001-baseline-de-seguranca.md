@@ -4,6 +4,11 @@
 > **Data:** 14 de agosto de 2026
 > **Escopo:** transversal — vale para todos os `apps/`, `infra/` e `firmware/`
 > **Substitui:** nada. **Complementa:** `docs/backend/adrs/ADR-006` (superfície biométrica)
+> **Emenda de 2026-10-07 (Theo, SRS 1.1.0):** duas regras deste ADR mudam no backend novo. Na seção 1, a rota
+> que não declara permissão deixa de ser negada por um guard central: a rota protegida recebe a autenticação
+> pela dependência do router, e a regra que continua é "nenhuma rota de dado responde sem autenticação"
+> (NFR-SEC-04.1). Na seção de ambiente, o erro de inicialização nomeia a variável e deixa de trazer o formato
+> esperado; a leitura é uma classe de configuração tipada. "Nenhum valor padrão no ponto de leitura" continua.
 
 ---
 

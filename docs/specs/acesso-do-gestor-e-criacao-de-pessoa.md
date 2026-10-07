@@ -5,7 +5,7 @@
 > **Módulo:** `apps/api`, módulos `access` e `registry`
 > **Epic:** #176
 > **Requisitos:** FR-ACC-01, FR-REG-01, NFR-SEC-01, NFR-SEC-04, NFR-SEC-06
-> **Sprint:** 1 (spec e sub-issues); o código abre o Sprint 2
+> **Sprint:** 1 (spec, sub-issues e #186); #187 a #189 abrem o Sprint 2
 
 Primeiro épico com código da reescrita. Ele cria `apps/api`, o banco com isolamento por instituição e as
 duas operações que todo o resto do E1 pressupõe: um gestor autenticado e uma pessoa a quem um cadastro
@@ -113,7 +113,6 @@ Nenhum pedido carrega a instituição. Ela vem da sessão.
 | `400` | Login com credencial inválida |
 | `401` | Rota protegida sem token, ou com token inexistente, expirado ou já encerrado |
 | `403` | Usuário autenticado cujo papel não está entre os declarados pela rota |
-| `404` | Rota registrada sem declaração de acesso |
 | `409` | `external_id` já usado na instituição |
 | `422` | Corpo fora da validação |
 | `429` | Cota do login excedida |
@@ -125,7 +124,7 @@ Nenhum pedido carrega a instituição. Ela vem da sessão.
 | --- | --- | --- |
 | `manager` | `POST /v1/auth/logout`, `POST /v1/people` | Só na própria instituição |
 | `teacher` | nenhuma rota neste épico | O valor existe no modelo; nenhum professor é criado antes do E2 |
-| sem autenticação | `GET /health`, `POST /v1/auth/login` | As duas declaram que são públicas |
+| sem autenticação | `GET /health`, `POST /v1/auth/login` | As duas únicas rotas sem autenticação |
 
 ---
 
@@ -133,10 +132,8 @@ Nenhum pedido carrega a instituição. Ela vem da sessão.
 
 ### 1. Autorização
 
-- Toda rota declara, no registro, os papéis que a acessam ou que é pública. A declaração é a única
-  fonte da checagem; nenhuma rota confere papel por conta própria.
-- Na inicialização, uma rota sem declaração é retirada da aplicação e o serviço grava um log de erro
-  `route_without_access_declaration` com o método e o caminho. A requisição a ela responde `404`.
+- Toda rota protegida declara os papéis que a acessam, na dependência do router ou da rota. A declaração
+  é a única fonte da checagem; nenhuma rota confere papel por conta própria.
 - Em rota protegida, a ordem é: autenticar pelo token, depois conferir o papel. Sem token válido, a
   resposta é `401` com `"Unauthorized"`. Com papel fora da declaração, é `403` com `"Forbidden"`.
 - O token é inválido quando não existe, quando foi encerrado por logout ou quando tem mais de 8 horas.
@@ -182,10 +179,10 @@ Nenhum pedido carrega a instituição. Ela vem da sessão.
 
 ### 6. Ambiente
 
-- Um único módulo lê o ambiente. Toda variável é obrigatória e validada na inicialização, sem valor
-  padrão.
-- Com uma variável ausente ou fora do formato, o processo encerra com erro que traz o nome da variável
-  e o formato esperado. Isso vale para o serviço, para o comando `create-manager` e para as migrations.
+- Um único módulo lê o ambiente, por uma classe de configuração tipada. Toda variável é obrigatória, sem
+  valor padrão.
+- Com uma variável ausente ou fora do tipo, o processo encerra com erro que traz o nome da variável e
+  nunca o valor recebido. Isso vale para o serviço, para o comando `create-manager` e para as migrations.
 
 | Variável | Formato |
 | --- | --- |
@@ -224,7 +221,6 @@ O corpo de erro é `{"detail": "<código>"}`. O `422` usa o formato de validaç�
 | `LOGIN_BAD_CREDENTIALS` | `400` | E-mail inexistente, senha errada ou usuário inativo | "LOGIN_BAD_CREDENTIALS" |
 | `Unauthorized` | `401` | Rota protegida sem token válido | "Unauthorized" |
 | `Forbidden` | `403` | Papel do usuário fora da declaração da rota | "Forbidden" |
-| `Not Found` | `404` | Rota retirada por não declarar acesso | "Not Found" |
 | `PERSON_EXTERNAL_ID_ALREADY_EXISTS` | `409` | `external_id` já usado na instituição | "PERSON_EXTERNAL_ID_ALREADY_EXISTS" |
 | validação | `422` | Campo ausente, vazio ou acima do tamanho | a lista de erros de validação do FastAPI |
 | `LOGIN_RATE_LIMITED` | `429` | Cota do login excedida | "LOGIN_RATE_LIMITED" |
@@ -285,14 +281,10 @@ Então o sistema responde `403` com "Forbidden"
 E nenhuma linha é gravada em `person`
 ```
 
-### Cenário 5 — Rota sem declaração de acesso não é servida (exceção)
+### Cenário 5 — removido
 
-```gherkin
-Dado uma rota registrada sem declarar papéis nem que é pública
-Quando o serviço inicia
-Então grava o log de erro `route_without_access_declaration` com o método e o caminho
-E uma requisição a essa rota responde `404`
-```
+Removido em 2026-10-07 com o critério NFR-SEC-04.2: a retirada de rota sem declaração deixou de existir. O
+número fica reservado para não renumerar os cenários que as issues citam.
 
 ### Cenário 6 — Token encerrado por logout (caminho alternativo)
 
@@ -379,7 +371,7 @@ E nenhum token é criado
 ```gherkin
 Dado o ambiente sem a variável `DATABASE_URL`
 Quando o serviço, o comando `create-manager` ou as migrations iniciam
-Então o processo encerra com erro que contém "DATABASE_URL" e o formato esperado
+Então o processo encerra com erro que nomeia a variável e não traz o valor de nenhuma variável
 E nenhuma variável tem valor padrão no módulo de ambiente
 ```
 
@@ -453,7 +445,7 @@ As quatro tabelas entram no diagrama do modelo lógico em `docs/data-model/READM
 
 | # | Issue | Título | Escopo | Critério de aceite | Depende de |
 | --- | --- | --- | --- | --- | --- |
-| 1 | #186 | Criar o serviço da API com ambiente obrigatório e rotas negadas por padrão | `apps/api`: projeto `uv` com dependências fixadas, módulo de ambiente, `GET /health`, registro de rotas que retira a rota sem declaração, OpenAPI sob `API_DOCS_ENABLED`, gates Ruff, mypy e pytest, `apps/api/AGENTS.md` e a tabela de comandos do `AGENTS.md` da raiz | Cenários 5 e 15 | — |
+| 1 | #186 | Criar o serviço da API com ambiente obrigatório e verificação de saúde | `apps/api`: projeto `uv` com dependências fixadas, módulo de ambiente, `GET /health`, OpenAPI sob `API_DOCS_ENABLED`, gates Ruff, mypy e pytest, `apps/api/AGENTS.md` e a tabela de comandos do `AGENTS.md` da raiz | Cenário 15 | — |
 | 2 | #187 | Subir o compose e o primeiro esquema com isolamento por instituição | `infra/docker-compose.yml` com PostgreSQL, Redis e o Serviço; os dois papéis de banco; Alembic e a primeira migration com `institution`, `user`, `accesstoken` e `person` sob RLS; a sessão que define `app.current_institution_id` | Cenários 11 e 12 | 1 |
 | 3 | #188 | Autenticar o gestor com rotas declaradas por papel e cota no login | Módulo `access`: login e logout do `fastapi-users` com token no banco, declaração de papéis por rota, cota do login no Redis, comando `create-manager` | Cenários 2, 3, 4, 6, 7, 13, 14, 16 e 17 | 2 |
 | 4 | #189 | Criar pessoa na instituição do gestor | Módulo `registry`: `POST /v1/people` com unicidade de `external_id` por instituição | Cenários 1, 8, 9 e 10 | 3 |

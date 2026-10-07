@@ -10,8 +10,9 @@ A verdade de produto vive em `docs/requirements/`, um SRS versionado. As decisõ
 
 Leia isto antes de afirmar que algo está pronto. O sistema está sendo reescrito do zero na branch `develop`, conforme os ADRs 0005 a 0007, e quase nada do que foi decidido existe em código.
 
-- A `develop` contém só documentação, o ferramental do repositório e `firmware/esp32-cam/.gitkeep`. Não há `apps/`, `packages/` nem `infra/`.
-- `apps/api` e `packages/pipeline` não existem. Nenhuma linha deles foi escrita.
+- A `develop` contém documentação, o ferramental do repositório, `firmware/esp32-cam/.gitkeep` e o começo de `apps/api`. Não há `packages/` nem `infra/`.
+- `apps/api` tem só a fundação: ambiente obrigatório, `GET /health` e o OpenAPI sob `API_DOCS_ENABLED`. Não tem banco, Redis, autenticação nem módulo de capacidade.
+- `packages/pipeline` não existe. Nenhuma linha dele foi escrita.
 - Não existe compose. Banco e Redis não sobem a partir da `develop`.
 - A `main` guarda o sistema anterior: `apps/api-core`, `apps/ai-service`, `packages/types`, `apps/web` e `infra/`. Ninguém a altera, e ela não é base de trabalho novo.
 - Os PRs #168 e #172 são trabalho de painel sobre a `main`, do plano anterior. O destino deles é decidido com quem os abriu.
@@ -29,7 +30,7 @@ Um agente que encontrar qualquer um desses itens já resolvido deve confirmar no
 
 | Camada | Tecnologia | Estado |
 |---|---|---|
-| Backend | Python 3.13, FastAPI, SQLAlchemy, Alembic, `fastapi-users` | decidido no ADR 0005, não construído |
+| Backend | Python 3.13, FastAPI, SQLAlchemy, Alembic, `fastapi-users` | decidido no ADR 0005; só a fundação de `apps/api` existe |
 | Inferência | InsightFace `buffalo_l`, MiniFASNetV2, FER MobileFaceNet, ONNX Runtime | decidido no ADR 0006, não construído |
 | Banco | PostgreSQL 16 + pgvector 0.8 (imagem pinada em `0.8.6-pg16-bookworm`), isolamento por RLS | decidido, sem compose |
 | Cota e canal de comandos | Redis 7 | decidido, sem compose |
@@ -66,7 +67,7 @@ Só entra aqui comando que foi executado. Cada área com gates próprios tem o s
 
 | Área | Gates |
 |---|---|
-| `apps/api` | pendente: a pasta não existe |
+| `apps/api` | `uv run ruff check` · `uv run ruff format --check` · `uv run mypy` · `uv run pytest`; o serviço sobe com `uv run fastapi dev`. Detalhes em `apps/api/AGENTS.md` |
 | `packages/pipeline` | pendente: a pasta não existe |
 | `firmware/esp32-cam` | pendente: sem código |
 | `apps/web` | pendente: a pasta não existe |
@@ -93,7 +94,9 @@ infra/               compose único e proxy TLS
 docs/research/       pré-registro e harness de avaliação do artigo
 ```
 
-Módulos de `apps/api`, um por capacidade, com os nomes das áreas do SRS: `registry`, `devices`, `biometrics`, `recognition`, `affective`, `access`, `governance`.
+`apps/api` separa infraestrutura de capacidade: `app/core/` guarda ambiente, banco, Redis e log; `app/features/` guarda um módulo por capacidade, com os nomes das áreas do SRS: `registry`, `devices`, `biometrics`, `recognition`, `affective`, `access`, `governance`. Dentro de um módulo, cada responsabilidade é um arquivo (`router.py`, `service.py`, `queries.py`, `schemas.py`, `models.py`), detalhado em `apps/api/AGENTS.md`.
+
+O paradigma é funções e dados; classe só quando o framework exige. Cada área segue a linguagem, o framework e as bibliotecas dela, nunca o padrão de outra stack.
 
 Regras de fronteira:
 
@@ -108,7 +111,8 @@ Onde vai um arquivo novo:
 
 | O que é | Onde |
 |---|---|
-| Rota, regra ou consulta de uma capacidade | o módulo da capacidade em `apps/api` |
+| Rota, regra ou consulta de uma capacidade | o módulo da capacidade em `apps/api/app/features` |
+| Ambiente, conexão de banco ou de Redis, log | `apps/api/app/core` |
 | Etapa de inferência ou carga de modelo | `packages/pipeline` |
 | Código da câmera | `firmware/esp32-cam` |
 | Tela | `apps/web` |

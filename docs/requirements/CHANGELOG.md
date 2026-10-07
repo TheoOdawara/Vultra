@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.1.0 — 2026-10-07
+
+Mudança decidida por Theo durante a issue #186, sem issue própria.
+
+- **NFR-SEC-04:** sai o critério NFR-SEC-04.2, que retirava na inicialização a rota registrada sem
+  declaração de permissão. A proteção passa a ser a autenticação exigida pelo router da rota, o mecanismo do
+  próprio FastAPI, e o critério NFR-SEC-04.1 continua valendo.
+- **NFR-SEC-06:** o erro de inicialização nomeia a variável ausente; deixa de trazer o formato esperado. A
+  leitura do ambiente é uma classe de configuração tipada, sem validação escrita à mão.
+
 ## 1.0.0 — 2026-10-06
 
 Primeira versão do SRS, levantada do zero em entrevista com Theo (issue #173).

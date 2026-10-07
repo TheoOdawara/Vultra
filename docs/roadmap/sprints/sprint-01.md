@@ -2,14 +2,15 @@
 
 **Meta:** a ESP32-CAM real conecta por `wss://` com o certificado fixado, entrega um quadro JPEG e
 reconecta depois de uma queda de rede.
-**Baseline de requisitos:** v1.0.0, sem pedido de mudança aberto.
-**Itens:** #173, #180, #184, #181, #183, #176
+**Baseline de requisitos:** v1.0.0 no início; v1.1.0 desde 2026-10-07, mudança decidida na #186.
+**Itens:** #173, #180, #184, #181, #183, #176, #186
 
 Em ordem de dependência:
 
 1. #181 — o teste de bancada que decide o [ADR 0007](../../decisions/0007-canal-da-camera-por-websocket.md).
 2. #183 — o levantamento de modelos de vivacidade, que não depende de hardware.
-3. #176 — só a spec e as sub-issues que ela gera. O código do épico abre o Sprint 2.
+3. #176 — a spec, as sub-issues que ela gera e a primeira delas, #186. As sub-issues #187 a #189 abrem o
+   Sprint 2.
 
 ## Replanejamento de 2026-10-06
 

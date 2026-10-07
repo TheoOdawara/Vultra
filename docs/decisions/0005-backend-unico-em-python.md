@@ -42,14 +42,14 @@ resolve junto em Python 3.13.
 
 | Função | Biblioteca | Versão |
 | --- | --- | --- |
-| Servidor e API | `fastapi`, `uvicorn` | 0.142.2, 0.54.0 |
+| Servidor e API | `fastapi`, `fastapi-cli`, `uvicorn` | 0.142.2, 0.0.32, 0.54.0 |
 | Validação e ambiente | `pydantic`, `pydantic-settings` | 2.13.5, 2.15.0 |
 | Banco | `sqlalchemy`, `psycopg`, `alembic`, `pgvector` | 2.0.54, 3.3.6, 1.20.0, 0.5.0 |
 | Usuários e sessão | `fastapi-users`, `fastapi-users-db-sqlalchemy` | 15.0.5, 7.0.0 |
 | Cota | `limits` sobre `redis` | 5.8.0, 8.1.0 |
 | Log e correlação | `structlog`, `asgi-correlation-id` | 26.1.0, 5.0.1 |
 | Inferência | `insightface`, `onnxruntime`, `opencv-python-headless`, `numpy` | 2.1, 1.30.0, 5.0.0.93, 2.5.3 |
-| Testes | `pytest`, `anyio`, `httpx`, `testcontainers` | 9.1.1, 4.15.1, 0.28.1, 4.15.0 |
+| Testes | `pytest`, `anyio`, `httpx2`, `testcontainers` | 9.1.1, 4.15.1, 2.13.1, 4.15.0 |
 | Gates | `ruff`, `mypy` | 0.16.10, 2.4.0 |
 
 **Implantação.** Um único arquivo de compose sobe tudo — banco, Redis, serviço e proxy TLS — nos dois
@@ -57,6 +57,12 @@ ambientes do NFR-FLEX-01. Local e nuvem diferem só na configuração.
 
 **Painel.** Não é tocado no E1. A tecnologia dele é decidida quando o E2 for planejado; até lá o
 [0004](0004-topologia-e-fundacao-do-portal.md) fica como está, sem servir de base para trabalho novo.
+
+**Emenda de 2026-10-07 (Theo).** Dentro de `apps/api`, a infraestrutura fica em `app/core/` e os módulos
+por capacidade em `app/features/`. Em cada módulo, rota, regra, consulta, esquema e tabela são arquivos
+separados (`router.py`, `service.py`, `queries.py`, `schemas.py`, `models.py`), porque mudam por motivos
+diferentes. O arquivo nasce quando tem conteúdo. `apps/api` é uma aplicação sem empacotamento: não tem
+`src/` nem backend de build.
 
 ## Consequências
 
@@ -69,6 +75,9 @@ ambientes do NFR-FLEX-01. Local e nuvem diferem só na configuração.
 - **`fastapi-users` está em modo manutenção.** Recebe correção de segurança e de dependência, sem
   funcionalidade nova, e tem sucessor anunciado. Aceito por Theo em 2026-10-06; herda-se uma migração
   futura.
+- **O cliente HTTP dos testes é o `httpx2`, não o `httpx`.** O `httpx` parou na 0.28.1, sem 1.0 estável, e
+  o `TestClient` do Starlette 1.7 emite aviso de depreciação com ele. O `httpx2` é a continuação mantida
+  pela Pydantic. Trocado por Theo em 2026-10-07.
 - **`pwdlib` não é fixado por nós.** O `fastapi-users` 15.0.5 o fixa em 0.3.0.
 - **`insightface` 2.1 declara `opencv-python`**, a variante com interface gráfica, que se instala ao lado
   da `headless`. A dependência é sobrescrita no `uv` para ficar só a `headless`.

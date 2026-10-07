@@ -1,6 +1,9 @@
 {
   "isGitignoreExtActive": true,
   "editor.formatOnSave": true,
+  "python.analysis.typeCheckingMode": "off",
+  "mypy-type-checker.cwd": "${workspaceFolder}/apps/api",
+  "mypy-type-checker.path": ["uv", "run", "python", "-I", "-m", "mypy"],
   "[python]": {
     "editor.defaultFormatter": "charliermarsh.ruff",
     "editor.codeActionsOnSave": {

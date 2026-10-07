@@ -6,7 +6,7 @@ decidido.
 
 | Regra | Onde é imposta | Requisito |
 | --- | --- | --- |
-| Toda rota declara os papéis que a acessam ou que é pública; sem declaração, não é servida | Serviço | NFR-SEC-04 |
+| Toda rota de dado exige autenticação e declara os papéis que a acessam | Serviço | NFR-SEC-04 |
 | O gestor só opera a própria instituição | Serviço e PostgreSQL | FR-ACC-01, NFR-SEC-01 |
 | O login tem cota por IP e por e-mail; Redis fora do ar nega | Serviço e Redis | FR-ACC-01 |
 | A câmera autentica com credencial própria, guardada com hash | Serviço | FR-DEV-01 |
