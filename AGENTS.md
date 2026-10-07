@@ -152,7 +152,7 @@ O hook de `SessionStart` em `.claude/settings.json` imprime o brief da sessão: 
 
 A `develop` é a branch de integração da reescrita. A `main` guarda o sistema anterior e fica intocada até a `develop` substituí-la, quando o dono do repositório decidir.
 
-Nada entra na `develop` por push direto: todo trabalho sai de uma branch própria (`feat/`, `fix/`, `docs/`, `chore/`), cortada da `develop`, e entra por Pull Request com aprovação do outro integrante. Somos dois: Theo e Vinicius. A exceção existe apenas quando o dono do repositório pede explicitamente, caso a caso, e não vira precedente.
+Nada entra na `develop` por push direto: todo trabalho sai de uma branch própria (`feat/`, `fix/`, `docs/`, `chore/`), cortada da `develop`, e entra por Pull Request, sem exigir aprovação de outro integrante. A exceção existe apenas quando o dono do repositório pede explicitamente, caso a caso, e não vira precedente.
 
 A coluna Staging do Project é o que já foi mesclado na `develop`.
 
