@@ -11,6 +11,19 @@ outras, e o isolamento é o objeto da seção experimental do artigo
 2. **Banco.** O PostgreSQL impõe o mesmo corte por RLS. Uma consulta sem o filtro da aplicação, ou sem
    contexto de instituição, devolve zero linhas de outra instituição.
 
+## Mecanismo (E1)
+
+Definido na [SPEC-004](../../specs/acesso-do-gestor-e-criacao-de-pessoa.md).
+
+- Toda tabela com `institution_id` tem RLS habilitado e forçado. A política compara a coluna com
+  `app.current_institution_id`; sem esse contexto, nenhuma linha passa.
+- O Serviço define `app.current_institution_id` com `SET LOCAL`, na mesma transação da consulta, em um
+  único ponto.
+- O Serviço conecta com um papel de banco que não é dono das tabelas e não tem `BYPASSRLS`. As
+  migrations usam outro papel.
+- `user` e `accesstoken` ficam fora do RLS: o login procura o usuário antes de existir contexto de
+  instituição. Por isso o e-mail é único no sistema inteiro.
+
 ## De onde vem a instituição
 
 | Quem chama | Origem |

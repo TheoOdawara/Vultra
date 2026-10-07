@@ -19,4 +19,6 @@ auditoria. Faz a comparação 1:N do vetor de uma captura contra a galeria da in
   ([ADR-002 de banco](../../database/adrs/ADR-002-pin-pgvector-0.8.md)).
 - O índice é HNSW ([ADR-001 de banco](../../database/adrs/ADR-001-pgvector-hnsw.md)). A topologia do
   índice sob RLS é a variável do experimento em [../../research/pre-registro.md](../../research/pre-registro.md).
-- O esquema do backend novo ainda não existe; ver [../../data-model/](../../data-model/README.md).
+- Há dois papéis de banco: o do Serviço, sem `BYPASSRLS` e sem ser dono das tabelas, e o das
+  migrations ([tenancy](../concepts/tenancy.md)).
+- O esquema do backend novo ainda não existe; as primeiras tabelas são do épico #176. Ver [../../data-model/](../../data-model/README.md).

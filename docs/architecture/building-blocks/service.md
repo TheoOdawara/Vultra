@@ -38,3 +38,9 @@ decidido.
   [OQ-03](../../requirements/open-questions.md#oq-03); só o ponto de chamada do Pipeline muda.
 - O usuário e a sessão vêm do `fastapi-users`, que mantém o `sqlalchemy` na linha 2.0
   ([0005](../../decisions/0005-backend-unico-em-python.md)).
+- Cada rota declara os papéis que a acessam ou que é pública. Uma rota sem declaração é retirada na
+  inicialização (E1, [SPEC-004](../../specs/acesso-do-gestor-e-criacao-de-pessoa.md)).
+- A sessão é um token Bearer guardado no PostgreSQL, com 8 horas de validade; o logout o apaga (E1,
+  SPEC-004).
+- A instituição da requisição é definida no banco em um único ponto, na mesma transação da consulta
+  ([tenancy](../concepts/tenancy.md)).
