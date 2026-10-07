@@ -14,10 +14,13 @@
 - **Migrations:** Alembic ([0005](../decisions/0005-backend-unico-em-python.md)).
 - **Redis:** guarda só cota e comandos de câmera; nada dele é fonte de verdade.
 
+- **Tabelas e chaves:** estão no [modelo lógico](README.md). Das tabelas do épico #176,
+  só `person` fica sob RLS, habilitado e forçado.
+
 ## O que não existe ainda
 
-As tabelas, chaves e índices do backend novo. Eles são definidos nas specs do E1 e registrados aqui
-quando a primeira migration for escrita.
+Nenhuma migration foi escrita. As tabelas das outras entidades entram no modelo lógico quando a spec
+de cada uma fechar.
 
 O esquema em `apps/api-core/src/infrastructure/database/schema/` é o do backend anterior, congelado, e
 não é a base do novo.

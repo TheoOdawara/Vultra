@@ -6,8 +6,9 @@ decidido.
 
 | Regra | Onde é imposta | Requisito |
 | --- | --- | --- |
-| Toda rota declara a permissão que exige; sem declaração, nega | Serviço | NFR-SEC-04 |
+| Toda rota declara os papéis que a acessam ou que é pública; sem declaração, não é servida | Serviço | NFR-SEC-04 |
 | O gestor só opera a própria instituição | Serviço e PostgreSQL | FR-ACC-01, NFR-SEC-01 |
+| O login tem cota por IP e por e-mail; Redis fora do ar nega | Serviço e Redis | FR-ACC-01 |
 | A câmera autentica com credencial própria, guardada com hash | Serviço | FR-DEV-01 |
 | Revogar ou rotacionar a credencial derruba a conexão aberta | Serviço | FR-DEV-02, FR-DEV-03 |
 | Nada trafega sem TLS entre câmera e servidor | Proxy e firmware | NFR-SEC-02 |
@@ -20,4 +21,5 @@ Uma regra só conta como atendida quando existe um teste que falha se o guard fo
 é uma política do banco, o teste roda contra um PostgreSQL de verdade.
 
 O ADR 0001 nomeia mecanismos do backend anterior, como `withTenantContext()`. As regras valem; os
-mecanismos do backend novo são definidos nas specs do E1.
+mecanismos do backend novo são definidos nas specs do E1. Os de acesso, isolamento e ambiente estão na
+[SPEC-004](../../specs/acesso-do-gestor-e-criacao-de-pessoa.md).

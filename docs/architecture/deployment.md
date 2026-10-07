@@ -1,6 +1,6 @@
 # Implantação e entrega
 
-![Diagrama de implantação](../diagrams/deployment.drawio.svg)
+![Diagrama de implantação](diagrams/deployment.drawio.svg)
 
 ## Ambientes
 
@@ -27,7 +27,8 @@ sobe todos os contêineres; o que muda entre os ambientes é só a configuraçã
 | Painel | Contêiner | E2 |
 
 O `infra/docker-compose.yml` de hoje sobe o backend anterior e publica as portas do banco, do Redis e
-do `ai-service`. Ele é reescrito no E1.
+do `ai-service`. Ele é reescrito no épico #176 com PostgreSQL, Redis e o Serviço; o Proxy TLS entra no
+épico #178.
 
 ## Entrega
 

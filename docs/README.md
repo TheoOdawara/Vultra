@@ -11,8 +11,10 @@ Cada pasta trata de um assunto e abre com um `README.md` que a indexa.
 | [decisions/](decisions/README.md) | ADRs: por que cada decisão transversal foi tomada |
 | [specs/](specs/) | Especificações de funcionalidade. As três que existem descrevem o plano anterior ao SRS 1.0.0 |
 | [research/](research/pre-registro.md) | Pré-registro do experimento do artigo |
-| [diagrams/](diagrams/) | Diagramas `.drawio.svg`, editáveis no VS Code com a extensão `hediet.vscode-drawio` |
 | [backend/adrs/](backend/adrs/README.md) · [database/adrs/](database/adrs/README.md) | ADRs anteriores a 2026-10-06 |
+
+Cada diagrama fica na pasta `diagrams/` do documento que ele ilustra, como `.drawio.svg`, editável no
+VS Code com a extensão `hediet.vscode-drawio`.
 
 ## Abrir o site local
 
