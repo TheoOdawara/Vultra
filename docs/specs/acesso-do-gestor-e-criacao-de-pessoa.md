@@ -1,6 +1,6 @@
 # SPEC-004 — Autenticar gestor e criar pessoa
 
-> **Status:** fechada
+> **Status:** publicada
 > **Perfil:** API
 > **Módulo:** `apps/api`, módulos `access` e `registry`
 > **Epic:** #176
@@ -451,9 +451,9 @@ As quatro tabelas entram no diagrama do modelo lógico em `docs/data-model/READM
 
 ## Quebra em Tasks
 
-| # | Título | Escopo | Critério de aceite | Depende de |
-| --- | --- | --- | --- | --- |
-| 1 | Scaffold the API service with required environment and deny-by-default routes | `apps/api`: projeto `uv` com dependências fixadas, módulo de ambiente, `GET /health`, registro de rotas que retira a rota sem declaração, OpenAPI sob `API_DOCS_ENABLED`, gates Ruff, mypy e pytest, `apps/api/AGENTS.md` e a tabela de comandos do `AGENTS.md` da raiz | Cenários 5 e 15 | — |
-| 2 | Add the compose and the first schema with institution isolation | `infra/docker-compose.yml` com PostgreSQL, Redis e o Serviço; os dois papéis de banco; Alembic e a primeira migration com `institution`, `user`, `accesstoken` e `person` sob RLS; a sessão que define `app.current_institution_id` | Cenários 11 e 12 | 1 |
-| 3 | Authenticate the manager with role-declared routes and a login quota | Módulo `access`: login e logout do `fastapi-users` com token no banco, declaração de papéis por rota, cota do login no Redis, comando `create-manager` | Cenários 2, 3, 4, 6, 7, 13, 14, 16 e 17 | 2 |
-| 4 | Create a person in the manager's institution | Módulo `registry`: `POST /v1/people` com unicidade de `external_id` por instituição | Cenários 1, 8, 9 e 10 | 3 |
+| # | Issue | Título | Escopo | Critério de aceite | Depende de |
+| --- | --- | --- | --- | --- | --- |
+| 1 | #186 | Criar o serviço da API com ambiente obrigatório e rotas negadas por padrão | `apps/api`: projeto `uv` com dependências fixadas, módulo de ambiente, `GET /health`, registro de rotas que retira a rota sem declaração, OpenAPI sob `API_DOCS_ENABLED`, gates Ruff, mypy e pytest, `apps/api/AGENTS.md` e a tabela de comandos do `AGENTS.md` da raiz | Cenários 5 e 15 | — |
+| 2 | #187 | Subir o compose e o primeiro esquema com isolamento por instituição | `infra/docker-compose.yml` com PostgreSQL, Redis e o Serviço; os dois papéis de banco; Alembic e a primeira migration com `institution`, `user`, `accesstoken` e `person` sob RLS; a sessão que define `app.current_institution_id` | Cenários 11 e 12 | 1 |
+| 3 | #188 | Autenticar o gestor com rotas declaradas por papel e cota no login | Módulo `access`: login e logout do `fastapi-users` com token no banco, declaração de papéis por rota, cota do login no Redis, comando `create-manager` | Cenários 2, 3, 4, 6, 7, 13, 14, 16 e 17 | 2 |
+| 4 | #189 | Criar pessoa na instituição do gestor | Módulo `registry`: `POST /v1/people` com unicidade de `external_id` por instituição | Cenários 1, 8, 9 e 10 | 3 |
