@@ -8,17 +8,18 @@ A verdade de produto vive em `docs/requirements/`, um SRS versionado. As decisõ
 
 ## Estado real do repositório
 
-Leia isto antes de afirmar que algo está pronto. O repositório está no meio de uma reescrita decidida nos ADRs 0005 a 0007, e o que existe em código não é o que foi decidido.
+Leia isto antes de afirmar que algo está pronto. O sistema está sendo reescrito do zero na branch `develop`, conforme os ADRs 0005 a 0007, e quase nada do que foi decidido existe em código.
 
-- O backend decidido, `apps/api`, não existe. Nenhuma linha dele foi escrita.
-- `firmware/esp32-cam/` contém apenas um `.gitkeep`.
-- `apps/api-core`, `apps/ai-service` e `packages/types` são o backend anterior. Estão congelados: ninguém os altera, e saem do repositório quando o substituto do estágio E1 existir.
-- `infra/docker-compose.yml` sobe o backend anterior, não o decidido.
-- O ADR 0007 (canal da câmera) está `proposed`: depende de um teste de bancada na ESP32-CAM real que ainda não foi feito.
+- A `develop` contém só documentação, o ferramental do repositório e `firmware/esp32-cam/.gitkeep`. Não há `apps/`, `packages/` nem `infra/`.
+- `apps/api` e `packages/pipeline` não existem. Nenhuma linha deles foi escrita.
+- Não existe compose. Banco e Redis não sobem a partir da `develop`.
+- A `main` guarda o sistema anterior: `apps/api-core`, `apps/ai-service`, `packages/types`, `apps/web` e `infra/`. Ninguém a altera, e ela não é base de trabalho novo.
+- Os PRs #168 e #172 são trabalho de painel sobre a `main`, do plano anterior. O destino deles é decidido com quem os abriu.
+- O ADR 0007 (canal da câmera) está `proposed`: depende do teste de bancada na ESP32-CAM real, que é a issue #181.
 - Nenhum workflow de CI existe. Todo gate roda na máquina de quem desenvolve.
-- A `main` não tem proteção configurada. A regra de branch abaixo é convenção; a issue é a #158.
-- `apps/web` é uma casca: uma página de placeholder e o cliente de API. Não tem Playwright nem axe-core (#125, #126).
-- As specs em `docs/specs/` e as issues abertas antes de 2026-10-06 descrevem o plano anterior ao SRS 1.0.0 e citam IDs `RF-NN` e `RNF-NN` que deixaram de existir.
+- Nenhuma branch tem proteção configurada. A regra de branch abaixo é convenção.
+- As specs em `docs/specs/` descrevem o plano anterior ao SRS 1.0.0 e citam IDs `RF-NN` e `RNF-NN` que deixaram de existir. As issues e os milestones desse plano foram fechados em 2026-10-06.
+- O hook de início de sessão ainda mede a distância da branch em relação a `origin/main`, não a `origin/develop`.
 
 Um agente que encontrar qualquer um desses itens já resolvido deve confirmar no código antes de acreditar.
 
@@ -30,10 +31,10 @@ Um agente que encontrar qualquer um desses itens já resolvido deve confirmar no
 |---|---|---|
 | Backend | Python 3.13, FastAPI, SQLAlchemy, Alembic, `fastapi-users` | decidido no ADR 0005, não construído |
 | Inferência | InsightFace `buffalo_l`, MiniFASNetV2, FER MobileFaceNet, ONNX Runtime | decidido no ADR 0006, não construído |
-| Banco | PostgreSQL 16 + pgvector 0.8 (imagem pinada em `0.8.6-pg16-bookworm`), isolamento por RLS | em uso |
-| Cota e canal de comandos | Redis 7 | em uso pelo backend anterior |
+| Banco | PostgreSQL 16 + pgvector 0.8 (imagem pinada em `0.8.6-pg16-bookworm`), isolamento por RLS | decidido, sem compose |
+| Cota e canal de comandos | Redis 7 | decidido, sem compose |
 | Firmware | ESP32-CAM | não construído; framework a definir no teste de bancada do ADR 0007 |
-| Painel | ver `apps/web/AGENTS.md` | tecnologia reavaliada quando o E2 for planejado |
+| Painel | a definir | não existe na `develop`; tecnologia decidida quando o E2 for planejado |
 | Gerenciador Python | `uv` | decidido |
 | Lint e tipos | Ruff e mypy no Python | decidido |
 
@@ -65,11 +66,10 @@ Só entra aqui comando que foi executado. Cada área com gates próprios tem o s
 
 | Área | Gates |
 |---|---|
-| `apps/web` | em `apps/web/AGENTS.md` |
 | `apps/api` | pendente: a pasta não existe |
 | `packages/pipeline` | pendente: a pasta não existe |
 | `firmware/esp32-cam` | pendente: sem código |
-| `apps/api-core`, `apps/ai-service` | n/a: congelados, sem gate; a suíte do `ai-service` nunca terminou de rodar |
+| `apps/web` | pendente: a pasta não existe |
 
 **Documentação**
 
@@ -103,7 +103,6 @@ Regras de fronteira:
 - Uma interface só existe em fronteira externa real. Não se cria interface com uma única implementação.
 - O quadro existe apenas em memória. Não é gravado em banco, disco, log, Redis, trilha de auditoria, mensagem de erro nem resposta.
 - O isolamento por instituição é imposto no banco por RLS e também filtrado na aplicação.
-- Nada novo entra em `apps/api-core`, `apps/ai-service` nem `packages/types`.
 
 Onde vai um arquivo novo:
 
@@ -140,20 +139,22 @@ O resumo em uma frase: autorização nega por padrão, nada cruza a fronteira da
 
 ## Início de sessão e coordenação
 
-O hook de `SessionStart` em `.claude/settings.json` imprime o brief da sessão: branch e distância de `origin/main`, PRs abertos, issues assignadas e milestones em curso. Ele é o ponto de partida, não um detalhe — sessão que ignora o brief repete trabalho ou colide com o outro integrante.
+O hook de `SessionStart` em `.claude/settings.json` imprime o brief da sessão: branch e distância de `origin/main`, PRs abertos, issues assignadas e milestones em curso. O plano e a ordem dos épicos estão em `docs/roadmap/`. Ele é o ponto de partida, não um detalhe — sessão que ignora o brief repete trabalho ou colide com o outro integrante.
 
 - Todo trabalho nasce de uma issue do GitHub, e a issue é assignada antes do primeiro commit.
 - Antes de escolher trabalho, verifique os PRs abertos e as branches remotas ativas. Trabalho anunciado por outro não é atropelado.
-- A base é sempre `origin/main` atualizada. Branch atrás da main se rebaseia antes de continuar.
+- A base é sempre `origin/develop` atualizada. Branch atrás da `develop` se rebaseia antes de continuar.
 - Estado compartilhado vive no GitHub (issues, PRs, milestones, o Project) e nos docs versionados. Memória local de agente não é canal de coordenação, e arquivo de estado fora do repositório não existe para o time.
 
 ---
 
 ## Branches
 
-Só existe `main`; não há branch de integração. Nada entra nela por push direto: todo trabalho sai de uma branch própria (`feat/`, `fix/`, `docs/`, `chore/`) e entra por Pull Request com aprovação do outro integrante. Somos dois: Theo e Vinicius. A exceção existe apenas quando o dono do repositório pede explicitamente, caso a caso, e não vira precedente.
+A `develop` é a branch de integração da reescrita. A `main` guarda o sistema anterior e fica intocada até a `develop` substituí-la, quando o dono do repositório decidir.
 
-Como o PR entra direto na `main`, a coluna Staging do Project fica sem uso.
+Nada entra na `develop` por push direto: todo trabalho sai de uma branch própria (`feat/`, `fix/`, `docs/`, `chore/`), cortada da `develop`, e entra por Pull Request com aprovação do outro integrante. Somos dois: Theo e Vinicius. A exceção existe apenas quando o dono do repositório pede explicitamente, caso a caso, e não vira precedente.
+
+A coluna Staging do Project é o que já foi mesclado na `develop`.
 
 ---
 
@@ -189,7 +190,6 @@ Conversa, documentação e issues em PT-BR. Código em inglês, sem exceção: i
 
 - `insightface` 2.1 emite um `FutureWarning` do `scikit-image` 0.26 a cada alinhamento de rosto. O `scikit-image` fica fixado em 0.26.0 e o aviso é filtrado nominalmente no gate.
 - `insightface` baixa os pesos do `buffalo_l` para `~/.insightface` na primeira execução, cerca de 600 MB, fora do repositório.
-- O Redis do compose atual tem volume em `/data` e snapshot ligado. Qualquer dado que passe por ele pode ir para o disco.
 - Um diagrama exportado pelo draw.io sem `--svg-theme light` segue o tema do navegador: em modo escuro as caixas ficam pretas e as setas somem sobre a página clara do site. Todo `.drawio.svg` é exportado com `drawio --export --embed-diagram --svg-theme light`.
 - Um diagrama com mais de 880 px de largura é reduzido pelo site até o texto ficar ilegível. O layout é vertical e cabe nessa largura.
 
@@ -202,6 +202,6 @@ Conversa, documentação e issues em PT-BR. Código em inglês, sem exceção: i
 - Escrever comentário que não foi pedido.
 - Ler, criar ou editar qualquer arquivo `.env`, incluindo o de exemplo, sem pedido explícito.
 - Dar valor padrão a variável de ambiente no ponto de leitura.
-- Commitar direto na `main`.
+- Commitar direto na `main` ou na `develop`.
 - Implementar feature não trivial sem teste escrito antes.
 - Tratar `docs/requirements/` ou os ADRs como sugestão.
