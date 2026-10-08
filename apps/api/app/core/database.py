@@ -2,9 +2,12 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from uuid import UUID
 
+from fastapi import Request
 from sqlalchemy import MetaData, text
-from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
+
+from app.core.settings import Settings
 
 
 class Base(DeclarativeBase):
@@ -17,6 +20,16 @@ class Base(DeclarativeBase):
             "pk": "pk_%(table_name)s",
         }
     )
+
+
+def create_engine(settings: Settings) -> AsyncEngine:
+    return create_async_engine(str(settings.database_url), hide_parameters=True)
+
+
+async def database_session(request: Request) -> AsyncIterator[AsyncSession]:
+    engine: AsyncEngine = request.app.state.engine
+    async with AsyncSession(engine, expire_on_commit=False) as session:
+        yield session
 
 
 @asynccontextmanager

@@ -142,6 +142,9 @@ Nenhum pedido carrega a instituição. Ela vem da sessão.
 
 - O login confere e-mail e senha pelo `fastapi-users`. E-mail inexistente, senha errada e usuário
   inativo recebem a mesma resposta: `400` com `"LOGIN_BAD_CREDENTIALS"`.
+- E-mail com caractere fora do ASCII recebe essa mesma resposta, sem consulta ao banco: o PostgreSQL e o
+  Python passam essas letras para minúscula de formas diferentes, e a conta ganharia mais de uma chave de
+  cota.
 - O logout apaga o token do banco. O mesmo token, usado depois, recebe `401`.
 - Senha e token nunca aparecem em log, em mensagem de erro nem em resposta que não seja a do login.
 
@@ -200,6 +203,8 @@ Nenhum pedido carrega a instituição. Ela vem da sessão.
 - A senha tem de 12 a 128 caracteres. Fora disso o comando encerra com
   `"password must have between 12 and 128 characters"` e nada é gravado.
 - Com um e-mail já existente, o comando encerra com `"email already registered"` e nada é gravado.
+- Com um e-mail com caractere fora do ASCII, o comando encerra com
+  `"email must have only ASCII characters"` e nada é gravado.
 - Em sucesso, imprime `"manager created: <email> (institution <id>)"`.
 
 ### 8. Persistência e Auditoria

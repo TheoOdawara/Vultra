@@ -8,11 +8,12 @@ ENV UV_COMPILE_BYTECODE=1 \
 WORKDIR /service
 
 COPY pyproject.toml uv.lock .python-version ./
-RUN uv sync --frozen --no-dev
+RUN uv sync --frozen --no-dev --no-install-project
 
 COPY alembic.ini ./
 COPY migrations ./migrations
 COPY app ./app
+RUN uv sync --frozen --no-dev --no-editable
 
 RUN useradd --system service
 USER service

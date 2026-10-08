@@ -4,14 +4,16 @@ O Serviço: o único backend do Vultra. Soma-se ao `AGENTS.md` da raiz e não o 
 
 ## Estado real
 
-Existem a fundação (a configuração de ambiente, `GET /health` e o OpenAPI sob `API_DOCS_ENABLED`) e o
-primeiro esquema: `institution`, `user`, `accesstoken` e `person`, esta sob RLS. Não há autenticação nem
-rota de capacidade. `DATABASE_URL` e `REDIS_URL` são lidas e o serviço ainda não se conecta a elas.
+Existem a fundação (a configuração de ambiente, `GET /health` e o OpenAPI sob `API_DOCS_ENABLED`), o
+primeiro esquema (`institution`, `user`, `accesstoken` e `person`, esta sob RLS) e o módulo `access`:
+`POST /v1/auth/login`, `POST /v1/auth/logout`, a declaração de papel por rota, a cota do login e o comando
+`create-manager`. Nenhuma outra capacidade tem rota, e nada ainda usa `institution_session`.
 
 ## Stack
 
-Projeto `uv` independente, com `pyproject.toml` e `uv.lock` próprios; não há workspace na raiz. É uma
-aplicação, não um pacote: o código fica em `app/`, sem `src/` e sem backend de build. Python 3.13, que o
+Projeto `uv` independente, com `pyproject.toml` e `uv.lock` próprios; não há workspace na raiz. O código
+fica em `app/`, sem `src/`, e é empacotado com o `uv_build` só para o `uv sync` instalar o executável
+`create-manager`. Python 3.13, que o
 `uv` instala sozinho no primeiro `uv sync`. As versões vêm da tabela do ADR 0005, e uma biblioteca dela só
 entra no `pyproject.toml` na entrega que a usa.
 
@@ -26,13 +28,16 @@ uv run ruff format --check
 uv run mypy
 uv run pytest
 uv run fastapi dev
+uv run create-manager --institution-name "<nome>" --email <e-mail>
 ```
 
 Para desenvolver, o PostgreSQL e o Redis sobem com `docker compose -f compose.dev.yaml up -d` em
 `infra`, em `127.0.0.1:5432` e `127.0.0.1:6379`, e as migrations rodam daqui com `uv run alembic upgrade head`.
 
 O `fastapi dev` é o CLI do FastAPI em modo de desenvolvimento, com recarga ao salvar; `fastapi run` é o modo
-de produção. Os dois acham a aplicação pelo `entrypoint` de `[tool.fastapi]` no `pyproject.toml`. O `.env` é
+de produção. No Windows só o `fastapi dev` serve: o `psycopg` assíncrono não aceita o laço de eventos que o
+`fastapi run` usa ali. O `create-manager` cria uma instituição e o primeiro gestor dela, pede a senha no
+terminal e recusa e-mail de domínio reservado, como `.test`. Os dois acham a aplicação pelo `entrypoint` de `[tool.fastapi]` no `pyproject.toml`. O `.env` é
 uma cópia preenchida de `.env.example` e não é versionado. O `pytest` trata todo aviso como erro. O `mypy`
 roda em modo `strict` sobre `app` e `tests`, com o plugin do Pydantic.
 
@@ -40,16 +45,18 @@ roda em modo `strict` sobre `app` e `tests`, com o plugin do Pydantic.
 
 ```
 app/main.py            o ponto de entrada: cria o `app` global que o CLI do FastAPI serve
-app/application.py     `create_app`: monta a aplicação a partir de um `Settings`
+app/application.py     `create_app`: monta a aplicação a partir de um `Settings` e cria o storage da cota
 app/core/settings.py   a configuração lida do ambiente
-app/core/database.py   a base dos modelos e `institution_session`, que define a instituição da transação
-app/features/          `access/models.py` e `registry/models.py`: as tabelas do primeiro esquema
+app/core/database.py   a base dos modelos, o engine, a sessão simples e `institution_session`, que define a instituição da transação
+app/features/access/   `router.py` (login e logout), `authentication.py` (a ligação com o `fastapi-users` e `require_roles`),
+                       `login_quota.py`, `create_manager.py` e `models.py`
+app/features/registry/ `models.py`: a tabela `person`
 migrations/            as migrations do Alembic, aplicadas com `MIGRATION_DATABASE_URL`; os privilégios vão para o usuário da `DATABASE_URL`
 tests/                 os testes, fora do pacote
 ```
 
 **`core/`** guarda a infraestrutura, que tem ciclo de vida próprio e não pertence a nenhuma capacidade:
-ambiente agora; conexão de banco, Redis e log quando chegarem.
+ambiente e sessão de banco; log quando chegar.
 
 **`features/`** nasce com a primeira capacidade e guarda uma pasta por capacidade do SRS. Dentro dela, cada
 responsabilidade é um arquivo, e o arquivo só nasce quando tem conteúdo:
@@ -64,7 +71,12 @@ responsabilidade é um arquivo, e o arquivo só nasce quando tem conteúdo:
 
 O `queries.py` guarda funções, não uma classe de repositório em volta da sessão: a `Session` do SQLAlchemy
 já é a unidade de trabalho. Uma responsabilidade vira pasta só quando uma feature tiver mais de um arquivo
-dela. Um `common/` só nasce quando duas features usarem a mesma coisa.
+dela.
+
+A tabela é o ponto de partida de uma capacidade com regra e consulta próprias, não uma forma a preencher.
+Um módulo que é quase todo ligação com uma biblioteca nomeia os arquivos pelo que eles guardam: em `access`
+quem consulta `user` e `accesstoken` é o `fastapi-users`, então não há `service.py` nem `queries.py`, e a
+ligação inteira fica em `authentication.py`, na ordem em que a documentação da biblioteca a apresenta. Um `common/` só nasce quando duas features usarem a mesma coisa.
 
 **Paradigma.** Funções e dados. Classe só quando o framework exige: `Settings`, esquema do Pydantic, modelo
 do SQLAlchemy. A estrutura segue o Python, o FastAPI e as bibliotecas em uso, nunca o padrão de outra
@@ -80,14 +92,28 @@ stack.
   `create_app` de `app.application` e passam um `Settings` próprio.
 - **OpenAPI.** `/docs` e `/openapi.json` são as rotas embutidas do FastAPI, ligadas só com
   `API_DOCS_ENABLED=true`.
-- **Autenticação.** Ainda não existe. Quando chegar, a rota protegida recebe a autenticação pela dependência
-  do router, que é o mecanismo do FastAPI; não há varredura de rotas na inicialização.
-- **Erros.** Quando a primeira regra de negócio chegar, ela levanta um erro de negócio com código, sem HTTP,
-  e um único ponto o traduz na resposta que o cliente recebe.
+- **Autenticação.** O `fastapi-users` confere a credencial e guarda o token no banco, válido por 8 horas. As
+  duas rotas de `access/router.py` são nossas e chamam a biblioteca, que é quem executa o SQL de usuário e
+  de token; o roteador pronto dela não é usado,
+  porque a cota roda antes da credencial e o logout exige papel.
+- **Autorização.** A rota protegida declara os papéis em `dependencies=[Depends(require_roles(...))]`, no
+  router ou na rota. Sem token válido a resposta é `401`; com papel fora da declaração, `403`. Não há
+  varredura de rotas na inicialização.
+- **Cota.** `enforce_login_quota` conta no Redis, pelo `limits`, antes de a credencial ser conferida. Redis
+  fora do ar ou lento além de 1 segundo nega com `503`. O login e o `create-manager` recusam e-mail com
+  caractere fora do ASCII: o PostgreSQL e o Python passam essas letras para minúscula de formas
+  diferentes, e uma mesma conta ganharia mais de uma chave de cota.
+- **Banco.** O engine nasce em `create_engine` com `hide_parameters=True`, para um erro de SQL não levar
+  token nem e-mail ao log.
+- **Erros.** Todo erro sai como `HTTPException`, o mecanismo do FastAPI, com o código da spec em `detail`:
+  `HTTPException(status.HTTP_400_BAD_REQUEST, "LOGIN_BAD_CREDENTIALS")`. Não há exceção de negócio própria
+  nem tratador que a traduza; os dois só nascem quando uma regra for chamada fora de uma rota.
 
 ## Testes
 
-Nenhum teste sobe banco. O RLS de `person` é conferido à mão no PostgreSQL do compose, pela emenda de
+Nenhum teste sobe banco nem Redis. Os testes de `access` trocam os adaptadores de usuário e de token do
+`fastapi-users` por versões em memória, via `dependency_overrides`, e o storage da cota em `app.state`
+pelo `MemoryStorage` do `limits`; a rota protegida que eles exercitam existe só no teste. O RLS de `person` é conferido à mão no PostgreSQL do compose, pela emenda de
 2026-10-07 ao ADR 0001.
 
 Os testes HTTP usam o `TestClient` do FastAPI sobre o `httpx2`. Com o `httpx` no lugar, o Starlette 1.7

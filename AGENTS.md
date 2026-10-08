@@ -11,7 +11,7 @@ A verdade de produto vive em `docs/requirements/`, um SRS versionado. As decisõ
 Leia isto antes de afirmar que algo está pronto. O sistema está sendo reescrito do zero na branch `develop`, conforme os ADRs 0005 a 0007, e quase nada do que foi decidido existe em código.
 
 - A `develop` contém documentação, o ferramental do repositório, `firmware/esp32-cam/.gitkeep`, o começo de `apps/api` e o compose em `infra/`. Não há `packages/`.
-- `apps/api` tem a fundação (ambiente obrigatório, `GET /health`, o OpenAPI sob `API_DOCS_ENABLED`) e o primeiro esquema: `institution`, `user`, `accesstoken` e `person`, esta sob RLS. O serviço ainda não abre conexão com o banco nem com o Redis, e não tem autenticação nem rota de capacidade.
+- `apps/api` tem a fundação (ambiente obrigatório, `GET /health`, o OpenAPI sob `API_DOCS_ENABLED`), o primeiro esquema (`institution`, `user`, `accesstoken` e `person`, esta sob RLS) e o módulo `access`: login e logout com token no banco, papel declarado por rota, cota do login no Redis e o comando `create-manager`. Nenhuma outra capacidade tem rota.
 - `packages/pipeline` não existe. Nenhuma linha dele foi escrita.
 - `infra/compose.yaml` sobe PostgreSQL, Redis, as migrations e o Serviço. `infra/compose.dev.yaml` sobe só PostgreSQL e Redis, para o Serviço rodar fora do contêiner. Não há proxy TLS.
 - A `main` guarda o sistema anterior: `apps/api-core`, `apps/ai-service`, `packages/types`, `apps/web` e `infra/`. Ninguém a altera, e ela não é base de trabalho novo.
@@ -33,7 +33,7 @@ Um agente que encontrar qualquer um desses itens já resolvido deve confirmar no
 | Backend | Python 3.13, FastAPI, SQLAlchemy, Alembic, `fastapi-users` | decidido no ADR 0005; existem a fundação de `apps/api` e o primeiro esquema |
 | Inferência | InsightFace `buffalo_l`, MiniFASNetV2, FER MobileFaceNet, ONNX Runtime | decidido no ADR 0006, não construído |
 | Banco | PostgreSQL 16 + pgvector 0.8 (imagem pinada em `0.8.6-pg16-bookworm`), isolamento por RLS | no compose; `person` sob RLS |
-| Cota e canal de comandos | Redis 7 | no compose; o serviço ainda não o usa |
+| Cota e canal de comandos | Redis 7 | no compose; guarda a cota do login |
 | Firmware | ESP32-CAM | não construído; framework a definir no teste de bancada do ADR 0007 |
 | Painel | a definir | não existe na `develop`; tecnologia decidida quando o E2 for planejado |
 | Gerenciador Python | `uv` | decidido |
@@ -54,7 +54,7 @@ As versões exatas das bibliotecas estão na tabela do ADR 0005 e não são repe
 
 ## Convenções
 
-- Toda dependência entra fixada com versão exata. `sqlalchemy` fica na linha 2.0 por exigência do adaptador do `fastapi-users`; o motivo está no ADR 0005.
+- Toda dependência entra fixada com versão exata. `sqlalchemy` fica na linha 2.0 por exigência do adaptador do `fastapi-users`; o motivo está no ADR 0005. `redis` fica na linha 7 por exigência do `limits`, no mesmo ADR.
 - `insightface` declara `opencv-python`; a dependência é sobrescrita no `uv` para ficar só a `opencv-python-headless`.
 - Um único arquivo de compose, `infra/compose.yaml`, sobe o sistema inteiro nos dois ambientes, local e nuvem. A diferença entre eles é só configuração. Ele não publica porta de banco nem de Redis.
 - `infra/compose.dev.yaml` existe só para desenvolver: estende o PostgreSQL e o Redis do compose principal e publica as portas deles em `127.0.0.1`. Não é ambiente de implantação.
@@ -68,7 +68,7 @@ Só entra aqui comando que foi executado. Cada área com gates próprios tem o s
 
 | Área | Gates |
 |---|---|
-| `apps/api` | `uv run ruff check` · `uv run ruff format --check` · `uv run mypy` · `uv run pytest`; o serviço sobe com `uv run fastapi dev`. Detalhes em `apps/api/AGENTS.md` |
+| `apps/api` | `uv run ruff check` · `uv run ruff format --check` · `uv run mypy` · `uv run pytest`; o serviço sobe com `uv run fastapi dev` e o primeiro gestor nasce com `uv run create-manager`. Detalhes em `apps/api/AGENTS.md` |
 | `infra` | `docker compose up -d --build` sobe tudo e aplica as migrations antes de o Serviço iniciar; `docker compose -f compose.dev.yaml up -d --remove-orphans` sobe só PostgreSQL e Redis |
 | `packages/pipeline` | pendente: a pasta não existe |
 | `firmware/esp32-cam` | pendente: sem código |
@@ -197,7 +197,7 @@ Conversa, documentação e issues em PT-BR. Código em inglês, sem exceção: i
 - `insightface` 2.1 emite um `FutureWarning` do `scikit-image` 0.26 a cada alinhamento de rosto. O `scikit-image` fica fixado em 0.26.0 e o aviso é filtrado nominalmente no gate.
 - `insightface` baixa os pesos do `buffalo_l` para `~/.insightface` na primeira execução, cerca de 600 MB, fora do repositório.
 - Um diagrama exportado pelo draw.io sem `--svg-theme light` segue o tema do navegador: em modo escuro as caixas ficam pretas e as setas somem sobre a página clara do site. Todo `.drawio.svg` é exportado com `drawio --export --embed-diagram --svg-theme light`.
-- No Windows, uma URL de banco com `localhost` faz cada conexão do psycopg esperar 130 segundos: ele tenta `::1` primeiro, onde a porta não está publicada, não percebe a recusa e só passa para `127.0.0.1` quando o tempo de conexão esgota. As URLs do `apps/api/.env` usam `127.0.0.1`.
+- No Windows, uma URL de banco com `localhost` faz cada conexão do psycopg esperar 130 segundos: ele tenta `::1` primeiro, onde a porta não está publicada, não percebe a recusa e só passa para `127.0.0.1` quando o tempo de conexão esgota. O cliente do Redis sofre do mesmo atraso, que estoura o tempo de conexão da cota e faz o login responder `503`. As URLs do `apps/api/.env` usam `127.0.0.1`.
 - Um diagrama com mais de 880 px de largura é reduzido pelo site até o texto ficar ilegível. O layout é vertical e cabe nessa largura.
 
 ---
