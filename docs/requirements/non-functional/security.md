@@ -65,11 +65,11 @@ controle de cota está indisponível.
 <a id="nfr-sec-04"></a>
 ## NFR-SEC-04 — Autorização que nega por padrão
 
-O sistema deve negar toda requisição a uma rota que não declare a permissão que exige.
+O sistema deve negar toda requisição sem autenticação a uma rota de dado.
 
 | Atributo | Valor |
 | --- | --- |
-| Rationale | A ausência de um guard precisa ser um erro visível, não uma rota aberta |
+| Rationale | Uma rota de dado aberta por esquecimento expõe a instituição inteira |
 | Source | Inferido na análise; aceito por Theo em 2026-10-06 |
 | Priority | Must |
 | Status | approved |
@@ -79,8 +79,6 @@ O sistema deve negar toda requisição a uma rota que não declare a permissão 
 **Critérios de aceite**
 - **NFR-SEC-04.1** — Dada uma requisição sem autenticação, quando ela atinge qualquer rota que não seja
   a verificação de saúde, então é negada; 0 rotas de dado respondem sem autenticação.
-- **NFR-SEC-04.2** — Dada uma rota registrada sem declaração de permissão, quando o sistema inicia,
-  então a rota não é servida.
 
 <a id="nfr-sec-05"></a>
 ## NFR-SEC-05 — Segredo fora do repositório e do log
@@ -104,8 +102,7 @@ log.
 <a id="nfr-sec-06"></a>
 ## NFR-SEC-06 — Ambiente obrigatório na inicialização
 
-O sistema deve recusar a inicialização quando falta uma variável de ambiente, nomeando a variável e o
-formato esperado.
+O sistema deve recusar a inicialização quando falta uma variável de ambiente, nomeando a variável.
 
 | Atributo | Valor |
 | --- | --- |
@@ -118,4 +115,4 @@ formato esperado.
 
 **Critérios de aceite**
 - **NFR-SEC-06.1** — Dada uma variável ausente, quando qualquer processo do sistema inicia, então ele
-  encerra com erro que nomeia a variável e o formato; 0 variáveis têm valor padrão no ponto de leitura.
+  encerra com erro que nomeia a variável; 0 variáveis têm valor padrão no ponto de leitura.

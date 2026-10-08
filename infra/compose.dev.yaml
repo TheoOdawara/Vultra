@@ -1,0 +1,19 @@
+name: vultra
+
+services:
+  postgres:
+    extends:
+      file: compose.yaml
+      service: postgres
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:?}:5432"
+
+  redis:
+    extends:
+      file: compose.yaml
+      service: redis
+    ports:
+      - "127.0.0.1:${REDIS_PORT:?}:6379"
+
+volumes:
+  postgres_data:

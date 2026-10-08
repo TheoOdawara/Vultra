@@ -1,6 +1,6 @@
 # Vultra — Especificação de Requisitos de Software
 
-**Versão:** 1.0.0 · **Data:** 2026-10-06 · [Changelog](CHANGELOG.md)
+**Versão:** 1.1.0 · **Data:** 2026-10-07 · [Changelog](CHANGELOG.md)
 
 ## Propósito
 
