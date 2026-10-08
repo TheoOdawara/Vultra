@@ -10,7 +10,7 @@ A verdade de produto vive em `docs/requirements/`, um SRS versionado. As decisõ
 
 Leia isto antes de afirmar que algo está pronto. O sistema está sendo reescrito do zero na branch `develop`, conforme os ADRs 0005 a 0007, e quase nada do que foi decidido existe em código.
 
-- A `develop` contém documentação, o ferramental do repositório, `firmware/esp32-cam/.gitkeep`, o começo de `apps/api` e o compose em `infra/`. Não há `packages/`.
+- A `develop` contém documentação, o ferramental do repositório, `esp32-cam/.gitkeep`, o começo de `apps/api` e o compose em `infra/`. Não há `packages/`.
 - `apps/api` tem a fundação (ambiente obrigatório, `GET /health`, o OpenAPI sob `API_DOCS_ENABLED`), o primeiro esquema (`institution`, `user`, `accesstoken` e `person`, esta sob RLS) e o módulo `access`: login e logout com token no banco, papel declarado por rota, cota do login no Redis e o comando `create-manager`. Nenhuma outra capacidade tem rota.
 - `packages/pipeline` não existe. Nenhuma linha dele foi escrita.
 - `infra/compose.yaml` sobe PostgreSQL, Redis, as migrations e o Serviço. `infra/compose.dev.yaml` sobe só PostgreSQL e Redis, para o Serviço rodar fora do contêiner. Não há proxy TLS.
@@ -71,7 +71,7 @@ Só entra aqui comando que foi executado. Cada área com gates próprios tem o s
 | `apps/api` | `uv run ruff check` · `uv run ruff format --check` · `uv run mypy` · `uv run pytest`; o serviço sobe com `uv run fastapi dev` e o primeiro gestor nasce com `uv run create-manager`. Detalhes em `apps/api/AGENTS.md` |
 | `infra` | `docker compose up -d --build` sobe tudo e aplica as migrations antes de o Serviço iniciar; `docker compose -f compose.dev.yaml up -d --remove-orphans` sobe só PostgreSQL e Redis |
 | `packages/pipeline` | pendente: a pasta não existe |
-| `firmware/esp32-cam` | pendente: sem código |
+| `esp32-cam` | pendente: sem código |
 | `apps/web` | pendente: a pasta não existe |
 
 **Documentação**
@@ -90,7 +90,7 @@ Decidida nos ADRs 0005, 0006 e 0007. O mapa completo está em `docs/architecture
 ```
 apps/api             serviço FastAPI: API, conexão das câmeras, banco        E1
 packages/pipeline    inferência: detecção, qualidade, vivacidade, vetor, emoção   E1
-firmware/esp32-cam   captura e envio do quadro                               E1
+esp32-cam            captura e envio do quadro                               E1
 apps/web             painel                                                  E2
 infra/               compose único e proxy TLS
 docs/research/       pré-registro e harness de avaliação do artigo
@@ -116,7 +116,7 @@ Onde vai um arquivo novo:
 | Rota, regra ou consulta de uma capacidade | o módulo da capacidade em `apps/api/app/features` |
 | Ambiente, conexão de banco ou de Redis, log | `apps/api/app/core` |
 | Etapa de inferência ou carga de modelo | `packages/pipeline` |
-| Código da câmera | `firmware/esp32-cam` |
+| Código da câmera | `esp32-cam` |
 | Tela | `apps/web` |
 | Serviço de infraestrutura | `infra/compose.yaml` |
 | Decisão que cruza módulos | `docs/decisions/NNNN-slug.md` |
