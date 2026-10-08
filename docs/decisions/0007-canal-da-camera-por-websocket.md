@@ -7,7 +7,7 @@
 ## Contexto
 
 A captura precisa ser disparada sem interface (FR-DEV-04), o quadro só trafega sobre TLS (NFR-SEC-02), e
-o tempo da captura ao resultado é medido pelo artigo (NFR-PERF-01). `firmware/esp32-cam/` está vazio:
+o tempo da captura ao resultado é medido pelo artigo (NFR-PERF-01). `esp32-cam/` está vazio:
 não há firmware a preservar.
 
 Uma requisição HTTPS avulsa refaz o handshake TLS. Um canal que o repete a cada captura coloca esse
