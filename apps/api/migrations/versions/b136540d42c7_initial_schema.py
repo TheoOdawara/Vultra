@@ -1,6 +1,8 @@
 import sqlalchemy as sa
 from alembic import op
 
+from app.core.settings import MigrationSettings
+
 revision = "b136540d42c7"
 down_revision = None
 
@@ -66,10 +68,14 @@ def upgrade() -> None:
         """
     )
 
-    op.execute("GRANT SELECT, INSERT ON institution TO vultra_service")
-    op.execute('GRANT SELECT, INSERT, UPDATE ON "user" TO vultra_service')
-    op.execute("GRANT SELECT, INSERT, DELETE ON accesstoken TO vultra_service")
-    op.execute("GRANT SELECT, INSERT ON person TO vultra_service")
+    service_user = MigrationSettings().database_url.hosts()[0]["username"]
+    if service_user is None:
+        raise ValueError("DATABASE_URL has no user to grant the service privileges to")
+    service_role = op.get_bind().dialect.identifier_preparer.quote(service_user)
+    op.execute(f"GRANT SELECT, INSERT ON institution TO {service_role}")
+    op.execute(f'GRANT SELECT, INSERT, UPDATE ON "user" TO {service_role}')
+    op.execute(f"GRANT SELECT, INSERT, DELETE ON accesstoken TO {service_role}")
+    op.execute(f"GRANT SELECT, INSERT ON person TO {service_role}")
 
 
 def downgrade() -> None:

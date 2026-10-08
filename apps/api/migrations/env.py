@@ -1,3 +1,4 @@
+import logging
 from importlib import import_module
 
 from alembic import context
@@ -5,6 +6,9 @@ from sqlalchemy import create_engine
 
 from app.core.database import Base
 from app.core.settings import MigrationSettings
+
+logging.basicConfig(format="%(levelname)s %(message)s")
+logging.getLogger("alembic").setLevel(logging.INFO)
 
 for models_module in ("app.features.access.models", "app.features.registry.models"):
     import_module(models_module)

@@ -9,6 +9,10 @@
 > pela dependência do router, e a regra que continua é "nenhuma rota de dado responde sem autenticação"
 > (NFR-SEC-04.1). Na seção de ambiente, o erro de inicialização nomeia a variável e deixa de trazer o formato
 > esperado; a leitura é uma classe de configuração tipada. "Nenhum valor padrão no ponto de leitura" continua.
+> **Emenda de 2026-10-07 (Theo, #187):** a seção 8 ganha uma exceção. O isolamento por RLS de `person` não
+> tem teste automático: ele foi conferido à mão no PostgreSQL do compose, com o papel do serviço, e a
+> conferência se repete quando uma migration tocar a política. O custo aceito é que a remoção da política
+> não derruba nenhum gate.
 
 ---
 

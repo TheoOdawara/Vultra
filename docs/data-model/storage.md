@@ -19,8 +19,8 @@
 
 ## O que não existe ainda
 
-Nenhuma migration foi escrita. As tabelas das outras entidades entram no modelo lógico quando a spec
-de cada uma fechar.
+A primeira migration cria `institution`, `user`, `accesstoken` e `person`. As tabelas das outras
+entidades entram no modelo lógico quando a spec de cada uma fechar.
 
 O esquema em `apps/api-core/src/infrastructure/database/schema/` é o do backend anterior, congelado, e
 não é a base do novo.

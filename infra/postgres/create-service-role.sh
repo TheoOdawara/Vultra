@@ -1,5 +1,5 @@
 #!/bin/sh
-psql --set ON_ERROR_STOP=1 --set password="${SERVICE_DATABASE_PASSWORD:?}" \
+psql --set ON_ERROR_STOP=1 --set role="${POSTGRES_SERVICE_USER:?}" --set password="${POSTGRES_SERVICE_PASSWORD:?}" \
     --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<'SQL'
-CREATE ROLE vultra_service LOGIN PASSWORD :'password';
+CREATE ROLE :"role" LOGIN PASSWORD :'password';
 SQL

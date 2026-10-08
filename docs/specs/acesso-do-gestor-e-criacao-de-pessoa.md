@@ -239,8 +239,9 @@ O corpo de erro é `{"detail": "<código>"}`. O `422` usa o formato de validaç�
 
 ## Cenários de Aceite (Gherkin)
 
-Onde o guard é uma política do banco, o cenário roda contra um PostgreSQL de verdade. Todo cenário de
-negação precisa falhar quando o guard correspondente é removido.
+Todo cenário de negação precisa falhar quando o guard correspondente é removido. A exceção são os
+cenários 11 e 12, cujo guard é a política do banco: eles são conferidos à mão no PostgreSQL do compose,
+com o papel do serviço, pela emenda de 2026-10-07 ao ADR 0001.
 
 ### Cenário 1 — Gestor autentica e cria pessoa (caminho feliz)
 
@@ -446,6 +447,6 @@ As quatro tabelas entram no diagrama do modelo lógico em `docs/data-model/READM
 | # | Issue | Título | Escopo | Critério de aceite | Depende de |
 | --- | --- | --- | --- | --- | --- |
 | 1 | #186 | Criar o serviço da API com ambiente obrigatório e verificação de saúde | `apps/api`: projeto `uv` com dependências fixadas, módulo de ambiente, `GET /health`, OpenAPI sob `API_DOCS_ENABLED`, gates Ruff, mypy e pytest, `apps/api/AGENTS.md` e a tabela de comandos do `AGENTS.md` da raiz | Cenário 15 | — |
-| 2 | #187 | Subir o compose e o primeiro esquema com isolamento por instituição | `infra/docker-compose.yml` com PostgreSQL, Redis e o Serviço; os dois papéis de banco; Alembic e a primeira migration com `institution`, `user`, `accesstoken` e `person` sob RLS; a sessão que define `app.current_institution_id` | Cenários 11 e 12 | 1 |
+| 2 | #187 | Subir o compose e o primeiro esquema com isolamento por instituição | `infra/compose.yaml` com PostgreSQL, Redis e o Serviço; os dois papéis de banco; Alembic e a primeira migration com `institution`, `user`, `accesstoken` e `person` sob RLS; a sessão que define `app.current_institution_id` | Cenários 11 e 12 | 1 |
 | 3 | #188 | Autenticar o gestor com rotas declaradas por papel e cota no login | Módulo `access`: login e logout do `fastapi-users` com token no banco, declaração de papéis por rota, cota do login no Redis, comando `create-manager` | Cenários 2, 3, 4, 6, 7, 13, 14, 16 e 17 | 2 |
 | 4 | #189 | Criar pessoa na instituição do gestor | Módulo `registry`: `POST /v1/people` com unicidade de `external_id` por instituição | Cenários 1, 8, 9 e 10 | 3 |

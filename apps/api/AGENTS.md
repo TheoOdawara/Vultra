@@ -4,9 +4,9 @@ O Serviço: o único backend do Vultra. Soma-se ao `AGENTS.md` da raiz e não o 
 
 ## Estado real
 
-Existe só a fundação: a configuração de ambiente, `GET /health` e o OpenAPI sob `API_DOCS_ENABLED`. Não há
-banco, Redis, autenticação nem módulo de capacidade. `DATABASE_URL` e `REDIS_URL` são lidas e nada se
-conecta a elas ainda.
+Existem a fundação (a configuração de ambiente, `GET /health` e o OpenAPI sob `API_DOCS_ENABLED`) e o
+primeiro esquema: `institution`, `user`, `accesstoken` e `person`, esta sob RLS. Não há autenticação nem
+rota de capacidade. `DATABASE_URL` e `REDIS_URL` são lidas e o serviço ainda não se conecta a elas.
 
 ## Stack
 
@@ -28,6 +28,9 @@ uv run pytest
 uv run fastapi dev
 ```
 
+Para desenvolver, o PostgreSQL e o Redis sobem com `docker compose -f compose.dev.yaml up -d` em
+`infra`, em `127.0.0.1:5432` e `127.0.0.1:6379`, e as migrations rodam daqui com `uv run alembic upgrade head`.
+
 O `fastapi dev` é o CLI do FastAPI em modo de desenvolvimento, com recarga ao salvar; `fastapi run` é o modo
 de produção. Os dois acham a aplicação pelo `entrypoint` de `[tool.fastapi]` no `pyproject.toml`. O `.env` é
 uma cópia preenchida de `.env.example` e não é versionado. O `pytest` trata todo aviso como erro. O `mypy`
@@ -39,6 +42,9 @@ roda em modo `strict` sobre `app` e `tests`, com o plugin do Pydantic.
 app/main.py            o ponto de entrada: cria o `app` global que o CLI do FastAPI serve
 app/application.py     `create_app`: monta a aplicação a partir de um `Settings`
 app/core/settings.py   a configuração lida do ambiente
+app/core/database.py   a base dos modelos e `institution_session`, que define a instituição da transação
+app/features/          `access/models.py` e `registry/models.py`: as tabelas do primeiro esquema
+migrations/            as migrations do Alembic, aplicadas com `MIGRATION_DATABASE_URL`; os privilégios vão para o usuário da `DATABASE_URL`
 tests/                 os testes, fora do pacote
 ```
 
@@ -80,6 +86,9 @@ stack.
   e um único ponto o traduz na resposta que o cliente recebe.
 
 ## Testes
+
+Nenhum teste sobe banco. O RLS de `person` é conferido à mão no PostgreSQL do compose, pela emenda de
+2026-10-07 ao ADR 0001.
 
 Os testes HTTP usam o `TestClient` do FastAPI sobre o `httpx2`. Com o `httpx` no lugar, o Starlette 1.7
 emite um aviso de depreciação, e o gate não aceita aviso.

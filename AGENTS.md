@@ -10,10 +10,10 @@ A verdade de produto vive em `docs/requirements/`, um SRS versionado. As decisõ
 
 Leia isto antes de afirmar que algo está pronto. O sistema está sendo reescrito do zero na branch `develop`, conforme os ADRs 0005 a 0007, e quase nada do que foi decidido existe em código.
 
-- A `develop` contém documentação, o ferramental do repositório, `firmware/esp32-cam/.gitkeep` e o começo de `apps/api`. Não há `packages/` nem `infra/`.
-- `apps/api` tem só a fundação: ambiente obrigatório, `GET /health` e o OpenAPI sob `API_DOCS_ENABLED`. Não tem banco, Redis, autenticação nem módulo de capacidade.
+- A `develop` contém documentação, o ferramental do repositório, `firmware/esp32-cam/.gitkeep`, o começo de `apps/api` e o compose em `infra/`. Não há `packages/`.
+- `apps/api` tem a fundação (ambiente obrigatório, `GET /health`, o OpenAPI sob `API_DOCS_ENABLED`) e o primeiro esquema: `institution`, `user`, `accesstoken` e `person`, esta sob RLS. O serviço ainda não abre conexão com o banco nem com o Redis, e não tem autenticação nem rota de capacidade.
 - `packages/pipeline` não existe. Nenhuma linha dele foi escrita.
-- Não existe compose. Banco e Redis não sobem a partir da `develop`.
+- `infra/compose.yaml` sobe PostgreSQL, Redis, as migrations e o Serviço. `infra/compose.dev.yaml` sobe só PostgreSQL e Redis, para o Serviço rodar fora do contêiner. Não há proxy TLS.
 - A `main` guarda o sistema anterior: `apps/api-core`, `apps/ai-service`, `packages/types`, `apps/web` e `infra/`. Ninguém a altera, e ela não é base de trabalho novo.
 - Os PRs #168 e #172 são trabalho de painel sobre a `main`, do plano anterior. O destino deles é decidido com quem os abriu.
 - O ADR 0007 (canal da câmera) está `proposed`: depende do teste de bancada na ESP32-CAM real, que é a issue #181.
@@ -30,10 +30,10 @@ Um agente que encontrar qualquer um desses itens já resolvido deve confirmar no
 
 | Camada | Tecnologia | Estado |
 |---|---|---|
-| Backend | Python 3.13, FastAPI, SQLAlchemy, Alembic, `fastapi-users` | decidido no ADR 0005; só a fundação de `apps/api` existe |
+| Backend | Python 3.13, FastAPI, SQLAlchemy, Alembic, `fastapi-users` | decidido no ADR 0005; existem a fundação de `apps/api` e o primeiro esquema |
 | Inferência | InsightFace `buffalo_l`, MiniFASNetV2, FER MobileFaceNet, ONNX Runtime | decidido no ADR 0006, não construído |
-| Banco | PostgreSQL 16 + pgvector 0.8 (imagem pinada em `0.8.6-pg16-bookworm`), isolamento por RLS | decidido, sem compose |
-| Cota e canal de comandos | Redis 7 | decidido, sem compose |
+| Banco | PostgreSQL 16 + pgvector 0.8 (imagem pinada em `0.8.6-pg16-bookworm`), isolamento por RLS | no compose; `person` sob RLS |
+| Cota e canal de comandos | Redis 7 | no compose; o serviço ainda não o usa |
 | Firmware | ESP32-CAM | não construído; framework a definir no teste de bancada do ADR 0007 |
 | Painel | a definir | não existe na `develop`; tecnologia decidida quando o E2 for planejado |
 | Gerenciador Python | `uv` | decidido |
@@ -56,7 +56,8 @@ As versões exatas das bibliotecas estão na tabela do ADR 0005 e não são repe
 
 - Toda dependência entra fixada com versão exata. `sqlalchemy` fica na linha 2.0 por exigência do adaptador do `fastapi-users`; o motivo está no ADR 0005.
 - `insightface` declara `opencv-python`; a dependência é sobrescrita no `uv` para ficar só a `opencv-python-headless`.
-- Um único arquivo de compose sobe o sistema inteiro nos dois ambientes, local e nuvem. A diferença entre eles é só configuração.
+- Um único arquivo de compose, `infra/compose.yaml`, sobe o sistema inteiro nos dois ambientes, local e nuvem. A diferença entre eles é só configuração. Ele não publica porta de banco nem de Redis.
+- `infra/compose.dev.yaml` existe só para desenvolver: estende o PostgreSQL e o Redis do compose principal e publica as portas deles em `127.0.0.1`. Não é ambiente de implantação.
 - O harness de avaliação do artigo importa o pacote do pipeline diretamente e vive em `docs/research/` como artefato de pesquisa, fora da superfície do produto.
 
 ---
@@ -68,6 +69,7 @@ Só entra aqui comando que foi executado. Cada área com gates próprios tem o s
 | Área | Gates |
 |---|---|
 | `apps/api` | `uv run ruff check` · `uv run ruff format --check` · `uv run mypy` · `uv run pytest`; o serviço sobe com `uv run fastapi dev`. Detalhes em `apps/api/AGENTS.md` |
+| `infra` | `docker compose up -d --build` sobe tudo e aplica as migrations antes de o Serviço iniciar; `docker compose -f compose.dev.yaml up -d --remove-orphans` sobe só PostgreSQL e Redis |
 | `packages/pipeline` | pendente: a pasta não existe |
 | `firmware/esp32-cam` | pendente: sem código |
 | `apps/web` | pendente: a pasta não existe |
@@ -116,7 +118,7 @@ Onde vai um arquivo novo:
 | Etapa de inferência ou carga de modelo | `packages/pipeline` |
 | Código da câmera | `firmware/esp32-cam` |
 | Tela | `apps/web` |
-| Serviço de infraestrutura | `infra/docker-compose.yml` |
+| Serviço de infraestrutura | `infra/compose.yaml` |
 | Decisão que cruza módulos | `docs/decisions/NNNN-slug.md` |
 
 Fluxo de uma captura:
@@ -137,7 +139,7 @@ ESP32-CAM  ──WebSocket sobre TLS──▶  proxy  ──▶  apps/api
 
 Estão em `docs/decisions/0001-baseline-de-seguranca.md`, que vale para todo o repositório, e nos requisitos `NFR-SEC` e `BR` do SRS. Nenhuma é negociável por prazo. Esse ADR cita mecanismos do backend anterior, como `withTenantContext()`; as regras valem, os nomes dos mecanismos não.
 
-O resumo em uma frase: autorização nega por padrão, nada cruza a fronteira da instituição, a cota vive em Redis e nega quando ele cai, a câmera só fala sobre TLS, ambiente sem valor padrão, nada sensível em log, e nenhuma regra vale sem um teste que falhe quando o guard some.
+O resumo em uma frase: autorização nega por padrão, nada cruza a fronteira da instituição, a cota vive em Redis e nega quando ele cai, a câmera só fala sobre TLS, ambiente sem valor padrão, nada sensível em log, e nenhuma regra vale sem um teste que falhe quando o guard some. A exceção é o RLS de `person`, conferido à mão no banco, pela emenda de 2026-10-07 ao ADR 0001.
 
 ---
 
@@ -195,6 +197,7 @@ Conversa, documentação e issues em PT-BR. Código em inglês, sem exceção: i
 - `insightface` 2.1 emite um `FutureWarning` do `scikit-image` 0.26 a cada alinhamento de rosto. O `scikit-image` fica fixado em 0.26.0 e o aviso é filtrado nominalmente no gate.
 - `insightface` baixa os pesos do `buffalo_l` para `~/.insightface` na primeira execução, cerca de 600 MB, fora do repositório.
 - Um diagrama exportado pelo draw.io sem `--svg-theme light` segue o tema do navegador: em modo escuro as caixas ficam pretas e as setas somem sobre a página clara do site. Todo `.drawio.svg` é exportado com `drawio --export --embed-diagram --svg-theme light`.
+- No Windows, uma URL de banco com `localhost` faz cada conexão do psycopg esperar 130 segundos: ele tenta `::1` primeiro, onde a porta não está publicada, não percebe a recusa e só passa para `127.0.0.1` quando o tempo de conexão esgota. As URLs do `apps/api/.env` usam `127.0.0.1`.
 - Um diagrama com mais de 880 px de largura é reduzido pelo site até o texto ficar ilegível. O layout é vertical e cabe nessa largura.
 
 ---

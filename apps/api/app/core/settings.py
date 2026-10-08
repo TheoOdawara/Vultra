@@ -15,4 +15,5 @@ class Settings(BaseSettings):
 class MigrationSettings(BaseSettings):
     model_config = environment_source
 
+    database_url: PostgresDsn
     migration_database_url: PostgresDsn
