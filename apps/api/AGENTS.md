@@ -7,7 +7,8 @@ O Serviço: o único backend do Vultra. Soma-se ao `AGENTS.md` da raiz e não o 
 Existem a fundação (a configuração de ambiente, `GET /health` e o OpenAPI sob `API_DOCS_ENABLED`), o
 primeiro esquema (`institution`, `user`, `accesstoken` e `person`, esta sob RLS) e o módulo `access`:
 `POST /v1/auth/login`, `POST /v1/auth/logout`, a declaração de papel por rota, a cota do login e o comando
-`create-manager`. Nenhuma outra capacidade tem rota, e nada ainda usa `institution_session`.
+`create-manager`. O módulo `registry` tem `POST /v1/people`, a primeira rota sobre `institution_session`.
+Nenhuma outra capacidade tem rota.
 
 ## Stack
 
@@ -48,9 +49,9 @@ app/main.py            o ponto de entrada: cria o `app` global que o CLI do Fast
 app/application.py     `create_app`: monta a aplicação a partir de um `Settings` e cria o storage da cota
 app/core/settings.py   a configuração lida do ambiente
 app/core/database.py   a base dos modelos, o engine, a sessão simples e `institution_session`, que define a instituição da transação
-app/features/access/   `router.py` (login e logout), `authentication.py` (a ligação com o `fastapi-users` e `require_roles`),
-                       `login_quota.py`, `create_manager.py` e `models.py`
-app/features/registry/ `models.py`: a tabela `person`
+app/features/access/   `router.py` (login e logout), `authentication.py` (a ligação com o `fastapi-users`, `require_roles`
+                       e `user_institution_session`), `login_quota.py`, `create_manager.py` e `models.py`
+app/features/registry/ `router.py` (`POST /v1/people`), `schemas.py` e `models.py`: a tabela `person`
 migrations/            as migrations do Alembic, aplicadas com `MIGRATION_DATABASE_URL`; os privilégios vão para o usuário da `DATABASE_URL`
 tests/                 os testes, fora do pacote
 ```
@@ -105,16 +106,23 @@ stack.
   diferentes, e uma mesma conta ganharia mais de uma chave de cota.
 - **Banco.** O engine nasce em `create_engine` com `hide_parameters=True`, para um erro de SQL não levar
   token nem e-mail ao log.
+- **Instituição.** A rota que lê ou grava dado de instituição recebe a sessão por
+  `Depends(user_institution_session, scope="function")`: a dependência abre `institution_session` com a
+  instituição do usuário autenticado, e o `scope="function"` faz o commit acontecer antes de a resposta
+  sair. Em `registry` o insert fica na própria rota, sem `service.py` nem `queries.py`, e a unicidade de
+  `external_id` é decidida pela restrição do banco: a rota traduz o `IntegrityError` em `409`.
 - **Erros.** Todo erro sai como `HTTPException`, o mecanismo do FastAPI, com o código da spec em `detail`:
   `HTTPException(status.HTTP_400_BAD_REQUEST, "LOGIN_BAD_CREDENTIALS")`. Não há exceção de negócio própria
   nem tratador que a traduza; os dois só nascem quando uma regra for chamada fora de uma rota.
 
 ## Testes
 
-Nenhum teste sobe banco nem Redis. Os testes de `access` trocam os adaptadores de usuário e de token do
-`fastapi-users` por versões em memória, via `dependency_overrides`, e o storage da cota em `app.state`
-pelo `MemoryStorage` do `limits`; a rota protegida que eles exercitam existe só no teste. O RLS de `person` é conferido à mão no PostgreSQL do compose, pela emenda de
-2026-10-07 ao ADR 0001.
+Nenhum teste sobe banco nem Redis. O `Service` de `tests/conftest.py` troca, via `dependency_overrides`, os
+adaptadores de usuário e de token do `fastapi-users` e a sessão da instituição por versões em memória, e o
+storage da cota em `app.state` pelo `MemoryStorage` do `limits`. A rota protegida que os testes de `access`
+exercitam é `POST /v1/people`. A sessão em memória recusa `external_id` repetido na instituição com o
+mesmo `IntegrityError` do banco; a restrição de verdade e o RLS de `person` são conferidos à mão no
+PostgreSQL do compose, o RLS pela emenda de 2026-10-07 ao ADR 0001.
 
 Os testes HTTP usam o `TestClient` do FastAPI sobre o `httpx2`. Com o `httpx` no lugar, o Starlette 1.7
 emite um aviso de depreciação, e o gate não aceita aviso.

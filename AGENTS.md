@@ -11,7 +11,7 @@ A verdade de produto vive em `docs/requirements/`, um SRS versionado. As decisõ
 Leia isto antes de afirmar que algo está pronto. O sistema está sendo reescrito do zero na branch `develop`, conforme os ADRs 0005 a 0007, e quase nada do que foi decidido existe em código.
 
 - A `develop` contém documentação, o ferramental do repositório, `esp32-cam/.gitkeep`, o começo de `apps/api` e o compose em `infra/`. Não há `packages/`.
-- `apps/api` tem a fundação (ambiente obrigatório, `GET /health`, o OpenAPI sob `API_DOCS_ENABLED`), o primeiro esquema (`institution`, `user`, `accesstoken` e `person`, esta sob RLS) e o módulo `access`: login e logout com token no banco, papel declarado por rota, cota do login no Redis e o comando `create-manager`. Nenhuma outra capacidade tem rota.
+- `apps/api` tem a fundação (ambiente obrigatório, `GET /health`, o OpenAPI sob `API_DOCS_ENABLED`), o primeiro esquema (`institution`, `user`, `accesstoken` e `person`, esta sob RLS) e o módulo `access`: login e logout com token no banco, papel declarado por rota, cota do login no Redis e o comando `create-manager`. O módulo `registry` tem `POST /v1/people`. Nenhuma outra capacidade tem rota.
 - `packages/pipeline` não existe. Nenhuma linha dele foi escrita.
 - `infra/compose.yaml` sobe PostgreSQL, Redis, as migrations e o Serviço. `infra/compose.dev.yaml` sobe só PostgreSQL e Redis, para o Serviço rodar fora do contêiner. Não há proxy TLS.
 - A `main` guarda o sistema anterior: `apps/api-core`, `apps/ai-service`, `packages/types`, `apps/web` e `infra/`. Ninguém a altera, e ela não é base de trabalho novo.

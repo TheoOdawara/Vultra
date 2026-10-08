@@ -1,7 +1,7 @@
 # Modelo de dados
 
 O modelo conceitual do sistema decidido, derivado do [glossário](../requirements/glossary.md) e dos
-requisitos. Nenhuma tabela do backend novo existe ainda.
+requisitos. Do backend novo existem as quatro tabelas do modelo lógico abaixo.
 
 ## Núcleo (E1)
 
@@ -16,8 +16,8 @@ Usuário, Pessoa, Câmera e Evento de reconhecimento são as mesmas entidades do
 ## Modelo lógico
 
 As tabelas do épico #176, definidas na
-[SPEC-004](../specs/acesso-do-gestor-e-criacao-de-pessoa.md). Estão tracejadas porque a primeira
-migration ainda não foi escrita. Cada spec do E1 que fechar acrescenta as suas tabelas a este diagrama.
+[SPEC-004](../specs/acesso-do-gestor-e-criacao-de-pessoa.md), criadas pela primeira migration de
+`apps/api`. Cada spec do E1 que fechar acrescenta as suas tabelas a este diagrama.
 
 ![Modelo lógico](diagrams/logical.drawio.svg)
 

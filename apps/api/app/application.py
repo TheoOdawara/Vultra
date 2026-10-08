@@ -8,6 +8,7 @@ from limits.aio.storage import RedisStorage
 from app.core.database import create_engine
 from app.core.settings import Settings
 from app.features.access.router import router as access_router
+from app.features.registry.router import router as registry_router
 
 
 def create_app(settings: Settings) -> FastAPI:
@@ -43,4 +44,5 @@ def create_app(settings: Settings) -> FastAPI:
         return {"status": "ok"}
 
     app.include_router(access_router)
+    app.include_router(registry_router)
     return app

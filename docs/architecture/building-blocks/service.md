@@ -1,7 +1,8 @@
 # Serviço
 
-`apps/api` · Python 3.13, FastAPI · estágio E1 · em construção: existe a fundação (ambiente, `GET /health`,
-OpenAPI sob `API_DOCS_ENABLED`), sem banco, autenticação nem módulo de capacidade.
+`apps/api` · Python 3.13, FastAPI · estágio E1 · em construção: existem a fundação (ambiente, `GET /health`,
+OpenAPI sob `API_DOCS_ENABLED`), o primeiro esquema, o módulo `access` (login e logout do gestor) e, em
+`registry`, a criação de pessoa. Os outros módulos da tabela abaixo ainda não têm código.
 
 ## O que faz
 

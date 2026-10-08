@@ -1,8 +1,8 @@
-from collections.abc import Callable
+from collections.abc import AsyncIterator, Callable
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi_users import BaseUserManager, UUIDIDMixin
 from fastapi_users.authentication import AuthenticationBackend, Authenticator, BearerTransport
 from fastapi_users.authentication.strategy.db import AccessTokenDatabase, DatabaseStrategy
@@ -13,7 +13,7 @@ from fastapi_users_db_sqlalchemy import SQLAlchemyUserDatabase
 from fastapi_users_db_sqlalchemy.access_token import SQLAlchemyAccessTokenDatabase
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.database import database_session
+from app.core.database import database_session, institution_session
 from app.features.access.models import AccessToken, User, UserRole
 
 
@@ -51,6 +51,15 @@ authentication_backend = AuthenticationBackend(
     name="database", transport=BearerTransport(tokenUrl="/v1/auth/login"), get_strategy=session_strategy
 )
 active_user_and_token = Authenticator([authentication_backend], user_manager).current_user_token(active=True)
+
+
+async def user_institution_session(
+    request: Request,
+    user_and_token: Annotated[tuple[User, str], Depends(active_user_and_token)],
+) -> AsyncIterator[AsyncSession]:
+    user, _ = user_and_token
+    async with institution_session(request.app.state.engine, user.institution_id) as session:
+        yield session
 
 
 def require_roles(*roles: UserRole) -> Callable[[tuple[User, str]], User]:
