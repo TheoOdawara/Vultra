@@ -42,7 +42,7 @@ Estão na seção Restrições da [visão geral dos requisitos](../requirements/
 | Um único serviço de backend, em Python com FastAPI | Uma linguagem, um conjunto de gates, e o harness mede o código de produção | [0005](../decisions/0005-backend-unico-em-python.md) |
 | Módulos por capacidade, sem camadas técnicas | Interface só em fronteira externa real | [0005](../decisions/0005-backend-unico-em-python.md) |
 | Inferência em pool de processos dentro do serviço | O quadro nunca sai da memória; a fila fica como saída | [0006](../decisions/0006-inferencia-no-processo-do-servico.md) |
-| Câmera ligada por WebSocket sobre TLS | Um handshake por conexão; proposto até o teste de bancada | [0007](../decisions/0007-canal-da-camera-por-websocket.md) |
+| Câmera ligada por WebSocket sobre TLS | Um handshake por conexão; aceito no teste de bancada | [0007](../decisions/0007-canal-da-camera-por-websocket.md) |
 | PostgreSQL com pgvector e RLS | É o objeto da seção experimental do artigo | [ADR-001 de banco](../database/adrs/ADR-001-pgvector-hnsw.md) |
 | Um compose para os dois ambientes | Local e nuvem diferem só na configuração | [0005](../decisions/0005-backend-unico-em-python.md) |
 

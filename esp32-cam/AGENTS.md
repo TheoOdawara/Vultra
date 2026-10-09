@@ -8,7 +8,7 @@ Existe só o firmware de bancada da
 [SPEC-005](../docs/specs/teste-de-bancada-do-canal-da-camera.md) e o servidor de bancada. A placa
 conecta ao Wi-Fi, abre `wss://` validando o servidor contra a CA embutida e envia um quadro VGA em JPEG
 a cada 2 s. Não há credencial, comando de captura nem finalidade. Os Cenários 1, 2 e 3 da spec
-foram executados na placa real; o Cenário 4, a reconexão após queda de rede, é a issue #193.
+foram executados na placa real, com os números no ADR 0007; o Cenário 4, a reconexão após queda de rede, é a issue #193.
 
 ## Stack
 

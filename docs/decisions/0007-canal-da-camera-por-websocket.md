@@ -1,6 +1,6 @@
 # 0007. Canal da câmera por WebSocket sobre TLS
 
-- Status: proposed
+- Status: accepted
 - Date: 2026-10-06
 - Requisitos: FR-DEV-01, FR-DEV-04, FR-BIO-01, FR-REC-01, NFR-SEC-02, NFR-PERF-01
 
@@ -25,14 +25,44 @@ emitido por uma CA própria. A câmera valida o servidor com o certificado da CA
 **Um comando disparado em uma réplica do serviço alcança a câmera conectada em outra** pelo canal de
 comandos no Redis ([0006](0006-inferencia-no-processo-do-servico.md)).
 
-**Este ADR só passa a `accepted` depois de um teste de bancada na ESP32-CAM real** que mostre:
+**A aceitação dependia de um teste de bancada na ESP32-CAM real** que mostrasse:
 
 1. Conexão `wss://` estabelecida com validação do certificado fixado.
 2. Envio de um quadro JPEG como mensagem binária, com a memória livre registrada antes e depois.
 3. Reconexão automática após queda da rede.
 
-A biblioteca candidata é o `esp_websocket_client` da Espressif, que documenta `wss://` e certificado em
-PEM. Se o teste falhar, vale a alternativa de HTTPS com consulta periódica, e este ADR é reescrito.
+O teste foi executado em 2026-10-08 e o resultado está abaixo. A biblioteca é o `esp_websocket_client`
+da Espressif.
+
+## Resultado do teste de bancada
+
+Executado em 2026-10-08, conforme a [SPEC-005](../specs/teste-de-bancada-do-canal-da-camera.md), na
+issue #181.
+
+| Item | Valor |
+| --- | --- |
+| Placa | AI-Thinker ESP32-CAM, OV2640, PSRAM, flash de 4 MB |
+| Versões | ESP-IDF v6.1, `esp_websocket_client` 1.8.0, `esp32-camera` 2.1.8, mbedTLS 4.1.0 |
+| Quadro | VGA em JPEG, de 11 a 16 kB |
+| Sinal do Wi-Fi | -57 dBm |
+
+| Critério | Medido | Resultado |
+| --- | --- | --- |
+| 1. `wss://` com o certificado fixado | canal aberto em 2917 ms, contando TCP, TLS e upgrade HTTP | aprovado |
+| 1. Servidor assinado por outra CA | 22 tentativas recusadas com `MBEDTLS_ERR_X509_CERT_VERIFY_FAILED`, nenhum quadro enviado | aprovado |
+| 2. Quadro como mensagem binária | 160 quadros em 330 s, todos íntegros, nenhuma falha de envio, nenhum reset | aprovado |
+| 2. Memória | heap interno livre de 157075 bytes depois do quadro 1 e 151571 depois do quadro 100, variação de 3,5%; mínimo desde o boot de 116148 bytes | aprovado |
+| 3. Reconexão após queda da rede | a placa reassociou e voltou a enviar sozinha depois de perder o ponto de acesso; o tempo não foi medido com sinal bom | pendente na #193 |
+
+**Aceito por Theo em 2026-10-08 com o critério 3 pendente.** O ponto de acesso não pôde ser desligado no
+dia do teste. A reconexão automática foi observada, e a medida do tempo, com limite de 30 s, é a issue
+#193.
+
+**O rádio da placa perde margem com a câmera ligada.** Com sinal de -64 a -70 dBm, o canal abriu em 5 a
+16 s, os envios estouraram o tempo e a placa perdeu o ponto de acesso. No mesmo enlace e sem a câmera, o
+firmware entregou um quadro de 12 kB a cada 2 s sem falha. Baixar o clock da câmera de 20 para 10 MHz
+não mudou o resultado, e a causa não foi isolada entre alimentação e interferência. Os números da tabela
+são de -57 dBm.
 
 ## Consequências
 
@@ -43,11 +73,13 @@ PEM. Se o teste falhar, vale a alternativa de HTTPS com consulta periódica, e e
 - Rotacionar ou revogar a credencial (FR-DEV-02, FR-DEV-03) derruba a conexão aberta da câmera.
 - O firmware fica mais complexo que um cliente HTTP: mantém conexão, reconecta e trata mensagens.
 - A CA local precisa ser gerada e gravada no firmware antes do primeiro teste local.
+- A câmera precisa de sinal melhor que cerca de -60 dBm no ponto de instalação. Abaixo disso o canal não
+  sustenta a captura.
 
 ## Alternativas consideradas
 
 | Alternativa | Por que foi rejeitada |
 | --- | --- |
-| HTTPS com consulta periódica de comandos | Firmware mais simples, mas o disparo atrasa até o intervalo de consulta e cada captura avulsa paga um handshake. É o plano B se o teste de bancada falhar. |
+| HTTPS com consulta periódica de comandos | Firmware mais simples, mas o disparo atrasa até o intervalo de consulta e cada captura avulsa paga um handshake. Era o plano B se o teste de bancada falhasse. |
 | MQTT sobre TLS para comandos e HTTPS para o quadro | Acrescenta um broker ao compose e mantém dois canais por câmera. |
 | HTTP sem TLS na rede local | Proibido pelo NFR-SEC-02: o quadro e a credencial trafegariam legíveis. |

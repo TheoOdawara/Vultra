@@ -156,6 +156,7 @@ N/A — o teste não autentica a câmera. O que ele prova é o outro sentido: a 
   `heap_min` e os três tempos de reconexão.
 - Reprovada qualquer uma delas, o ADR 0007 é reescrito com HTTPS e consulta periódica como decisão, e a
   mesma seção registra o que reprovou e com que número.
+- Em 2026-10-08 Theo aceitou o ADR com as regras 2 e 3 aprovadas e a regra 4 pendente na #193.
 
 ### 7. Persistência e Auditoria
 

@@ -17,7 +17,7 @@ Leia isto antes de afirmar que algo está pronto. O sistema está sendo reescrit
 - `infra/compose.yaml` sobe PostgreSQL, Redis, as migrations e o Serviço. `infra/compose.dev.yaml` sobe só PostgreSQL e Redis, para o Serviço rodar fora do contêiner. Não há proxy TLS.
 - A `main` guarda o sistema anterior: `apps/api-core`, `apps/ai-service`, `packages/types`, `apps/web` e `infra/`. Ninguém a altera, e ela não é base de trabalho novo.
 - Os PRs #168 e #172 são trabalho de painel sobre a `main`, do plano anterior. O destino deles é decidido com quem os abriu.
-- O ADR 0007 (canal da câmera) está `proposed`: depende do teste de bancada na ESP32-CAM real, que é a issue #181.
+- O ADR 0007 (canal da câmera) está `accepted` pelo teste de bancada da #181. O tempo de reconexão após queda de rede não foi medido e é a issue #193.
 - Nenhum workflow de CI existe. Todo gate roda na máquina de quem desenvolve.
 - Nenhuma branch tem proteção configurada. A regra de branch abaixo é convenção.
 - As specs em `docs/specs/` descrevem o plano anterior ao SRS 1.0.0 e citam IDs `RF-NN` e `RNF-NN` que deixaram de existir. As issues e os milestones desse plano foram fechados em 2026-10-06.

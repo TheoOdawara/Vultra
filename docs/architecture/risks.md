@@ -4,7 +4,8 @@ Um item sem issue própria é rastreado pelo ADR ou pela questão aberta indicad
 
 | Risco ou dívida | Consequência | Rastreio |
 | --- | --- | --- |
-| O canal WebSocket sobre TLS não foi testado na ESP32-CAM real | Se não couber em memória ou não reconectar, o canal muda para HTTPS com consulta periódica e o firmware é outro | #181 · [0007](../decisions/0007-canal-da-camera-por-websocket.md) |
+| O tempo de reconexão da câmera após queda de rede não foi medido | Se passar de 30 s com sinal bom, o firmware precisa de outra política de reconexão | #193 · [0007](../decisions/0007-canal-da-camera-por-websocket.md) |
+| Com a câmera ligada, o rádio da ESP32-CAM não sustenta o canal com sinal pior que cerca de -60 dBm | A câmera instalada longe do ponto de acesso não entrega quadro; a causa não foi isolada entre alimentação e interferência | [0007](../decisions/0007-canal-da-camera-por-websocket.md) |
 | O conteúdo do artigo não foi confirmado com o orientador | A prioridade do SRS inteiro pode mudar | [OQ-01](../requirements/open-questions.md#oq-01) |
 | A latência máxima não tem número | NFR-PERF-01 e 02 não são verificáveis, e a escolha entre pool e fila fica aberta | [OQ-03](../requirements/open-questions.md#oq-03) |
 | Os pesos do `buffalo_l` são só para pesquisa não comercial | O sistema não pode ser vendido sem licenciar ou trocar o modelo de vetor | [0006](../decisions/0006-inferencia-no-processo-do-servico.md) |
