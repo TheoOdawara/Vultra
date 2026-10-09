@@ -10,6 +10,7 @@ decidido.
 | O gestor só opera a própria instituição | Serviço e PostgreSQL | FR-ACC-01, NFR-SEC-01 |
 | O login tem cota por IP e por e-mail; Redis fora do ar nega | Serviço e Redis | FR-ACC-01 |
 | A câmera autentica com credencial própria, guardada com hash | Serviço | FR-DEV-01 |
+| Até o épico #177, a câmera de bancada autentica com o token único `BENCH_CAMERA_TOKEN` (SPEC-007) | Serviço e firmware | NFR-SEC-04 |
 | Revogar ou rotacionar a credencial derruba a conexão aberta | Serviço | FR-DEV-02, FR-DEV-03 |
 | Nada trafega sem TLS entre câmera e servidor | Proxy e firmware | NFR-SEC-02 |
 | Cota por câmera e por instituição; Redis fora do ar nega | Serviço e Redis | NFR-SEC-03 |

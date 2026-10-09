@@ -1,6 +1,6 @@
 # SPEC-001 — Processar quadro facial no ai-service (detecção, identidade e afeto)
 
-> **Status:** publicada
+> **Status:** publicada; substituída pela [SPEC-007](pipeline-de-inferencia-de-um-quadro.md)
 > **Perfil:** API
 > **Módulo:** `apps/ai-service`
 > **Epic:** #58

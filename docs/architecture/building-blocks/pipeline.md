@@ -27,4 +27,7 @@ motivo, ou o vetor de 512 dimensões e, no reconhecimento, a emoção com a conf
   assinatura muda o que o artigo mede.
 - Os pesos do `buffalo_l` são restritos a pesquisa não comercial
   ([0006](../../decisions/0006-inferencia-no-processo-do-servico.md)).
-- A ordem das etapas, os limiares e os códigos de recusa são definidos na spec do E1, ainda não escrita.
+- A ordem das etapas, os limiares e os motivos de recusa estão na [SPEC-007](../../specs/pipeline-de-inferencia-de-um-quadro.md) (E1). Os limiares são
+  constantes do pacote, e o resultado leva as medidas de cada etapa.
+- Os cinco arquivos de modelo ficam em `PIPELINE_MODEL_DIR`, fora do git, e são baixados por
+  `uv run download-models`, que confere o SHA-256 de cada um (E1, SPEC-007).

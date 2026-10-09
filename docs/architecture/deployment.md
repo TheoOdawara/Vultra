@@ -28,7 +28,8 @@ sobe todos os contêineres; o que muda entre os ambientes é só a configuraçã
 
 O `infra/docker-compose.yml` de hoje sobe o backend anterior e publica as portas do banco, do Redis e
 do `ai-service`. Ele é reescrito no épico #176 com PostgreSQL, Redis e o Serviço; o Proxy TLS entra no
-épico #178.
+épico #174, com o volume dos modelos e o serviço de execução única que os baixa
+([SPEC-007](../specs/pipeline-de-inferencia-de-um-quadro.md)).
 
 ## Entrega
 

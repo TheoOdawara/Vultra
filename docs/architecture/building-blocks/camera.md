@@ -19,6 +19,8 @@ mesma conexão ([0007](../../decisions/0007-canal-da-camera-por-websocket.md)).
 - O canal foi aceito no teste de bancada da
   [SPEC-005](../../specs/teste-de-bancada-do-canal-da-camera.md), com os números no
   [ADR 0007](../../decisions/0007-canal-da-camera-por-websocket.md). O tempo de reconexão é a #193.
+- Até o épico #177 o firmware de bancada envia o token único `BENCH_CAMERA_TOKEN` no cabeçalho
+  `Authorization` e conecta em `/v1/cameras/stream`, com a finalidade na URI (E1, [SPEC-007](../../specs/pipeline-de-inferencia-de-um-quadro.md)).
 - Com a câmera ligada, o rádio da placa precisa de sinal melhor que cerca de -60 dBm. A linha
   `wifi connected rssi=` do boot mostra o sinal no ponto de instalação.
 - A câmera valida o servidor com o certificado da CA fixado no firmware; trocar a CA exige regravar o

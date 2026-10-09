@@ -64,6 +64,18 @@ firmware entregou um quadro de 12 kB a cada 2 s sem falha. Baixar o clock da câ
 não mudou o resultado, e a causa não foi isolada entre alimentação e interferência. Os números da tabela
 são de -57 dBm.
 
+## Emenda de 2026-10-09
+
+Decidida por Theo Odawara na [SPEC-007](../specs/pipeline-de-inferencia-de-um-quadro.md), quando o
+reconhecimento passou à frente da credencial da câmera.
+
+- **O proxy reverso é o Caddy `2.11.7`**, que encaminha WebSocket de longa duração sem configuração
+  própria.
+- **Até o épico #177, a câmera de bancada autentica com um token único**, lido de `BENCH_CAMERA_TOKEN` e
+  enviado no cabeçalho `Authorization`. Ele não identifica câmera nem instituição, e o #177 o remove ao
+  criar a credencial por câmera.
+- **Até o épico #178, a finalidade vem da URI da conexão** e a câmera envia quadros por conta própria.
+
 ## Consequências
 
 - Um handshake TLS por conexão, não por captura.

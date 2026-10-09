@@ -46,5 +46,9 @@ decidido.
   [SPEC-004](../../specs/acesso-do-gestor-e-criacao-de-pessoa.md)).
 - A sessão é um token Bearer guardado no PostgreSQL, com 8 horas de validade; o logout o apaga (E1,
   SPEC-004).
+- O pool de inferência tem 1 processo e fica em `app/core`. Um quadro que chega com outro em
+  processamento é descartado (E1, [SPEC-007](../../specs/pipeline-de-inferencia-de-um-quadro.md)).
+- Até o épico #177, `devices` tem só a entrada WebSocket de bancada, `/v1/cameras/stream`, autenticada
+  pelo token único `BENCH_CAMERA_TOKEN`. O resultado de cada quadro vira uma linha de log (E1, SPEC-007).
 - A instituição da requisição é definida no banco em um único ponto, na mesma transação da consulta
   ([tenancy](../concepts/tenancy.md)).
