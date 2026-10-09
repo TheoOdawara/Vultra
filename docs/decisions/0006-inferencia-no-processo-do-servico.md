@@ -54,14 +54,15 @@ o repositório oficial publica resultado, e a diferença de cerca de 5 ms não p
 
 - **Origem do ONNX:** convertido por nós a partir dos `.pth` de
   `minivision-ai/Silent-Face-Anti-Spoofing`, no commit `b6d5f04ad78778917853b25c778acef6d5626d15`. O
-  repositório oficial não publica ONNX.
+  repositório oficial não publica ONNX. Os dois arquivos são os destinados à Release `models-v1`
+  deste repositório.
 - **Latência do par em CPU**, uma thread, `onnxruntime` 1.30.0, AMD Ryzen 7 5700X: p50 de 4,214 ms e p95
   de 7,466 ms.
 
 | Arquivo | SHA-256 do ONNX |
 | --- | --- |
-| `2.7_80x80_MiniFASNetV2.onnx` | `c9893806bb17f10c4397510b86d9b5b7a17b67e1de25993d9c8174c8aaf1ad0b` |
-| `4_0_0_80x80_MiniFASNetV1SE.onnx` | `2897a623f7e9508b317655f28258435ec56f592daeadcc5d1a0360231f0d58a2` |
+| `2.7_80x80_MiniFASNetV2.onnx` | `f89cdeaa53287ac3ca18dbc0f4903498898d8db8f334afd7bc9e9c1fe7c6c64d` |
+| `4_0_0_80x80_MiniFASNetV1SE.onnx` | `ab4c068865ebcf83b8ef86b022cc0ccbe58d0c584091a0a8005af7b716d90afa` |
 
 ## Consequências
 

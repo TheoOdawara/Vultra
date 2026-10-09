@@ -10,10 +10,10 @@ A verdade de produto vive em `docs/requirements/`, um SRS versionado. As decisõ
 
 Leia isto antes de afirmar que algo está pronto. O sistema está sendo reescrito do zero na branch `develop`, conforme os ADRs 0005 a 0007, e quase nada do que foi decidido existe em código.
 
-- A `develop` contém documentação, o ferramental do repositório, o firmware de bancada em `esp32-cam`, o começo de `apps/api` e o compose em `infra/`. Não há `packages/`.
+- A `develop` contém documentação, o ferramental do repositório, o firmware de bancada em `esp32-cam`, o começo de `apps/api`, o começo de `packages/pipeline` e o compose em `infra/`.
 - `esp32-cam` tem só o firmware de bancada da SPEC-005 e o servidor de bancada: a câmera conecta por `wss://` e envia um quadro a cada 2 s. Não há credencial, comando de captura nem finalidade.
 - `apps/api` tem a fundação (ambiente obrigatório, `GET /health`, o OpenAPI sob `API_DOCS_ENABLED`), o primeiro esquema (`institution`, `user`, `accesstoken` e `person`, esta sob RLS) e o módulo `access`: login e logout com token no banco, papel declarado por rota, cota do login no Redis e o comando `create-manager`. O módulo `registry` tem `POST /v1/people`. Nenhuma outra capacidade tem rota.
-- `packages/pipeline` não existe. Nenhuma linha dele foi escrita.
+- `packages/pipeline` tem o projeto `uv`, com as bibliotecas de inferência instaladas, e o comando `download-models`, que baixa os cinco arquivos de modelo e confere o SHA-256 de cada um. A Release `models-v1`, origem dos dois ONNX do MiniFASNet, ainda não foi publicada. `process_frame` não existe: nenhuma etapa de inferência foi escrita.
 - `infra/compose.yaml` sobe PostgreSQL, Redis, as migrations e o Serviço. `infra/compose.dev.yaml` sobe só PostgreSQL e Redis, para o Serviço rodar fora do contêiner. Não há proxy TLS.
 - A `main` guarda o sistema anterior: `apps/api-core`, `apps/ai-service`, `packages/types`, `apps/web` e `infra/`. Ninguém a altera, e ela não é base de trabalho novo.
 - Os PRs #168 e #172 são trabalho de painel sobre a `main`, do plano anterior. O destino deles é decidido com quem os abriu.
@@ -71,7 +71,7 @@ Só entra aqui comando que foi executado. Cada área com gates próprios tem o s
 |---|---|
 | `apps/api` | `uv run ruff check` · `uv run ruff format --check` · `uv run mypy` · `uv run pytest`; o serviço sobe com `uv run fastapi dev` e o primeiro gestor nasce com `uv run create-manager`. Detalhes em `apps/api/AGENTS.md` |
 | `infra` | `docker compose up -d --build` sobe tudo e aplica as migrations antes de o Serviço iniciar; `docker compose -f compose.dev.yaml up -d --remove-orphans` sobe só PostgreSQL e Redis |
-| `packages/pipeline` | pendente: a pasta não existe |
+| `packages/pipeline` | `uv run ruff check` · `uv run ruff format --check` · `uv run mypy`; os modelos chegam com `uv run download-models`. O `pytest` vira gate com o primeiro teste, na #199. Detalhes em `packages/pipeline/AGENTS.md` |
 | `esp32-cam` | `idf.py build`, com o ESP-IDF v6.1 ativado no terminal. Detalhes em `esp32-cam/AGENTS.md` |
 | `apps/web` | pendente: a pasta não existe |
 

@@ -33,6 +33,10 @@ def main() -> int:
     torch.onnx.export(
         model, (sample,), arguments.output, verbose=False, external_data=False
     )
+    exported = onnx.load(arguments.output)
+    for node in exported.graph.node:
+        del node.metadata_props[:]
+    onnx.save(exported, arguments.output)
 
     with torch.no_grad():
         expected = model(sample).numpy()
@@ -51,7 +55,7 @@ def main() -> int:
 
     opset = next(
         entry.version
-        for entry in onnx.load(arguments.output).opset_import
+        for entry in exported.opset_import
         if entry.domain == ""
     )
     sha256 = hashlib.sha256(arguments.output.read_bytes()).hexdigest()

@@ -82,8 +82,8 @@ do [ADR 0005](../decisions/0005-backend-unico-em-python.md).
 | --- | --- | --- |
 | `det_10g.onnx` | `buffalo_l.zip`, release `v0.7` de `deepinsight/insightface` | `5838f7fe053675b1c7a08b633df49e7af5495cee0493c7dcf6697200b85b5b91` |
 | `w600k_r50.onnx` | o mesmo `buffalo_l.zip` | `4c06341c33c2ca1f86781dab0e829f88ad5b64be9fba56e56bc9ebdefc619e43` |
-| `2.7_80x80_MiniFASNetV2.onnx` | Release `models-v1` deste repositório | `c9893806bb17f10c4397510b86d9b5b7a17b67e1de25993d9c8174c8aaf1ad0b` |
-| `4_0_0_80x80_MiniFASNetV1SE.onnx` | Release `models-v1` deste repositório | `2897a623f7e9508b317655f28258435ec56f592daeadcc5d1a0360231f0d58a2` |
+| `2.7_80x80_MiniFASNetV2.onnx` | Release `models-v1` deste repositório | `f89cdeaa53287ac3ca18dbc0f4903498898d8db8f334afd7bc9e9c1fe7c6c64d` |
+| `4_0_0_80x80_MiniFASNetV1SE.onnx` | Release `models-v1` deste repositório | `ab4c068865ebcf83b8ef86b022cc0ccbe58d0c584091a0a8005af7b716d90afa` |
 | `facial_expression_recognition_mobilefacenet_2022july.onnx` | `opencv/opencv_zoo`, commit `47534e27c9851bb1128ccc0102f1145e27f23f98` | `4f61307602fc089ce20488a31d4e4614e3c9753a7d6c41578c854858b183e1a9` |
 
 O `buffalo_l.zip` tem SHA-256 `80ffe37d8a5940d59a7384c201a2a38d4741f2f3c51eef46ebb28218a7b0ca2f`. Dos

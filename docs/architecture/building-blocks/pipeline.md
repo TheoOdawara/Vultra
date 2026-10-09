@@ -1,6 +1,7 @@
 # Pipeline
 
-`packages/pipeline` · Python, ONNX Runtime, InsightFace · estágio E1 · ainda não existe.
+`packages/pipeline` · Python, ONNX Runtime, InsightFace · estágio E1 · existem o projeto e o comando
+`download-models`; a inferência ainda não.
 
 ## O que faz
 

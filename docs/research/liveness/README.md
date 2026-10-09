@@ -49,10 +49,13 @@ Duas ressalvas que as fontes declaram:
 Os dois `.pth` oficiais foram convertidos por
 [`convert_minifasnet.py`](convert_minifasnet.py),
 que carrega o peso com `weights_only=True`, exporta com `torch.onnx.export` num arquivo único e compara a
-saída do ONNX com a do PyTorch sobre o mesmo tensor de semente `0`.
+saída do ONNX com a do PyTorch sobre o mesmo tensor de semente `0`. Antes de gravar, ele remove os
+metadados dos nós: o exportador grava neles o caminho absoluto do clone, e com isso o SHA-256 mudava
+conforme a pasta em que a conversão rodava.
 
 ```
 uv run --no-project --python 3.13 \
+  --index https://download.pytorch.org/whl/cpu --index-strategy unsafe-best-match \
   --with torch==2.14.1 --with onnx==1.23.2 --with onnxscript==0.7.2 \
   --with onnxruntime==1.30.0 --with numpy==2.5.3 \
   docs/research/liveness/convert_minifasnet.py \
@@ -70,10 +73,18 @@ uv run --no-project --python 3.13 \
 
 | Peso de origem | SHA-256 do `.pth` | Opset | SHA-256 do `.onnx` | Diferença máxima |
 | --- | --- | --- | --- | --- |
-| `2.7_80x80_MiniFASNetV2.pth` | `a5eb02e1843f19b5386b953cc4c9f011c3f985d0ee2bb9819eea9a142099bec0` | 20 | `c9893806bb17f10c4397510b86d9b5b7a17b67e1de25993d9c8174c8aaf1ad0b` | 2,146e-06 |
-| `4_0_0_80x80_MiniFASNetV1SE.pth` | `84ee1d37d96894d5e82de5a57df044ef80a58be2b218b5ed7cdfd875ec2f5990` | 20 | `2897a623f7e9508b317655f28258435ec56f592daeadcc5d1a0360231f0d58a2` | 5,960e-07 |
+| `2.7_80x80_MiniFASNetV2.pth` | `a5eb02e1843f19b5386b953cc4c9f011c3f985d0ee2bb9819eea9a142099bec0` | 20 | `f89cdeaa53287ac3ca18dbc0f4903498898d8db8f334afd7bc9e9c1fe7c6c64d` | 4,768e-07 |
+| `4_0_0_80x80_MiniFASNetV1SE.pth` | `84ee1d37d96894d5e82de5a57df044ef80a58be2b218b5ed7cdfd875ec2f5990` | 20 | `ab4c068865ebcf83b8ef86b022cc0ccbe58d0c584091a0a8005af7b716d90afa` | 2,027e-06 |
 
-As duas ficam abaixo da tolerância de `1e-4`. A conversão foi repetida e gerou os mesmos dois SHA-256.
+As duas ficam abaixo da tolerância de `1e-4`. Os dois ONNX desta tabela são os da reconversão de
+2026-10-09 em Linux, com o `torch` do índice de CPU, e são os destinados à Release `models-v1` deste
+repositório, ainda não publicada. A conversão foi repetida a partir de outra pasta e gerou os mesmos dois SHA-256. A igualdade
+do SHA-256 entre sistemas operacionais não foi medida: o arquivo de referência é o da Release.
+
+A primeira conversão, feita no Windows antes de o script remover os metadados, gerou
+`c9893806bb17f10c4397510b86d9b5b7a17b67e1de25993d9c8174c8aaf1ad0b` e
+`2897a623f7e9508b317655f28258435ec56f592daeadcc5d1a0360231f0d58a2`. A latência abaixo foi medida nesses
+dois arquivos; os metadados não entram na execução.
 
 Os `.pth` vêm de `resources/anti_spoof_models/` no commit `b6d5f04`. No Windows o clone completo falha,
 porque o repositório tem uma pasta com espaço no fim do nome; o clone usado foi esparso, só com `src/` e
@@ -127,7 +138,7 @@ A regra 5 da spec, na ordem em que foi escrita.
 | --- | --- | --- | --- |
 | Licença proíbe pesquisa não comercial | não: Apache-2.0; dataset `não publicado`, que não elimina | não: idem | não: Apache-2.0; o CelebA-Spoof permite pesquisa não comercial |
 | Não executa no `onnxruntime` 1.30.0 | executa | executa | executa |
-| Origem do ONNX não se reproduz | reproduz: diferença de 2,146e-06 | reproduz: 2,146e-06 e 5,960e-07 | reproduz: SHA-256 no `digest` do asset da release |
+| Origem do ONNX não se reproduz | reproduz: diferença de 4,768e-07 | reproduz: 4,768e-07 e 2,027e-06 | reproduz: SHA-256 no `digest` do asset da release |
 
 **Ordenação.**
 
@@ -138,7 +149,7 @@ A regra 5 da spec, na ordem em que foi escrita.
 ## Recomendação
 
 **O MiniFASNetV2 oficial sozinho, convertido por nós** (`2.7_80x80_MiniFASNetV2.pth`, ONNX de SHA-256
-`c9893806bb17f10c4397510b86d9b5b7a17b67e1de25993d9c8174c8aaf1ad0b`). O ADR 0006 é **confirmado**: a
+`f89cdeaa53287ac3ca18dbc0f4903498898d8db8f334afd7bc9e9c1fe7c6c64d`). O ADR 0006 é **confirmado**: a
 linha `Vivacidade` fica como está e ganha a origem do ONNX, o SHA-256 e a latência.
 
 O que a regra não pesa e quem aceita precisa saber:
