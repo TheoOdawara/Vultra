@@ -26,6 +26,7 @@ Confirmadas por Theo em 2026-10-08.
 6. Uma issue, uma branch `chore/181-camera-channel-bench`, duas entregas.
 7. A placa é gravada pelo adaptador USB-serial de Theo, que executa a parte física: gravar, derrubar o
    Wi-Fi e colar o log serial.
+8. A placa é a AI-Thinker ESP32-CAM, com OV2640 e PSRAM. O buffer do quadro fica na PSRAM.
 
 ## Valores confirmados
 
@@ -38,7 +39,7 @@ Confirmados por Theo em 2026-10-08.
 | Variação de heap aceita | o heap interno livre depois do quadro 100 difere em no máximo 5% do medido depois do quadro 1 |
 | Queda de rede | Wi-Fi desligado por 60 s, 3 vezes |
 | Prazo de reconexão | um quadro entregue em até 30 s depois de a rede voltar, sem intervenção manual |
-| Tempo do handshake TLS | registrado; não reprova o teste |
+| Tempo de abertura do canal | do início da conexão até o WebSocket aberto: TCP, TLS e upgrade HTTP. O cliente não expõe o TLS isolado. Registrado; não reprova o teste |
 
 ## Versões
 
@@ -114,7 +115,7 @@ N/A — o teste não autentica a câmera. O que ele prova é o outro sentido: a 
 - A validação do certificado e do nome do servidor fica ligada; nenhuma opção do cliente que a pule é
   usada.
 - Com o servidor assinado pela CA de bancada, a conexão abre e o firmware registra:
-  > `tls handshake_ms=<n>`
+  > `channel open_ms=<n>`
 - Com o servidor assinado por outra CA, a conexão não abre, nenhum quadro é enviado e o firmware
   registra:
   > `websocket connect failed`
@@ -151,7 +152,7 @@ N/A — o teste não autentica a câmera. O que ele prova é o outro sentido: a 
 ### 6. O resultado decide o ADR 0007
 
 - Aprovadas as regras 2, 3 e 4, o ADR 0007 passa a `accepted` e ganha a seção `Resultado do teste de
-  bancada`, com a placa, as versões, o tempo de handshake, o heap do quadro 1 e do quadro 100, o
+  bancada`, com a placa, as versões, o tempo de abertura do canal, o heap do quadro 1 e do quadro 100, o
   `heap_min` e os três tempos de reconexão.
 - Reprovada qualquer uma delas, o ADR 0007 é reescrito com HTTPS e consulta periódica como decisão, e a
   mesma seção registra o que reprovou e com que número.
@@ -190,7 +191,7 @@ Não há código de erro HTTP. Os desfechos de falha do teste são estes.
 Dado que o servidor de bancada está de pé com `server.pem`
 E o firmware foi gravado com `ca.pem` embutido
 Quando a placa liga
-Então o log serial traz `tls handshake_ms=<n>`
+Então o log serial traz `channel open_ms=<n>`
 E o servidor de bancada registra o quadro 1 com `valid=true`
 ```
 
@@ -215,6 +216,8 @@ E `heap_after` do quadro 100 difere em no máximo 5% de `heap_after` do quadro 1
 ```
 
 ### Cenário 4 — Reconexão depois da queda de rede (caminho alternativo)
+
+Adiado em 2026-10-08 para a issue #193: o ponto de acesso não pôde ser desligado no dia do teste.
 
 ```gherkin
 Dado que a placa já enviou o quadro 100
@@ -259,8 +262,8 @@ N/A — o teste não cria nem lê tabela.
 - Proxy TLS e a escolha da tecnologia dele: épico #178.
 - Certificado público e o ambiente de nuvem: épico #179.
 - Canal de comandos entre réplicas no Redis: épico #178.
-- Latência da captura ao resultado e o orçamento de OQ-03: épico #179. O tempo de handshake medido aqui
-  é um insumo, não a medida do artigo.
+- Latência da captura ao resultado e o orçamento de OQ-03: épico #179. O tempo de abertura do canal
+  medido aqui é um insumo, não a medida do artigo.
 - Protótipo do plano B: se o teste reprovar, o ADR é reescrito e o HTTPS com consulta periódica é
   construído no épico #178.
 - Teste automatizado do firmware: `esp32-cam` não tem runner, e o teste é a execução na placa.
@@ -272,5 +275,5 @@ viram sub-issues.
 
 | # | Título | Escopo | Critério de aceite | Depende de |
 | --- | --- | --- | --- | --- |
-| 1 | Add the bench firmware and the bench server for the camera channel | `esp32-cam/` (projeto ESP-IDF: `CMakeLists.txt`, `sdkconfig.defaults`, `main/`), `esp32-cam/bench/server.py`, `esp32-cam/AGENTS.md`, `.gitignore`, linhas de stack e de comandos do `AGENTS.md` da raiz | `idf.py build` sem erro nem aviso; Cenários 1, 2, 3 e 4 executados na placa, com o log serial colado por Theo | — |
+| 1 | Add the bench firmware and the bench server for the camera channel | `esp32-cam/` (projeto ESP-IDF: `CMakeLists.txt`, `sdkconfig.defaults`, `main/`), `esp32-cam/bench/server.py`, `esp32-cam/AGENTS.md`, `.gitignore`, linhas de stack e de comandos do `AGENTS.md` da raiz | `idf.py build` sem erro e sem aviso do compilador (os `CMake Warning` do próprio ESP-IDF não contam); Cenários 1, 2 e 3 executados na placa; o Cenário 4 foi adiado para a #193 | — |
 | 2 | Record the bench result in ADR 0007 | `docs/decisions/0007-canal-da-camera-por-websocket.md`, `docs/architecture/building-blocks/camera.md`, `docs/architecture/risks.md` | Cenário 5 | 1 |

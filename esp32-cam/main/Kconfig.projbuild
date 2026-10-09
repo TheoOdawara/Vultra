@@ -1,0 +1,12 @@
+menu "Vultra camera bench"
+
+    config BENCH_WIFI_SSID
+        string "Wi-Fi SSID"
+
+    config BENCH_WIFI_PASSWORD
+        string "Wi-Fi password"
+
+    config BENCH_SERVER_URI
+        string "Bench server URI (wss://<host>:8443/)"
+
+endmenu

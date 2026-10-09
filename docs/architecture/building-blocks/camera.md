@@ -1,6 +1,6 @@
 # Câmera
 
-`esp32-cam` · ESP32-CAM, firmware C++ sobre ESP-IDF · estágio E1 · a pasta só tem um `.gitkeep`.
+`esp32-cam` · AI-Thinker ESP32-CAM, firmware C++ sobre ESP-IDF · estágio E1 · existe só o firmware de bancada da SPEC-005.
 
 ## O que faz
 

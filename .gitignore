@@ -19,3 +19,9 @@
 **/.mypy_cache
 **/.ruff_cache
 **/.env
+/esp32-cam/build
+/esp32-cam/sdkconfig
+/esp32-cam/sdkconfig.old
+/esp32-cam/managed_components
+/esp32-cam/bench/certs
+/esp32-cam/log.*.txt
