@@ -18,3 +18,33 @@ O sprint começou com a meta "dado um quadro, o pipeline devolve a recusa por qu
 o vetor e a emoção", e com o épico #174 como item. A issue #184 trocou a ordem do E1: o quadro que
 alimenta o pipeline chega pela ESP32-CAM desde o início, então a captura vem antes do pipeline. O épico
 #174 voltou ao Backlog sem spec escrita.
+
+## Resultado — fechado em 2026-10-09
+
+O sprint fechou dois dias antes do fim. Os sete itens estão concluídos.
+
+| Item | Concluído em | Entrou por |
+| --- | --- | --- |
+| #173 | 2026-10-07 | PR #182 |
+| #180 | 2026-10-07 | fechamento das issues e dos milestones do plano anterior |
+| #184 | 2026-10-07 | PR #185 |
+| #176 e #186 | 2026-10-08 | PRs #190 e #192 |
+| #181 | 2026-10-09 | PR #194 |
+| #183 | 2026-10-09 | PR #195 |
+
+As sub-issues #187, #188 e #189, previstas para abrir o Sprint 2, também entraram pelo PR #192. O épico
+#176 saiu inteiro.
+
+**A meta foi cumprida em parte.** A ESP32-CAM conecta por `wss://` com o certificado fixado e entrega o
+quadro JPEG, medido na #181. A reconexão depois de uma queda de rede foi observada, mas o tempo não foi
+medido: o ponto de acesso não pôde ser desligado no dia do teste. A medição é a #193 e segue para o
+[Sprint 2](sprint-02.md).
+
+O que o sprint mudou fora do código:
+
+- O [ADR 0007](../../decisions/0007-canal-da-camera-por-websocket.md) passou a `accepted`, com o critério
+  de reconexão pendente.
+- O [ADR 0006](../../decisions/0006-inferencia-no-processo-do-servico.md) foi emendado: a vivacidade usa
+  o par MiniFASNetV2 e MiniFASNetV1SE.
+- O teste de bancada mostrou que o rádio da placa não sustenta o canal com sinal pior que cerca de
+  -60 dBm quando a câmera está ligada. O risco está em [Riscos e dívida](../../architecture/risks.md).

@@ -34,6 +34,7 @@ nav = [
   { "Roadmap" = [
     "roadmap/README.md",
     { "Sprint 1" = "roadmap/sprints/sprint-01.md" },
+    { "Sprint 2" = "roadmap/sprints/sprint-02.md" },
   ] },
   { "Decisões" = [
     "decisions/README.md",

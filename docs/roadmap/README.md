@@ -15,33 +15,38 @@ A ESP32-CAM envia o quadro, a API o processa em memória, e saem reconhecimento 
 proteções de segurança desde o início. GitHub Milestone:
 [E1 — Núcleo](https://github.com/TheoOdawara/Vultra/milestone/10).
 
-Os épicos estão em ordem de construção: o caminho do quadro vem primeiro, da câmera ao pipeline, e o
-que se grava a partir dele vem depois.
+Os épicos estão em ordem de construção: o reconhecimento funciona primeiro, e a credencial da câmera e
+a captura disparada pela API vêm depois dele.
 
 | Épico | Issue | Cobre |
 | --- | --- | --- |
 | Acesso do gestor e criação de pessoa | #176 | FR-ACC-01, FR-REG-01, NFR-SEC-01, NFR-SEC-04, NFR-SEC-06 |
-| Credencial da câmera: registrar, revogar e rotacionar | #177 | FR-DEV-01, FR-DEV-02, FR-DEV-03 |
-| Captura disparada pela API, sobre TLS e sob cota | #178 | FR-DEV-04, NFR-SEC-02, NFR-SEC-03 |
 | Pipeline de inferência: qualidade, vivacidade, vetor e emoção de um quadro | #174 | FR-BIO-02, FR-BIO-03, FR-AFF-01 |
 | Cadastro e reconhecimento: galeria, evento, emoção e auditoria | #175 | FR-BIO-01, FR-BIO-04, FR-REC-01, FR-REC-02, FR-AFF-02, FR-GOV-01, NFR-REL-01 |
+| Credencial da câmera: registrar, revogar e rotacionar | #177 | FR-DEV-01, FR-DEV-02, FR-DEV-03 |
+| Captura disparada pela API, sobre TLS e sob cota | #178 | FR-DEV-04, NFR-SEC-02, NFR-SEC-03 |
 | Núcleo medido de ponta a ponta nos dois ambientes | #179 | NFR-PERF-01, NFR-PERF-02, NFR-FLEX-01, NFR-SEC-05 |
 
-Decisões que sustentam essa ordem, tomadas no replanejamento de 2026-10-06 (issue #184):
+Decisões que sustentam essa ordem, tomadas nos replanejamentos de 2026-10-06 (issue #184) e de
+2026-10-09 (issue #196):
 
+- **O reconhecimento funciona primeiro.** Decisão de Theo em 2026-10-09: o pipeline (#174) e o cadastro
+  e reconhecimento (#175) vêm antes da credencial da câmera (#177) e da captura disparada pela API
+  (#178). Até 2026-10-09 a ordem era #177 → #178 → #174 → #175.
 - **O quadro que alimenta o pipeline chega pela ESP32-CAM desde o início.** Nenhum épico é construído
-  sobre quadro injetado por script. Por isso a captura (#178) vem antes do pipeline (#174).
-- **O teste de bancada do [ADR 0007](../decisions/0007-canal-da-camera-por-websocket.md) é a issue
-  #181 e é o primeiro trabalho do E1.** Ele precisa fechar antes de o épico #178 ser especificado.
+  sobre quadro injetado por script. Antes de #177 e #178 existirem, o quadro vem pelo canal de bancada
+  da #181; como ele entra no serviço é decidido na spec do #174 e na do #175.
+- **O teste de bancada do [ADR 0007](../decisions/0007-canal-da-camera-por-websocket.md) foi a issue
+  #181 e fechou em 2026-10-09.** O tempo de reconexão ficou para a #193, que precisa fechar antes de o
+  épico #178 ser especificado.
 - **O épico #176 é o primeiro com código**, porque registrar câmera e disparar captura são operações de
   um gestor autenticado. Nenhuma rota nasce sem autenticação
   ([NFR-SEC-04](../requirements/non-functional/security.md#nfr-sec-04)), e nenhuma câmera conecta sem
   credencial ([FR-DEV-01](../requirements/functional/devices.md#fr-dev-01)).
 - **O isolamento por instituição nasce com a primeira tabela, no épico #176.**
-- **O levantamento de modelos de vivacidade é a issue #183** e precisa fechar antes de o épico #174
-  ser especificado: o MiniFASNetV2 do
-  [ADR 0006](../decisions/0006-inferencia-no-processo-do-servico.md) não tem ONNX oficial, e a escolha
-  não registra alternativa comparada.
+- **O levantamento de modelos de vivacidade foi a issue #183 e fechou em 2026-10-09.** O
+  [ADR 0006](../decisions/0006-inferencia-no-processo-do-servico.md) passou a nomear o par MiniFASNetV2
+  e MiniFASNetV1SE, com o ONNX convertido por nós.
 - **NFR-SEC-05 e NFR-FLEX-01 ficam no épico #179** porque o critério de aceite dos dois pede o fluxo
   completo. O mecanismo de cada um nasce antes, com o código que ele protege.
 - **O E1 é planejado sob a hipótese de trabalho de
@@ -82,3 +87,4 @@ Todo requisito aprovado de um estágio planejado pertence a exatamente um épico
 ## Sprints
 
 - [Sprint 1](sprints/sprint-01.md) — a ESP32-CAM real conecta por `wss://`, entrega um quadro e reconecta
+- [Sprint 2](sprints/sprint-02.md) — um quadro real cadastra um rosto, e o seguinte o reconhece com a emoção
