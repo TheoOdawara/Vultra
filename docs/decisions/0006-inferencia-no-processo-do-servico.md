@@ -37,11 +37,31 @@ escalar a inferência em outra máquina. Trocar muda o ponto de chamada do pacot
 | Etapa | Modelo | Licença |
 | --- | --- | --- |
 | Detecção e vetor de 512 dimensões | InsightFace `buffalo_l`, só os módulos `detection` e `recognition` | Código MIT; pesos apenas para pesquisa não comercial |
-| Vivacidade | MiniFASNetV2 | Apache-2.0 |
+| Vivacidade | MiniFASNetV2 e MiniFASNetV1SE, com as saídas somadas. Emendado em 2026-10-09 por Theo Odawara | Apache-2.0 |
 | Emoção | FER MobileFaceNet do OpenCV Zoo, 7 classes | Apache-2.0 |
 
 `insightface` 2.1 com `onnxruntime` 1.30.0 e `numpy` 2.5.3 foi executado em Python 3.13: carregou o
 `buffalo_l` com os dois módulos e gerou vetor `float32` de 512 dimensões.
+
+## Levantamento de modelos de vivacidade
+
+O [levantamento](../research/liveness/README.md) de 2026-10-09 comparou três candidatos: o MiniFASNetV2
+oficial sozinho, o par oficial MiniFASNetV2 e MiniFASNetV1SE, e um ONNX de terceiro. Nenhum foi eliminado.
+A regra recomendou o V2 sozinho, pelo menor p95.
+
+**Theo Odawara recusou a recomendação em 2026-10-09 e escolheu o par oficial.** É o único uso para o qual
+o repositório oficial publica resultado, e a diferença de cerca de 5 ms não pesa no orçamento da captura.
+
+- **Origem do ONNX:** convertido por nós a partir dos `.pth` de
+  `minivision-ai/Silent-Face-Anti-Spoofing`, no commit `b6d5f04ad78778917853b25c778acef6d5626d15`. O
+  repositório oficial não publica ONNX.
+- **Latência do par em CPU**, uma thread, `onnxruntime` 1.30.0, AMD Ryzen 7 5700X: p50 de 4,214 ms e p95
+  de 7,466 ms.
+
+| Arquivo | SHA-256 do ONNX |
+| --- | --- |
+| `2.7_80x80_MiniFASNetV2.onnx` | `c9893806bb17f10c4397510b86d9b5b7a17b67e1de25993d9c8174c8aaf1ad0b` |
+| `4_0_0_80x80_MiniFASNetV1SE.onnx` | `2897a623f7e9508b317655f28258435ec56f592daeadcc5d1a0360231f0d58a2` |
 
 ## Consequências
 
@@ -57,8 +77,8 @@ escalar a inferência em outra máquina. Trocar muda o ponto de chamada do pacot
 - **Trocar um modelo reinicia a API.**
 - **Os pesos do `buffalo_l` impedem uso comercial.** Servem à Iniciação Científica e ao artigo; vender o
   Vultra exige licenciar os pesos ou trocar o modelo de vetor.
-- **A robustez do MiniFASNetV2 depende do modelo da câmera**, segundo o próprio repositório. Na ESP32-CAM
-  a taxa de bloqueio é medição obrigatória e entra nas limitações do artigo.
+- **A robustez do par MiniFASNet depende do modelo da câmera e da cena**, segundo o próprio repositório.
+  Na ESP32-CAM a taxa de bloqueio é medição obrigatória e entra nas limitações do artigo.
 
 ## Alternativas consideradas
 

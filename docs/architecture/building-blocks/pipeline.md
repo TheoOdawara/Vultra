@@ -11,7 +11,7 @@ motivo, ou o vetor de 512 dimensões e, no reconhecimento, a emoção com a conf
 | --- | --- | --- |
 | Detecção e contagem de rostos | InsightFace `buffalo_l`, módulo `detection` | [BR-02](../../requirements/business-rules.md#br-02) |
 | Qualidade do quadro | sobre a saída da detecção | [FR-BIO-02](../../requirements/functional/biometrics.md#fr-bio-02) |
-| Vivacidade | MiniFASNetV2 | [FR-BIO-03](../../requirements/functional/biometrics.md#fr-bio-03) |
+| Vivacidade | MiniFASNetV2 e MiniFASNetV1SE, com as saídas somadas | [FR-BIO-03](../../requirements/functional/biometrics.md#fr-bio-03) |
 | Vetor | InsightFace `buffalo_l`, módulo `recognition` | [FR-BIO-01](../../requirements/functional/biometrics.md#fr-bio-01) |
 | Emoção, só no reconhecimento | FER MobileFaceNet do OpenCV Zoo | [FR-AFF-01](../../requirements/functional/affective.md#fr-aff-01) |
 
