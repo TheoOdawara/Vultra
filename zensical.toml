@@ -78,6 +78,7 @@ nav = [
   ] },
   { "Pesquisa" = [
     { "Pré-registro" = "research/pre-registro.md" },
+    { "Vivacidade" = "research/liveness/README.md" },
   ] },
   { "Plano anterior" = [
     { "SPEC-001 · Pipeline do ai-service" = "specs/ai-service-pipeline-inferencia.md" },
@@ -85,6 +86,7 @@ nav = [
     { "SPEC-003 · Portal" = "specs/frontend-portal-forma-final.md" },
     { "SPEC-004 · Acesso do gestor e criação de pessoa" = "specs/acesso-do-gestor-e-criacao-de-pessoa.md" },
     { "SPEC-005 ·Teste de bancada do canal da câmera" = "specs/teste-de-bancada-do-canal-da-camera.md" },
+    { "SPEC-006 · Levantamento de modelos de vivacidade" = "specs/levantamento-de-modelos-de-vivacidade.md" },
     { "ADRs de backend" = [
       "backend/adrs/README.md",
       "backend/adrs/ADR-001-typebox-sobre-zod.md",

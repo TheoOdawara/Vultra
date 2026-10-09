@@ -32,7 +32,7 @@ Um agente que encontrar qualquer um desses itens já resolvido deve confirmar no
 | Camada | Tecnologia | Estado |
 |---|---|---|
 | Backend | Python 3.13, FastAPI, SQLAlchemy, Alembic, `fastapi-users` | decidido no ADR 0005; existem a fundação de `apps/api` e o primeiro esquema |
-| Inferência | InsightFace `buffalo_l`, MiniFASNetV2, FER MobileFaceNet, ONNX Runtime | decidido no ADR 0006, não construído |
+| Inferência | InsightFace `buffalo_l`, MiniFASNetV2 com MiniFASNetV1SE, FER MobileFaceNet, ONNX Runtime | decidido no ADR 0006, não construído |
 | Banco | PostgreSQL 16 + pgvector 0.8 (imagem pinada em `0.8.6-pg16-bookworm`), isolamento por RLS | no compose; `person` sob RLS |
 | Cota e canal de comandos | Redis 7 | no compose; guarda a cota do login |
 | Firmware | AI-Thinker ESP32-CAM, ESP-IDF 6.1, `esp_websocket_client`, `esp32-camera` | existe o firmware de bancada do ADR 0007 |
