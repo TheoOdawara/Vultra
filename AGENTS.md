@@ -10,13 +10,14 @@ A verdade de produto vive em `docs/requirements/`, um SRS versionado. As decisõ
 
 Leia isto antes de afirmar que algo está pronto. O sistema está sendo reescrito do zero na branch `develop`, conforme os ADRs 0005 a 0007, e quase nada do que foi decidido existe em código.
 
-- A `develop` contém documentação, o ferramental do repositório, `esp32-cam/.gitkeep`, o começo de `apps/api` e o compose em `infra/`. Não há `packages/`.
+- A `develop` contém documentação, o ferramental do repositório, o firmware de bancada em `esp32-cam`, o começo de `apps/api` e o compose em `infra/`. Não há `packages/`.
+- `esp32-cam` tem só o firmware de bancada da SPEC-005 e o servidor de bancada: a câmera conecta por `wss://` e envia um quadro a cada 2 s. Não há credencial, comando de captura nem finalidade.
 - `apps/api` tem a fundação (ambiente obrigatório, `GET /health`, o OpenAPI sob `API_DOCS_ENABLED`), o primeiro esquema (`institution`, `user`, `accesstoken` e `person`, esta sob RLS) e o módulo `access`: login e logout com token no banco, papel declarado por rota, cota do login no Redis e o comando `create-manager`. O módulo `registry` tem `POST /v1/people`. Nenhuma outra capacidade tem rota.
 - `packages/pipeline` não existe. Nenhuma linha dele foi escrita.
 - `infra/compose.yaml` sobe PostgreSQL, Redis, as migrations e o Serviço. `infra/compose.dev.yaml` sobe só PostgreSQL e Redis, para o Serviço rodar fora do contêiner. Não há proxy TLS.
 - A `main` guarda o sistema anterior: `apps/api-core`, `apps/ai-service`, `packages/types`, `apps/web` e `infra/`. Ninguém a altera, e ela não é base de trabalho novo.
 - Os PRs #168 e #172 são trabalho de painel sobre a `main`, do plano anterior. O destino deles é decidido com quem os abriu.
-- O ADR 0007 (canal da câmera) está `proposed`: depende do teste de bancada na ESP32-CAM real, que é a issue #181.
+- O ADR 0007 (canal da câmera) está `accepted` pelo teste de bancada da #181. O tempo de reconexão após queda de rede não foi medido e é a issue #193.
 - Nenhum workflow de CI existe. Todo gate roda na máquina de quem desenvolve.
 - Nenhuma branch tem proteção configurada. A regra de branch abaixo é convenção.
 - As specs em `docs/specs/` descrevem o plano anterior ao SRS 1.0.0 e citam IDs `RF-NN` e `RNF-NN` que deixaram de existir. As issues e os milestones desse plano foram fechados em 2026-10-06.
@@ -34,7 +35,7 @@ Um agente que encontrar qualquer um desses itens já resolvido deve confirmar no
 | Inferência | InsightFace `buffalo_l`, MiniFASNetV2, FER MobileFaceNet, ONNX Runtime | decidido no ADR 0006, não construído |
 | Banco | PostgreSQL 16 + pgvector 0.8 (imagem pinada em `0.8.6-pg16-bookworm`), isolamento por RLS | no compose; `person` sob RLS |
 | Cota e canal de comandos | Redis 7 | no compose; guarda a cota do login |
-| Firmware | ESP32-CAM | não construído; framework a definir no teste de bancada do ADR 0007 |
+| Firmware | AI-Thinker ESP32-CAM, ESP-IDF 6.1, `esp_websocket_client`, `esp32-camera` | existe o firmware de bancada do ADR 0007 |
 | Painel | a definir | não existe na `develop`; tecnologia decidida quando o E2 for planejado |
 | Gerenciador Python | `uv` | decidido |
 | Lint e tipos | Ruff e mypy no Python | decidido |
@@ -71,7 +72,7 @@ Só entra aqui comando que foi executado. Cada área com gates próprios tem o s
 | `apps/api` | `uv run ruff check` · `uv run ruff format --check` · `uv run mypy` · `uv run pytest`; o serviço sobe com `uv run fastapi dev` e o primeiro gestor nasce com `uv run create-manager`. Detalhes em `apps/api/AGENTS.md` |
 | `infra` | `docker compose up -d --build` sobe tudo e aplica as migrations antes de o Serviço iniciar; `docker compose -f compose.dev.yaml up -d --remove-orphans` sobe só PostgreSQL e Redis |
 | `packages/pipeline` | pendente: a pasta não existe |
-| `esp32-cam` | pendente: sem código |
+| `esp32-cam` | `idf.py build`, com o ESP-IDF v6.1 ativado no terminal. Detalhes em `esp32-cam/AGENTS.md` |
 | `apps/web` | pendente: a pasta não existe |
 
 **Documentação**
