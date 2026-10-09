@@ -48,6 +48,9 @@ Confirmados por Theo em 2026-10-09.
 | Nenhum candidato sobra | o ADR 0006 não muda e a escolha volta a Theo |
 | Pasta e arquivos | `docs/research/liveness/`, com `README.md`, `convert_minifasnet.py` e `measure_latency.py` |
 | Gates dos scripts | `ruff` 0.16.10; sem `mypy` |
+| Campo `não publicado` na regra 5 | não elimina: só elimina a licença que proíbe pesquisa não comercial |
+| Distinguir foto impressa de tela | só conta a classe cujo significado tem fonte. Classe de significado `não publicado` não vence o critério |
+| SHA-256 publicado na release | vale o `digest` que a API do GitHub expõe no asset da release |
 
 ## Fontes
 

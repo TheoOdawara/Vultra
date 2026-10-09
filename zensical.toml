@@ -78,6 +78,7 @@ nav = [
   ] },
   { "Pesquisa" = [
     { "Pré-registro" = "research/pre-registro.md" },
+    { "Vivacidade" = "research/liveness/README.md" },
   ] },
   { "Plano anterior" = [
     { "SPEC-001 · Pipeline do ai-service" = "specs/ai-service-pipeline-inferencia.md" },
